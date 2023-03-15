@@ -6,19 +6,15 @@ from trackers.deep_sort import nn_matching
 import numpy as np
 
 
-class TrackerWithEncoder:
+class DeepSort:
     tracker = None
     encoder = None
     tracks = None
 
-    def __init__(self, encoder_model_filename):
-        max_cosine_distance = 0.4
-        nn_budget = None
+    def __init__(self, encoder_model_filename, max_dist=0.4, nn_budget=100, max_age=30, n_init=3):
 
-        # encoder_model_filename = _encoder_model_filename
-
-        metric = nn_matching.NearestNeighborDistanceMetric("cosine", max_cosine_distance, nn_budget)
-        self.tracker = DeepSortTracker(metric)
+        metric = nn_matching.NearestNeighborDistanceMetric("cosine", max_dist, nn_budget)
+        self.tracker = DeepSortTracker(metric, max_age=max_age, n_init=n_init)
         self.encoder = gdet.create_box_encoder(encoder_model_filename, batch_size=1)
 
     def update(self, frame, detections):

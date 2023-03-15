@@ -19,7 +19,6 @@ def create_tracker(tracker_type, tracker_config, reid_weights, device, half):
             nn_budget=cfg.strongsort.nn_budget,
             mc_lambda=cfg.strongsort.mc_lambda,
             ema_alpha=cfg.strongsort.ema_alpha,
-
         )
         return strongsort
 
@@ -69,15 +68,12 @@ def create_tracker(tracker_type, tracker_config, reid_weights, device, half):
         sort = Sort(max_age=cfg.sort.max_age, min_hits=cfg.sort.min_hits)
         return sort
     elif tracker_type == 'deepsort':
-        from trackers.deep_sort.tracker import Tracker as DeepSort
-        deepsort = DeepSort(metric=cfg.deepsort.metric,
-                            max_iou_distance=cfg.deepsort.max_iou_distance,
-                            max_age=cfg.deepsort.max_age,
-                            n_init=cfg.deepsort.n_unit)
-        return deepsort
-    elif tracker_type == 'deepsort_enc':
-        from trackers.deep_sort.tracker_enc import TrackerWithEncoder as DeepSortWithEncoder
-        tracker = DeepSortWithEncoder(encoder_model_filename=cfg.deepsort.encoder_model_filename)
+        from trackers.deep_sort.deepsort import DeepSort as DeepSort
+        tracker = DeepSort(encoder_model_filename=reid_weights,
+                           max_dist=cfg.deepsort.max_dist,
+                           max_age=cfg.deepsort.max_age,
+                           n_init=cfg.deepsort.n_init,
+                           nn_budget=cfg.deepsort.nn_budget)
         return tracker
     else:
         print(f"No such tracker: {tracker_type}!")
