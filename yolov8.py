@@ -20,7 +20,7 @@ def create_video_with_track(results, source_video, output_file):
 
     print(f"input = {source_video}, w = {w}, h = {h}, fps = {fps}, frames_in_video = {frames_in_video}")
 
-    output_video = cv2.VideoWriter(output_file, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
+    output_video = cv2.VideoWriter(str(output_file), cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
 
     # считываем все фреймы из видео
     for i in range(frames_in_video):
