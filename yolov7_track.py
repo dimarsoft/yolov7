@@ -32,7 +32,8 @@ def create_video_with_track(results, source_video, output_file):
     input_video.release()
 
 
-def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, output_folder, conf=0.3, save_vid=False):
+def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, output_folder,
+                           reid_weights, conf=0.3, save_vid=False):
     print(f"start {source}")
 
     source_path = Path(source)
@@ -44,7 +45,8 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
         source=source,
         conf=conf,
         tracker_type=tracker_type,
-        tracker_config=tracker_config
+        tracker_config=tracker_config,
+        reid_weights=reid_weights
     )
 
     print(f"save to: {text_path}")
@@ -52,10 +54,11 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
     yolo7_save_tracks_to_txt(results=track, txt_path=text_path, conf=conf)
 
 
-def run_yolo7(model, source, tracker_type: str, tracker_config=None, output_folder=None, conf=0.3, save_vid=False):
+def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, reid_weights, conf=0.3, save_vid=False):
     """
 
     Args:
+        reid_weights:
         conf: conf для трекера
         save_vid: Создаем наше видео с центром человека
         output_folder: путь к папке для результатов работы, txt
@@ -72,9 +75,11 @@ def run_yolo7(model, source, tracker_type: str, tracker_config=None, output_fold
         for entry in source_path.iterdir():
             # check if it is a file
             if entry.is_file() and entry.suffix == ".mp4":
-                run_single_video_yolo7(model, str(entry), tracker_type, tracker_config, output_folder, conf, save_vid)
+                run_single_video_yolo7(model, str(entry), tracker_type, tracker_config, output_folder,
+                                       reid_weights, conf, save_vid)
     else:
-        run_single_video_yolo7(model, source, tracker_type, tracker_config, output_folder, conf, save_vid)
+        run_single_video_yolo7(model, source, tracker_type, tracker_config, output_folder,
+                               reid_weights, conf, save_vid)
 
 
 def run_example():
@@ -84,7 +89,23 @@ def run_example():
     tracker_config = "./trackers/strongsort/configs/strongsort.yaml"
     output_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\"
 
-    run_yolo7(model, video_source, "strongsort", tracker_config, output_folder)
+    # run_yolo7(model, video_source, "strongsort", tracker_config, output_folder)
+
+    tracker_config = "trackers/deep_sort/configs/deepsort.yaml"
+    reid_weights = "mars-small128.pb"
+    # run_yolo7(model, video_source, "deepsort", tracker_config, output_folder, reid_weights)
+
+    tracker_config = "trackers/botsort/configs/botsort.yaml"
+    reid_weights = "osnet_x0_25_msmt17.pt"
+    # run_yolo7(model, video_source, "botsort", tracker_config, output_folder, reid_weights)
+
+    tracker_config = "trackers/ocsort/configs/ocsort.yaml"
+    reid_weights = "osnet_x0_25_msmt17.pt"
+    # run_yolo7(model, video_source, "ocsort", tracker_config, output_folder, reid_weights)
+
+    tracker_config = "trackers/bytetrack/configs/bytetrack.yaml"
+    reid_weights = "osnet_x0_25_msmt17.pt"
+    run_yolo7(model, video_source, "bytetrack", tracker_config, output_folder, reid_weights)
 
 
 if __name__ == '__main__':

@@ -51,10 +51,10 @@ def yolo7_save_tracks_to_txt(results, txt_path, conf=0.0):
             # print(frame_index, " ", box.id, ", cls = ", box.cls, ", ", box.xywhn)
             xywhn = track[1:5]
             # print(frame_index, " ", xywhn)
-            bbox_w = xywhn[2]
-            bbox_h = xywhn[3]
-            bbox_left = xywhn[0] - bbox_w / 2
-            bbox_top = xywhn[1] - bbox_h / 2
+            bbox_w = xywhn[2] - xywhn[0]
+            bbox_h = xywhn[3] - xywhn[1]
+            bbox_left = xywhn[0]
+            bbox_top = xywhn[1]
             track_id = int(track[5])
             cls = int(track[6])
             text_file.write(('%g ' * 8 + '\n') % (track[0], track_id, cls, bbox_left,

@@ -57,6 +57,7 @@ class YOLO7:
     def track(self, source, tracker_type, tracker_config, reid_weights="osnet_x0_25_msmt17.pt", conf=0.3, iou=0.4,
               classes=None):
 
+        self.reid_weights = Path(WEIGHTS) / reid_weights
         tracker = create_tracker(tracker_type, tracker_config, self.reid_weights, self.device, self.half)
 
         input_video = cv2.VideoCapture(source)
@@ -107,7 +108,8 @@ class YOLO7:
                               f"conf = {detection[6]}")
 
                         info = [frame_id,
-                                int(detection[0]), int(detection[1]), int(detection[2]), int(detection[3]),
+                                float(detection[0]) / w, float(detection[1]) / h,
+                                float(detection[2]) / w, float(detection[3]) / h,
                                 int(detection[4]), int(detection[5]), float(detection[6])]
 
                         print(info)

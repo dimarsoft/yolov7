@@ -6,15 +6,16 @@ import copy
 import torch
 import torch.nn.functional as F
 
-from yolov8.ultralytics.yolo.utils.ops import xywh2xyxy, xyxy2xywh
-
+from ultralytics.yolo.utils.ops import xywh2xyxy, xyxy2xywh
 
 from trackers.bytetrack.kalman_filter import KalmanFilter
 from trackers.bytetrack import matching
 from trackers.bytetrack.basetrack import BaseTrack, TrackState
 
+
 class STrack(BaseTrack):
     shared_kalman = KalmanFilter()
+
     def __init__(self, tlwh, score, cls):
 
         # wait activate
@@ -155,8 +156,8 @@ class BYTETracker(object):
         self.removed_stracks = []  # type: list[STrack]
 
         self.frame_id = 0
-        self.track_buffer=track_buffer
-        
+        self.track_buffer = track_buffer
+
         self.track_thresh = track_thresh
         self.match_thresh = match_thresh
         self.det_thresh = track_thresh + 0.1
@@ -175,7 +176,7 @@ class BYTETracker(object):
         xywh = xyxy2xywh(xyxys.numpy())
         confs = dets[:, 4]
         clss = dets[:, 5]
-        
+
         classes = clss.numpy()
         xyxys = xyxys.numpy()
         confs = confs.numpy()
@@ -185,21 +186,20 @@ class BYTETracker(object):
         inds_high = confs < self.track_thresh
 
         inds_second = np.logical_and(inds_low, inds_high)
-        
+
         dets_second = xywh[inds_second]
         dets = xywh[remain_inds]
-        
+
         scores_keep = confs[remain_inds]
         scores_second = confs[inds_second]
-        
+
         clss_keep = classes[remain_inds]
         clss_second = classes[inds_second]
-        
 
         if len(dets) > 0:
             '''Detections'''
-            detections = [STrack(xyxy, s, c) for 
-                (xyxy, s, c) in zip(dets, scores_keep, clss_keep)]
+            detections = [STrack(xyxy, s, c) for
+                          (xyxy, s, c) in zip(dets, scores_keep, clss_keep)]
         else:
             detections = []
 
@@ -217,7 +217,7 @@ class BYTETracker(object):
         # Predict the current location with KF
         STrack.multi_predict(strack_pool)
         dists = matching.iou_distance(strack_pool, detections)
-        #if not self.args.mot20:
+        # if not self.args.mot20:
         dists = matching.fuse_score(dists, detections)
         matches, u_track, u_detection = matching.linear_assignment(dists, thresh=self.match_thresh)
 
@@ -260,7 +260,7 @@ class BYTETracker(object):
         '''Deal with unconfirmed tracks, usually tracks with only one beginning frame'''
         detections = [detections[i] for i in u_detection]
         dists = matching.iou_distance(unconfirmed, detections)
-        #if not self.args.mot20:
+        # if not self.args.mot20:
         dists = matching.fuse_score(dists, detections)
         matches, u_unconfirmed, u_detection = matching.linear_assignment(dists, thresh=0.7)
         for itracked, idet in matches:
@@ -298,7 +298,7 @@ class BYTETracker(object):
         output_stracks = [track for track in self.tracked_stracks if track.is_activated]
         outputs = []
         for t in output_stracks:
-            output= []
+            output = []
             tlwh = t.tlwh
             tid = t.track_id
             tlwh = np.expand_dims(tlwh, axis=0)
@@ -311,7 +311,9 @@ class BYTETracker(object):
             outputs.append(output)
 
         return outputs
-#track_id, class_id, conf
+
+
+# track_id, class_id, conf
 
 def joint_stracks(tlista, tlistb):
     exists = {}
