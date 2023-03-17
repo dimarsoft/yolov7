@@ -19,6 +19,7 @@ lap>=0.4.0
 scikit-learn
 ultralytics~=8.0.53
 
+gdown
 
 # Logging -------------------------------------
 tensorboard>=2.4.1
