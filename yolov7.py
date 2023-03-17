@@ -34,13 +34,22 @@ class YOLO7:
         img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x416x416
         img = np.ascontiguousarray(img)
         img = torch.from_numpy(img).to(self.device)
-        img = img.float()  # uint8 to fp16/32
+        img = img.half() if self.half else img.float()  # uint8 to fp16/32
+        # img = img.float()  # uint8 to fp16/32
         img /= 255.0  # 0 - 255 to 0.0 - 1.0
 
         if img.ndimension() == 3:
             img = img.unsqueeze(0)
 
         return img
+
+    def to_tensor2(self, im):
+        im = torch.from_numpy(im).to(self.device)
+        im = im.half() if self.half else im.float()  # uint8 to fp16/32
+        im /= 255.0  # 0 - 255 to 0.0 - 1.0
+        if len(im.shape) == 3:
+            im = im[None]  # expand for batch dim
+        return im
 
     def track(self, source, tracker_type, tracker_config, reid_weights="osnet_x0_25_msmt17.pt", conf=0.3, iou=0.4,
               classes=None):
