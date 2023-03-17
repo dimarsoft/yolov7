@@ -15,13 +15,16 @@ WEIGHTS = ROOT / 'weights'
 
 
 class YOLO7:
-    def __init__(self, weights_path, device=''):
+    def __init__(self, weights_path, half=False, device=''):
         self.device = select_device(device)
         # Load model
         self.model = attempt_load(weights_path, map_location=self.device)  # load FP32 model
 
-        self.half = self.device.type != 'cpu'  # half precision only supported on CUDA
+        self.half = half
+        if half:
+            self.half = self.device.type != 'cpu'  # half precision only supported on CUDA
 
+        print(f"device = {self.device}, half = {self.half}")
         if self.half:
             self.model.half()  # to FP16
 
