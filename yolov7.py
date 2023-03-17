@@ -74,6 +74,8 @@ class YOLO7:
 
         curr_frame, prev_frame = None, None
 
+        results = []
+
         for frame_id in range(frames_in_video):
             ret, frame = input_video.read()
 
@@ -97,11 +99,19 @@ class YOLO7:
                 for tr_id, predict_track in enumerate(predict):
                     tracker_outputs = tracker.update(predict_track.cpu(), frame)
 
-                    print(f"predict_track = {len(tracker_outputs)}")
+                    # print(f"predict_track = {len(tracker_outputs)}")
 
-                    # Process detections [x1, y1, x2, y2, track_id, class_id, conf, queue]
+                    # Process detections [f, x1, y1, x2, y2, track_id, class_id, conf]
                     for det_id, detection in enumerate(tracker_outputs):  # detections per image
-                        print(f"{det_id}: bb = {detection[:4]}, id = {detection[4]}, cls = {detection[5]}, conf = {detection[6]}")
+                        print(f"{det_id}: bb = {detection[:4]}, id = {detection[4]}, cls = {detection[5]}, "
+                              f"conf = {detection[6]}")
+
+                        info = [frame_id,
+                                int(detection[0]), int(detection[1]), int(detection[2]), int(detection[3]),
+                                int(detection[4]), int(detection[5]), float(detection[6])]
+
+                        print(info)
+                        results.append(info)
 
             t4 = time_synchronized()
 
@@ -112,3 +122,5 @@ class YOLO7:
                   f'({(1E3 * (t3 - t2)):.1f}ms) NMS, {(1E3 * (t4 - t3)):.1f}ms) track')
 
         input_video.release()
+
+        return results

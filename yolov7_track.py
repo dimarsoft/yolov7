@@ -1,6 +1,6 @@
 from pathlib import Path
 
-# from save_txt_tools import yolo8_save_tracks_to_txt
+from save_txt_tools import yolo7_save_tracks_to_txt
 from yolov7 import YOLO7
 
 
@@ -34,6 +34,10 @@ def create_video_with_track(results, source_video, output_file):
 
 def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, output_folder, conf=0.3, save_vid=False):
     print(f"start {source}")
+
+    source_path = Path(source)
+    text_path = Path(output_folder) / f"{source_path.stem}.txt"
+
     model = YOLO7(model)
 
     track = model.track(
@@ -42,12 +46,10 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
         tracker_type=tracker_type,
         tracker_config=tracker_config
     )
-    source_path = Path(source)
-    text_path = Path(output_folder) / f"{source_path.stem}.txt"
 
     print(f"save to: {text_path}")
 
-    # yolo8_save_tracks_to_txt(results=track, txt_path=text_path, conf=conf)
+    yolo7_save_tracks_to_txt(results=track, txt_path=text_path, conf=conf)
 
 
 def run_yolo7(model, source, tracker_type: str, tracker_config=None, output_folder=None, conf=0.3, save_vid=False):
@@ -80,8 +82,9 @@ def run_example():
     video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\1.mp4"
 
     tracker_config = "./trackers/strongsort/configs/strongsort.yaml"
+    output_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\"
 
-    run_yolo7(model, video_source, "strongsort", tracker_config)
+    run_yolo7(model, video_source, "strongsort", tracker_config, output_folder)
 
 
 if __name__ == '__main__':
