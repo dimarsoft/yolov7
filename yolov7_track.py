@@ -69,7 +69,7 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
         print(f"Processed '{source}' to {output_folder}: ({(1E3 * (t2 - t1)):.1f} ms)")
 
     # count humans
-    humans_result = track.test_humans()
+    humans_result = track_worker.test_humans()
     humans_result.file = source_path.name
 
     # add result
