@@ -112,6 +112,48 @@ class DetectedTrackLabel(DetectedLabel):
         return f"{self.track_id}: {self.label_str()}"
 
 
+def draw_track_on_frame(frame, draw_rect, frame_w, frame_h, frame_info: DetectedTrackLabel):
+
+    # if frame_info.labels is not None:
+    lab = frame_info
+
+    # cv2.putText(frame, f"{lab.frame} ", (0, 40), 0, 1, (255, 255, 255), 2, cv2.LINE_AA)
+
+    hh = int(lab.height * frame_h)
+    ww = int(lab.width * frame_w)
+
+    x = int(lab.x * frame_w - ww / 2)
+    y = int(lab.y * frame_h - hh / 2)
+
+    # рамка объекта
+
+    if draw_rect:
+        if lab.label is Labels.human:
+            cv2.putText(frame, frame_info.get_caption(), (x, y), 0, 1, (255, 255, 255), 1, cv2.LINE_AA)
+        cv2.rectangle(frame, (x, y), (x + ww, y + hh), label_colors[lab.label], 1)
+
+    # если человек, то рисуем центр масс
+    if lab.label is Labels.human:
+        x = int(x + ww / 2)
+        y = int(y + hh / 2)
+
+        if lab.human_pos is HumanPos.above:
+            color = (0, 0, 255)
+        else:
+            if lab.human_pos is HumanPos.below:
+                color = (0, 255, 0)
+            else:
+                color = (255, 255, 0)
+
+        if lab.track_color is not None:
+            cv2.circle(frame, (x, y), 10, lab.track_color, -1)
+            cv2.circle(frame, (x, y), 5, color, -1)
+            cv2.putText(frame, f"{lab.track_id}", (x, y), 0, 1, lab.track_color, 1, cv2.LINE_AA)
+        else:
+            cv2.circle(frame, (x, y), 5, color, -1)
+            cv2.putText(frame, f"{lab.track_id}", (x, y), 0, 1, color, 1, cv2.LINE_AA)
+
+
 class TrackWorker:
     def __init__(self, track_result, a=-0.2, b=0.68) -> None:
         # турникет, потом вынести в настройку
@@ -166,50 +208,11 @@ class TrackWorker:
 
         return track_list
 
-    def draw_track_on_frame(self, frame, draw_rect, frame_w, frame_h, frame_info: DetectedTrackLabel):
+    def draw_turnic_on_frame(self, frame, frame_w, frame_h):
         # турникет рисуем один раз
-
         y1 = int(self.get_y(0) * frame_h)
         y2 = int(self.get_y(1) * frame_h)
         cv2.line(frame, (0, y1), (frame_w, y2), (0, 0, 255), 1)
-
-        # if frame_info.labels is not None:
-        lab = frame_info
-
-        # cv2.putText(frame, f"{lab.frame} ", (0, 40), 0, 1, (255, 255, 255), 2, cv2.LINE_AA)
-
-        hh = int(lab.height * frame_h)
-        ww = int(lab.width * frame_w)
-
-        x = int(lab.x * frame_w - ww / 2)
-        y = int(lab.y * frame_h - hh / 2)
-
-        # рамка объекта
-
-        if draw_rect:
-            cv2.putText(frame, frame_info.get_caption(), (x, y), 0, 1, (255, 255, 255), 2, cv2.LINE_AA)
-            cv2.rectangle(frame, (x, y), (x + ww, y + hh), label_colors[lab.label], 1)
-
-        # если человек, то рисуем центр масс
-        if lab.label is Labels.human:
-            x = int(x + ww / 2)
-            y = int(y + hh / 2)
-
-            if lab.human_pos is HumanPos.above:
-                color = (0, 0, 255)
-            else:
-                if lab.human_pos is HumanPos.below:
-                    color = (0, 255, 0)
-                else:
-                    color = (255, 255, 0)
-
-            if lab.track_color is not None:
-                cv2.circle(frame, (x, y), 10, lab.track_color, -1)
-                cv2.circle(frame, (x, y), 5, color, -1)
-                cv2.putText(frame, f"{lab.track_id}", (x, y), 0, 1, lab.track_color, 1, cv2.LINE_AA)
-            else:
-                cv2.circle(frame, (x, y), 5, color, -1)
-                cv2.putText(frame, f"{lab.track_id}", (x, y), 0, 1, color, 1, cv2.LINE_AA)
 
     def create_video(self, source_video, output_folder):
         input_video = cv2.VideoCapture(str(source_video))
@@ -230,8 +233,11 @@ class TrackWorker:
             results.append(frame)
         input_video.release()
 
+        for i in range(frames_in_video):
+            self.draw_turnic_on_frame(results[i], w, h)
+
         for label in self.track_labels:
-            self.draw_track_on_frame(results[label.frame], True, w, h, label)
+            draw_track_on_frame(results[label.frame], True, w, h, label)
 
         output_video_path = str(Path(output_folder) / Path(source_video).name)
         output_video = cv2.VideoWriter(
