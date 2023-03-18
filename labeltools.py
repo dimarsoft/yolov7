@@ -125,11 +125,17 @@ def draw_track_on_frame(frame, draw_rect, frame_w, frame_h, frame_info: Detected
     x = int(lab.x * frame_w - ww / 2)
     y = int(lab.y * frame_h - hh / 2)
 
+    font_scale = 0.4
+
     # рамка объекта
 
     if draw_rect:
         if lab.label is Labels.human:
-            cv2.putText(frame, frame_info.get_caption(), (x, y), 0, 1, (255, 255, 255), 1, cv2.LINE_AA)
+            if lab.track_color is not None:
+                caption_color = lab.track_color
+            else:
+                caption_color = (255, 255, 255)
+            cv2.putText(frame, frame_info.get_caption(), (x, y), 0, font_scale, caption_color, 1, cv2.LINE_AA)
         cv2.rectangle(frame, (x, y), (x + ww, y + hh), label_colors[lab.label], 1)
 
     # если человек, то рисуем центр масс
@@ -148,10 +154,10 @@ def draw_track_on_frame(frame, draw_rect, frame_w, frame_h, frame_info: Detected
         if lab.track_color is not None:
             cv2.circle(frame, (x, y), 10, lab.track_color, -1)
             cv2.circle(frame, (x, y), 5, color, -1)
-            cv2.putText(frame, f"{lab.track_id}", (x, y), 0, 1, lab.track_color, 1, cv2.LINE_AA)
+            # cv2.putText(frame, f"{lab.track_id}", (x, y), 0, 1, lab.track_color, 1, cv2.LINE_AA)
         else:
             cv2.circle(frame, (x, y), 5, color, -1)
-            cv2.putText(frame, f"{lab.track_id}", (x, y), 0, 1, color, 1, cv2.LINE_AA)
+            # cv2.putText(frame, f"{lab.track_id}", (x, y), 0, 1, color, 1, cv2.LINE_AA)
 
 
 class TrackWorker:
@@ -184,6 +190,39 @@ class TrackWorker:
                 label.human_pos = HumanPos.above
             else:
                 label.human_pos = HumanPos.below
+
+    # заделить трек по id
+    # получаем словать: ключ = id, значение список треков по это id
+    # также указываем класс
+    @staticmethod
+    def get_tracks_info_by_id(tracks, label_type: Labels = Labels.human):
+        tracks_by_id = dict()
+
+        for track in tracks:
+            if track.label is label_type:
+                by_id = tracks_by_id.get(track.track_id)
+                if by_id is None:
+                    by_id = []
+                    tracks_by_id[track.track_id] = by_id
+                by_id.append(track)
+
+        return tracks_by_id
+
+    def fill_track_color(self):
+        tracks_info_by_id = self.get_tracks_info_by_id(self.track_labels, Labels=Labels.human)
+
+        # наложение трека
+        color_id = 0
+
+        for key in tracks_info_by_id:
+            tracks = tracks_info_by_id[key]
+
+            object_color = get_color(color_id)
+
+            for track in tracks:
+                track.track_color = object_color
+
+            color_id += 1
 
     # # Process detections [f, x1, y1, x2, y2, track_id, class_id, conf]
     @staticmethod
