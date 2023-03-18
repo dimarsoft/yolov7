@@ -169,6 +169,7 @@ class TrackWorker:
         self.track_result = track_result
         self.track_labels = TrackWorker.convert_tracks_to_list(track_result)
         self.test_track_human(self.track_labels)
+        self.fill_track_color()
 
     # получить координату y для х
     def get_y(self, x):
