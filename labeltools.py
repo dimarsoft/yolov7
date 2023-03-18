@@ -4,6 +4,8 @@ from typing import List
 
 import cv2
 
+from resultools import Result
+
 
 # класс
 class Labels(Enum):
@@ -113,7 +115,6 @@ class DetectedTrackLabel(DetectedLabel):
 
 
 def draw_track_on_frame(frame, draw_rect, frame_w, frame_h, frame_info: DetectedTrackLabel):
-
     # if frame_info.labels is not None:
     lab = frame_info
 
@@ -288,3 +289,6 @@ class TrackWorker:
             output_video.write(results[i])
 
         output_video.release()
+
+    def test_humans(self):
+        return Result(0, 0, 0, [])
