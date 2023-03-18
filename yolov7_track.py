@@ -148,9 +148,9 @@ def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, r
         run_single_video_yolo7(model, source, tracker_type, tracker_config, session_folder,
                                reid_weights, test_results, conf, save_vid)
 
-    # save result
+    # save results
 
-    test_results.save_result(session_folder)
+    test_results.save_results(session_folder)
 
 
 def run_example():
