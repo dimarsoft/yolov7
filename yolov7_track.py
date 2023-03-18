@@ -1,8 +1,11 @@
+import os
 from pathlib import Path
 
 from labeltools import TrackWorker
 from save_txt_tools import yolo7_save_tracks_to_txt
+from utils.torch_utils import time_synchronized
 from yolov7 import YOLO7
+from datetime import datetime
 
 
 def create_video_with_track(results, source_video, output_file):
@@ -50,13 +53,17 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
         reid_weights=reid_weights
     )
 
-    print(f"save to: {text_path}")
+    print(f"save tracks to: {text_path}")
 
     yolo7_save_tracks_to_txt(results=track, txt_path=text_path, conf=conf)
 
     if save_vid:
+        t1 = time_synchronized()
         track_worker = TrackWorker(track)
         track_worker.create_video(source, output_folder)
+        t2 = time_synchronized()
+
+        print(f"Processed '{source}' to {output_folder}: ({(1E3 * (t2 - t1)):.1f} ms)")
 
 
 def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, reid_weights, conf=0.3, save_vid=False):
@@ -74,16 +81,39 @@ def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, r
     """
     source_path = Path(source)
 
+    # в выходной папке создаем папку с сессией: дата_трекер туда уже сохраняем все файлы
+
+    now = datetime.now()
+
+    session_folder_name = f"{now.year:04d}_{now.month:02d}_{now.day:02d}_{now.hour:02d}_{now.minute:02d}_" \
+                          f"{now.second:02d}_{tracker_type}"
+
+    session_folder = str(Path(output_folder) / session_folder_name)
+
+    try:
+        os.makedirs(session_folder, exist_ok=True)
+        print(f"Directory '{session_folder}' created successfully")
+    except OSError as error:
+        print(f"Directory '{session_folder}' can not be created")
+
+    import shutil
+
+    save_tracker_config = str(Path(session_folder) / Path(tracker_config).name)
+
+    print(f"Copy '{tracker_config}' to '{save_tracker_config}")
+
+    shutil.copy(tracker_config, save_tracker_config)
+
     if source_path.is_dir():
         print(f"process folder: {source_path}")
 
         for entry in source_path.iterdir():
             # check if it is a file
             if entry.is_file() and entry.suffix == ".mp4":
-                run_single_video_yolo7(model, str(entry), tracker_type, tracker_config, output_folder,
+                run_single_video_yolo7(model, str(entry), tracker_type, tracker_config, session_folder,
                                        reid_weights, conf, save_vid)
     else:
-        run_single_video_yolo7(model, source, tracker_type, tracker_config, output_folder,
+        run_single_video_yolo7(model, source, tracker_type, tracker_config, session_folder,
                                reid_weights, conf, save_vid)
 
 
@@ -93,12 +123,12 @@ def run_example():
 
     tracker_config = "./trackers/strongsort/configs/strongsort.yaml"
     output_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\"
-
-    # run_yolo7(model, video_source, "strongsort", tracker_config, output_folder)
+    reid_weights = "osnet_x0_25_msmt17.pt"
+    run_yolo7(model, video_source, "strongsort", tracker_config, output_folder, reid_weights)
 
     tracker_config = "trackers/deep_sort/configs/deepsort.yaml"
     reid_weights = "mars-small128.pb"
-    run_yolo7(model, video_source, "deepsort", tracker_config, output_folder, reid_weights)
+    # run_yolo7(model, video_source, "deepsort", tracker_config, output_folder, reid_weights)
 
     tracker_config = "trackers/botsort/configs/botsort.yaml"
     reid_weights = "osnet_x0_25_msmt17.pt"
