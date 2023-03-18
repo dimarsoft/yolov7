@@ -19,6 +19,35 @@ class HumanPos(Enum):
     near = 2  # в пределах турникета
 
 
+# цвета обектов
+
+label_colors = {
+    Labels.human: (255, 255, 0),
+    Labels.helmet: (255, 0, 255),
+    Labels.uniform: (255, 255, 255)
+}
+
+# 10 различных цветов для объектов
+human_colors = \
+    [
+        (255, 0, 0),
+        (0, 255, 0),
+        (0, 0, 255),
+        (127, 0, 0),
+        (0, 127, 0),
+        (0, 0, 127),
+        (64, 0, 0),
+        (0, 64, 0),
+        (0, 0, 64),
+        (127, 127, 0)
+    ]
+
+
+def get_color(item_id: int):
+    item_id = item_id % len(human_colors)
+    return human_colors[item_id]
+
+
 class Bbox:
     def __init__(self, x1, y1, x2, y2):
         self.x1 = min(x1, x2)
@@ -159,7 +188,7 @@ class TrackWorker:
 
         if draw_rect:
             cv2.putText(frame, frame_info.get_caption(), (x, y), 0, 1, (255, 255, 255), 2, cv2.LINE_AA)
-            cv2.rectangle(frame, (x, y), (x + ww, y + hh), self.label_colors[lab.label], 1)
+            cv2.rectangle(frame, (x, y), (x + ww, y + hh), label_colors[lab.label], 1)
 
         # если человек, то рисуем центр масс
         if lab.label is Labels.human:
