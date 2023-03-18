@@ -210,7 +210,7 @@ class TrackWorker:
         return tracks_by_id
 
     def fill_track_color(self):
-        tracks_info_by_id = self.get_tracks_info_by_id(self.track_labels, Labels=Labels.human)
+        tracks_info_by_id = self.get_tracks_info_by_id(self.track_labels, label_type=Labels.human)
 
         # наложение трека
         color_id = 0
