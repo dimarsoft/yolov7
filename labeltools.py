@@ -147,7 +147,7 @@ class TrackWorker:
     @staticmethod
     def convert_tracks_to_list(results: List):
         track_list = []
-        for track in enumerate(results):
+        for track in results:
             frame_index = track[0]
             xywhn = track[1:5]
 
