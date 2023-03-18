@@ -56,7 +56,7 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
 
     if save_vid:
         track_worker = TrackWorker(track)
-        track_worker.draw_track_on_frame(source, output_folder)
+        track_worker.create_video(source, output_folder)
 
 
 def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, reid_weights, conf=0.3, save_vid=False):
