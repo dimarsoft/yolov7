@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from labeltools import TrackWorker
 from save_txt_tools import yolo7_save_tracks_to_txt
 from yolov7 import YOLO7
 
@@ -53,6 +54,10 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
 
     yolo7_save_tracks_to_txt(results=track, txt_path=text_path, conf=conf)
 
+    if save_vid:
+        track_worker = TrackWorker(track)
+        track_worker.draw_track_on_frame(source, output_folder)
+
 
 def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, reid_weights, conf=0.3, save_vid=False):
     """
@@ -93,7 +98,7 @@ def run_example():
 
     tracker_config = "trackers/deep_sort/configs/deepsort.yaml"
     reid_weights = "mars-small128.pb"
-    # run_yolo7(model, video_source, "deepsort", tracker_config, output_folder, reid_weights)
+    run_yolo7(model, video_source, "deepsort", tracker_config, output_folder, reid_weights)
 
     tracker_config = "trackers/botsort/configs/botsort.yaml"
     reid_weights = "osnet_x0_25_msmt17.pt"
@@ -105,7 +110,7 @@ def run_example():
 
     tracker_config = "trackers/bytetrack/configs/bytetrack.yaml"
     reid_weights = "osnet_x0_25_msmt17.pt"
-    run_yolo7(model, video_source, "bytetrack", tracker_config, output_folder, reid_weights)
+    # run_yolo7(model, video_source, "bytetrack", tracker_config, output_folder, reid_weights)
 
 
 if __name__ == '__main__':
