@@ -149,7 +149,7 @@ class TrackWorker:
         track_list = []
         for track in enumerate(results):
             frame_index = track[0]
-            xywhn = track[1:4]
+            xywhn = track[1:5]
 
             bbox_w = abs(xywhn[2] - xywhn[0])
             bbox_h = abs(xywhn[3] - xywhn[1])
