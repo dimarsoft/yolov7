@@ -300,7 +300,7 @@ class TrackWorker:
         items = []
 
         while start < end:
-            item = self.get_near_v2(start, end, tracks)
+            item = self.get_near_v2(start, tracks)
             if item is None:
                 break
 
