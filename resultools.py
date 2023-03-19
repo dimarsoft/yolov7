@@ -47,8 +47,8 @@ class TestResults:
             print(
                 f"file = {item.file}, in = {item.counter_in}, out = {item.counter_out}, "
                 f"deviations = {len(item.deviations)} ")
-            for div in item.deviations:
-                print(f"\t div = {div.status_id}, [{div.start_frame} - {div.end_frame}]")
+            for i, div in enumerate(item.deviations):
+                print(f"\t{i + 1}, status = {div.status_id}, frame: [{div.start_frame} - {div.end_frame}]")
 
     def add_test(self, test_info):
         self.result_items.append(test_info)
@@ -63,13 +63,16 @@ class TestResults:
 
         # 1 версия считаем вход/выход
 
-        in_equals = 0   # количество не совпадений
+        in_equals = 0  # количество не совпадений
         out_equals = 0
 
         sum_delta_in = 0
         sum_delta_out = 0
 
         by_item_info = []
+
+        total = len(self.test_items)
+        total_equal = 0
 
         for item in self.test_items:
             result_item = TestResults.get_for(self.result_items, item.file)
@@ -82,7 +85,14 @@ class TestResults:
                 actual_counter_out = 0
 
             delta_in = item.counter_in - actual_counter_in
-            delta_out = item.counter_in - actual_counter_out
+            delta_out = item.counter_out - actual_counter_out
+
+            if delta_in == 0 and delta_out == 0:
+                total_equal += 1
+            if delta_in == 0:
+                in_equals += 1
+            if delta_out == 0:
+                out_equals += 1
 
             if delta_in != 0:
                 item_info = dict()
@@ -102,21 +112,22 @@ class TestResults:
 
                 by_item_info.append(item_info)
 
-            in_equals += delta_in == 0 if 1 else 0
-            out_equals += delta_out == 0 if 1 else 0
-
             sum_delta_in += abs(delta_in)
             sum_delta_out += abs(delta_out)
 
         results_info = dict()
 
         results_info['equals_in'] = in_equals
-        results_info['equals_ou'] = out_equals
+        results_info['equals_out'] = out_equals
 
         results_info['delta_in_sum'] = sum_delta_in
         results_info['delta_out_sum'] = sum_delta_out
 
         results_info['not_equal_items'] = by_item_info
+
+        results_info['total_records'] = total
+        results_info['total_equal'] = total_equal
+        results_info['total_equal_percent'] = (100.0 * total_equal) / total
 
         result_json_file = Path(output_folder) / "compare_track_results.json"
 
@@ -126,3 +137,44 @@ class TestResults:
             write_file.write(json.dumps(results_info, indent=4, sort_keys=True, default=lambda o: o.__dict__))
 
         # 2 версия считаем дополнительно совпадения инцидентов
+
+
+def test_json():
+    """
+Тест содержимого тестового файла.
+1. читаем показываем. если что-то не так то будет ошибка
+2. создаем словарь по file, оно дожно быть уникально, иначе ошибка по ключу
+    """
+    test_file = "testinfo/all_track_results.json"
+    result = TestResults(test_file)
+    result.print_info()
+
+    test = dict()
+
+    for i, item in enumerate(result.test_items):
+        if item.file in test:
+            print(f"{i}, {item.file} already present")
+            print(f"{test[item.file]}, {item}")
+
+        test[item.file] = item
+
+    for key, item in test.items():
+        print(
+            f"key = {key}, file = {item.file}, in = {item.counter_in}, out = {item.counter_out}, "
+            f"deviations = {len(item.deviations)} ")
+        for i, div in enumerate(item.deviations):
+            print(f"\t{i + 1}, status = {div.status_id}, [{div.start_frame} - {div.end_frame}]")
+
+    result_json_file = "testinfo/tmp_track_results.json"
+    print(f"Save compare results info '{str(result_json_file)}'")
+
+    with open(result_json_file, "w") as write_file:
+        write_file.write(json.dumps(test, indent=4, sort_keys=True, default=lambda o: o.__dict__))
+
+    result.result_items = TestResults.read_info(test_file)
+
+    result.compare_to_file("testinfo")
+
+
+if __name__ == '__main__':
+    test_json()
