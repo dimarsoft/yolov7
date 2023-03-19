@@ -152,6 +152,8 @@ def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, r
 
     test_results.save_results(session_folder)
 
+    test_results.compare_to_file(session_folder)
+
 
 def run_example():
     model = "D:\\AI\\2023\\models\\Yolov7\\25.02.2023_dataset_1.1_yolov7_best.pt"

@@ -57,3 +57,68 @@ class TestResults:
         result_json_file = Path(output_folder) / "current_all_track_results.json"
         with open(result_json_file, "w") as write_file:
             write_file.write(json.dumps(self.result_items, indent=4, sort_keys=True, default=lambda o: o.__dict__))
+
+    def compare_to_file(self, output_folder):
+
+        # 1 версия считаем вход/выход
+
+        in_equals = 0   # количество не совпадений
+        out_equals = 0
+
+        sum_delta_in = 0
+        sum_delta_out = 0
+
+        by_item_info = []
+
+        for item in self.test_items:
+            result_item = TestResults.get_for(self.result_items, item.file)
+
+            if result_item is not None:
+                actual_counter_in = result_item.counter_in
+                actual_counter_out = result_item.counter_out
+            else:
+                actual_counter_in = 0
+                actual_counter_out = 0
+
+            delta_in = item.counter_in - actual_counter_in
+            delta_out = item.counter_in - actual_counter_out
+
+            if delta_in != 0:
+                item_info = dict()
+
+                item_info["file"] = item.file
+                item_info["expected_in"] = item.counter_in
+                item_info["actual_in"] = actual_counter_in
+
+                by_item_info.append(item_info)
+
+            if delta_out != 0:
+                item_info = dict()
+
+                item_info["file"] = item.file
+                item_info["expected_out"] = item.counter_out
+                item_info["actual_out"] = actual_counter_out
+
+                by_item_info.append(item_info)
+
+            in_equals += delta_in == 0 if 1 else 0
+            out_equals += delta_out == 0 if 1 else 0
+
+            sum_delta_in += abs(delta_in)
+            sum_delta_out += abs(delta_out)
+
+        results_info = dict()
+
+        results_info['in_equals'] = in_equals
+        results_info['out_equals'] = out_equals
+
+        results_info['sum_delta_in'] = sum_delta_in
+        results_info['sum_delta_out'] = sum_delta_out
+
+        results_info['not_equal_items'] = by_item_info
+
+        result_json_file = Path(output_folder) / "compare_track_results.json"
+        with open(result_json_file, "w") as write_file:
+            write_file.write(json.dumps(results_info, indent=4, sort_keys=True, default=lambda o: o.__dict__))
+
+        # 2 версия считаем дополнительно совпадения инцидентов
