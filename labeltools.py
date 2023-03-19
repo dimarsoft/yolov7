@@ -4,7 +4,7 @@ from typing import List
 
 import cv2
 
-from resultools import Result
+from resultools import Result, Deviation
 
 
 # класс
@@ -161,6 +161,22 @@ def draw_track_on_frame(frame, draw_rect, frame_w, frame_h, frame_info: Detected
             # cv2.putText(frame, f"{lab.track_id}", (x, y), 0, 1, color, 1, cv2.LINE_AA)
 
 
+def find_frame(frame, tracks):
+    for t in tracks:
+        if t.frame == frame:
+            return t
+    return None
+
+
+class NearItem:
+    def __init__(self, start_pos, start_frame, end_frame, start_i, end_i):
+        self.start_pos = start_pos
+        self.start_frame = start_frame
+        self.end_frame = end_frame
+        self.start_i = start_i
+        self.end_i = end_i
+
+
 class TrackWorker:
     def __init__(self, track_result, a=-0.2, b=0.68) -> None:
         # турникет, потом вынести в настройку
@@ -171,6 +187,237 @@ class TrackWorker:
         self.track_labels = TrackWorker.convert_tracks_to_list(track_result)
         self.test_track_human(self.track_labels)
         self.fill_track_color()
+
+    @staticmethod
+    def convert_to_bb(label: DetectedLabel):
+        x1 = label.x - label.width / 2
+        y1 = label.y - label.height / 2
+
+        x2 = x1 + label.width
+        y2 = y1 + label.height
+
+        return Bbox(x1, y1, x2, y2)
+
+    def check_bb(self, h_bb, t_bb):
+        bb_main = self.convert_to_bb(h_bb)
+        bb_test = self.convert_to_bb(t_bb)
+
+        # print(f"bb_main = {bb_main}, bb_test = {bb_test}")
+
+        if (bb_test.x1 < bb_main.x1) and (bb_test.x2 < bb_main.x1):
+            return False
+
+        if (bb_test.x1 > bb_main.x2) and (bb_test.x2 > bb_main.x2):
+            return False
+
+        if (bb_test.y1 < bb_main.y1) and (bb_test.y2 < bb_main.y1):
+            return False
+
+        if (bb_test.y1 > bb_main.y2) and (bb_test.y2 > bb_main.y2):
+            return False
+
+        iou = bb_test.iou(bb_main)
+
+        # print(f"iou = {iou}")
+
+        return True
+
+    def find_near_in_track(self, tracks_human, track, near_info):
+
+        for frame in range(near_info[0], near_info[1] + 1):
+            # print(f"find_near_in_track: frame = {frame}")
+            h_bb = find_frame(frame, tracks_human)
+            t_bb = find_frame(frame, track)
+
+            if h_bb is not None and t_bb is not None:
+                # print(f"find_near_in_track: frame = {frame}, found")
+
+                if self.check_bb(h_bb, t_bb):
+                    return True
+
+        return False
+
+    def find_near(self, tracks_human, tracks_by_id, near_info):
+        for track_id in tracks_by_id:
+            tracks = tracks_by_id[track_id]
+            # print(f"find_near = {id}")
+            if self.find_near_in_track(tracks_human, tracks, near_info):
+                return id
+        return None
+
+    @staticmethod
+    def invert_human_pos(human_pos):
+        if human_pos == HumanPos.above:
+            return HumanPos.below
+        if human_pos == HumanPos.below:
+            return HumanPos.above
+        return human_pos
+
+    def get_near_v2(self, start, tracks) -> NearItem:
+        start_pos = tracks[start].human_pos
+        end_pos = self.invert_human_pos(start_pos)
+
+        end = len(tracks)
+
+        start_frame = None
+        start_i = None
+
+        end_frame = None
+        end_i = None
+
+        for i in range(start, end):
+            if tracks[i].human_pos is HumanPos.near:
+                start_frame = tracks[i].frame
+                start_i = i
+                break
+        if start_i is not None:
+            for i in range(start_i + 1, end):
+                if tracks[i].human_pos is end_pos:
+                    end_frame = tracks[i].frame
+                    end_i = i
+                    break
+            if end_i is not None:
+                return NearItem(start_pos, start_frame, end_frame, start_i, end_i)
+            else:
+                return NearItem(start_pos, start_frame, tracks[end - 1].frame, start_i, end - 1)
+
+        for i in range(start + 1, end):
+            if tracks[i].human_pos is end_pos:
+                start_frame = tracks[i].frame
+                start_i = i
+                break
+
+        if start_i is not None:
+            return NearItem(start_pos, start_frame, start_frame, start_i, start_i)
+
+        return None
+
+    def get_near_items(self, tracks) -> List:
+
+        start = 0
+        end = len(tracks)
+
+        items = []
+
+        while start < end:
+            item = self.get_near_v2(start, end, tracks)
+            if item is None:
+                break
+
+            items.append(item)
+
+            start = item.end_i + 1
+
+        return items
+
+    # получить координату(frame) прохождения турникета
+    def get_near(self, tracks):
+        start_frame = None
+        end_frame = None
+        for track in tracks:
+            if track.human_pos is HumanPos.near:
+                start_frame = track.frame
+                break
+
+        reversed_tracks = tracks[::-1]
+        for track in reversed_tracks:
+            if track.human_pos is HumanPos.near:
+                end_frame = track.frame
+                break
+
+        if start_frame is not None and end_frame is not None:
+            return [start_frame, end_frame]
+
+        start_frame = None
+        end_frame = None
+        pos = tracks[0].human_pos
+        for track in tracks:
+            if track.human_pos is not pos:
+                start_frame = track.frame
+                break
+
+        for track in reversed_tracks:
+            if track.human_pos is pos:
+                end_frame = track.frame
+                break
+        if start_frame is not None and end_frame is not None:
+            return [start_frame, end_frame]
+
+        return None
+
+    def get_humans_counter(self):
+        track_list = self.track_labels
+        # треки с людьми
+        track_human_by_id = self.get_tracks_info_by_id(track_list, label_type=Labels.human)
+
+        # print(f"track_human_by_id = {len(track_human_by_id)}")
+
+        # треки с касками
+        tracks_helmet_by_id = self.get_tracks_info_by_id(track_list, label_type=Labels.helmet)
+
+        # print(f"tracks_helmet_by_id = {len(tracks_helmet_by_id)}")
+
+        # треки с жилетами
+        tracks_uniform_by_id = self.get_tracks_info_by_id(track_list, label_type=Labels.uniform)
+
+        # print(f"tracks_uniform_by_id = {len(tracks_uniform_by_id)}")
+
+        counter = 0
+        counter_in = 0
+        counter_out = 0
+        violations = []
+        for track_id in track_human_by_id:
+            tracks = track_human_by_id[track_id]
+            near_items = self.get_near_items(tracks)
+
+            for near_item in near_items:
+
+                if near_item.start_pos == HumanPos.above:
+                    counter_in += 1
+                else:
+                    counter_out += 1
+
+                near_info = [near_item.start_frame, near_item.end_frame]
+
+                # if near_info is not None:
+                counter += 1
+
+                # print(f"human = {id}, {near_info}")
+
+                has_helmet = False
+                has_uniform = False
+
+                helmet_found_id = self.find_near(tracks, tracks_helmet_by_id, near_info)
+
+                if helmet_found_id is not None:
+                    # нашли каску
+                    has_helmet = True
+                    # удалем трек с каской
+                    del tracks_helmet_by_id[helmet_found_id]
+
+                uniform_found_id = self.find_near(tracks, tracks_uniform_by_id, near_info)
+
+                if uniform_found_id is not None:
+                    # нашли каску
+                    has_iniform = True
+                    # удалем трек с каской
+                    del tracks_uniform_by_id[uniform_found_id]
+
+                status = 0
+
+                if not has_helmet and not has_uniform:
+                    status = 1
+                else:
+                    if has_helmet and not has_uniform:
+                        status = 2
+                    else:
+                        if not has_helmet and has_uniform:
+                            status = 3
+
+                if status > 0:
+                    violations.append(Deviation(near_info[0], near_info[1], status))
+
+        return Result(counter_in + counter_out, counter_in, counter_out, violations)
 
     # получить координату y для х
     def get_y(self, x):
@@ -291,4 +538,4 @@ class TrackWorker:
         output_video.release()
 
     def test_humans(self):
-        return Result(0, 0, 0, [])
+        return self.get_humans_counter()
