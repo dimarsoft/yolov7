@@ -55,6 +55,7 @@ class TestResults:
 
     def save_results(self, output_folder):
         result_json_file = Path(output_folder) / "current_all_track_results.json"
+        print(f"Save result_items '{str(result_json_file)}'")
         with open(result_json_file, "w") as write_file:
             write_file.write(json.dumps(self.result_items, indent=4, sort_keys=True, default=lambda o: o.__dict__))
 
@@ -109,15 +110,18 @@ class TestResults:
 
         results_info = dict()
 
-        results_info['in_equals'] = in_equals
-        results_info['out_equals'] = out_equals
+        results_info['equals_in'] = in_equals
+        results_info['equals_ou'] = out_equals
 
-        results_info['sum_delta_in'] = sum_delta_in
-        results_info['sum_delta_out'] = sum_delta_out
+        results_info['delta_in_sum'] = sum_delta_in
+        results_info['delta_out_sum'] = sum_delta_out
 
         results_info['not_equal_items'] = by_item_info
 
         result_json_file = Path(output_folder) / "compare_track_results.json"
+
+        print(f"Save compare results info '{str(result_json_file)}'")
+
         with open(result_json_file, "w") as write_file:
             write_file.write(json.dumps(results_info, indent=4, sort_keys=True, default=lambda o: o.__dict__))
 
