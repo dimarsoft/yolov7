@@ -44,6 +44,18 @@ class TestResults:
             write_file.write(json.dumps(self.result_items, indent=4, sort_keys=True, default=lambda o: o.__dict__))
 
     def compare_to_file(self, output_folder):
+        self.compare_list_to_file(output_folder, self.test_items)
+
+    def compare_one_to_file(self, output_folder):
+
+        new_test = []
+        for item in self.result_items:
+            result_item = TestResults.get_for(self.test_items, item.file)
+            new_test.append(result_item)
+
+        self.compare_list_to_file(output_folder, new_test)
+
+    def compare_list_to_file(self, output_folder, test_items):
 
         # 1 версия считаем вход/выход
 
@@ -55,10 +67,10 @@ class TestResults:
 
         by_item_info = []
 
-        total = len(self.test_items)
+        total = len(test_items)
         total_equal = 0
 
-        for item in self.test_items:
+        for item in test_items:
             result_item = TestResults.get_for(self.result_items, item.file)
 
             if result_item is not None:
