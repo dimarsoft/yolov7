@@ -126,6 +126,10 @@ class YOLO7:
                         width = abs(x1-x2)
                         height = abs(y1-y2)
 
+                        if detection[6] is None:
+                            print("detection[6] is None")
+                            continue
+
                         info = [frame_id,
                                 left, top,
                                 width, height,

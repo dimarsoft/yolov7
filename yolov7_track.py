@@ -148,10 +148,10 @@ def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, r
             # check if it is a file
             if entry.is_file() and entry.suffix == ".mp4":
                 run_single_video_yolo7(model, str(entry), tracker_type, tracker_config, session_folder,
-                                       reid_weights, test_results, conf, save_vid)
+                                       reid_weights, test_results, test_func, conf, save_vid)
     else:
         run_single_video_yolo7(model, source, tracker_type, tracker_config, session_folder,
-                               reid_weights, test_results, conf, save_vid)
+                               reid_weights, test_results, test_func, conf, save_vid)
 
     # save results
 
@@ -162,13 +162,13 @@ def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, r
 
 def run_example():
     model = "D:\\AI\\2023\\models\\Yolov7\\25.02.2023_dataset_1.1_yolov7_best.pt"
-    video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\20.mp4"
+    video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\3.mp4"
     test_file = "D:\\AI\\2023\\TestInfo\\all_track_results.json"
 
     tracker_config = "./trackers/strongsort/configs/strongsort.yaml"
     output_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\"
     reid_weights = "osnet_x0_25_msmt17.pt"
-    run_yolo7(model, video_source, "strongsort", tracker_config, output_folder, reid_weights, test_file)
+    # run_yolo7(model, video_source, "strongsort", tracker_config, output_folder, reid_weights, test_file)
 
     tracker_config = "trackers/deep_sort/configs/deepsort.yaml"
     reid_weights = "mars-small128.pb"
@@ -185,6 +185,11 @@ def run_example():
     tracker_config = "trackers/bytetrack/configs/bytetrack.yaml"
     reid_weights = "osnet_x0_25_msmt17.pt"
     # run_yolo7(model, video_source, "bytetrack", tracker_config, output_folder, reid_weights)
+
+    tracker_config = "trackers/fast_deep_sort/configs/fastdeepsort.yaml"
+    reid_weights = "mars-small128.pb"
+    run_yolo7(model, video_source, "fastdeepsort", tracker_config,
+              output_folder, reid_weights, test_file, save_vid=True)
 
 
 if __name__ == '__main__':

@@ -75,6 +75,10 @@ def create_tracker(tracker_type, tracker_config, reid_weights, device, half):
                            n_init=cfg.deepsort.n_init,
                            nn_budget=cfg.deepsort.nn_budget)
         return tracker
+    elif tracker_type == 'fastdeepsort':
+        from trackers.fast_deep_sort.fast_deepsort_tracker import FastDeepSort
+        tracker = FastDeepSort(max_age=cfg.fastdeepsort.max_age)
+        return tracker
     else:
         print(f"No such tracker: {tracker_type}!")
         exit()
