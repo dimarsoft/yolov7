@@ -162,7 +162,7 @@ def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, r
 
 def run_example():
     model = "D:\\AI\\2023\\models\\Yolov7\\25.02.2023_dataset_1.1_yolov7_best.pt"
-    video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\3.mp4"
+    video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\1.mp4"
     test_file = "D:\\AI\\2023\\TestInfo\\all_track_results.json"
 
     tracker_config = "./trackers/strongsort/configs/strongsort.yaml"

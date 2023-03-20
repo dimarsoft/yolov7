@@ -8,9 +8,12 @@ class FastDeepSort:
     def update(self, detections, frame):
         dets = []
         for det in detections:
-            dets.append((det[:4], det[4], det[5]))
+            bbox = det[:4]
+            bbox[2] = bbox[2] - bbox[0]
+            bbox[2] = bbox[3] - bbox[1]
+            dets.append((bbox, det[4], det[5]))
 
-        # bbs expected to be a list of detections, each in tuples of ( [left,top,w,h], confidence, detection_class )
+        # bbs expected to be a list of detections, each in tuples of ( [left,top,w,h], confidence, detection_class)
         tracks = self.tracker.update_tracks(dets, frame=frame)
 
         results = []
