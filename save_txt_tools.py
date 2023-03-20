@@ -27,6 +27,7 @@ def convert_toy7(results):
                 track_id = int(box.id)
                 cls = int(box.cls)
                 results_y7.append([frame_index, track_id, cls, bbox_left, bbox_top, bbox_w, bbox_h, box.conf])
+    return results_y7
 
 
 def yolo8_save_tracks_to_txt(results, txt_path, conf=0.0):
