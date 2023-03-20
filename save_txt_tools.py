@@ -24,11 +24,18 @@ def convert_toy7(results):
                 bbox_h = xywhn[3]
                 bbox_left = xywhn[0] - bbox_w / 2
                 bbox_top = xywhn[1] - bbox_h / 2
+                bbox_r = xywhn[0] + bbox_w / 2
+                bbox_b = xywhn[1] + bbox_h / 2
                 track_id = int(box.id)
                 cls = int(box.cls)
-                results_y7.append([frame_index, track_id, cls, bbox_left, bbox_top, bbox_w, bbox_h, box.conf])
+                results_y7.append([frame_index, bbox_left, bbox_top, bbox_r, bbox_b, track_id, cls, box.conf])
     return results_y7
-
+"""
+ info = [frame_id,
+                                float(detection[0]) / w, float(detection[1]) / h,
+                                float(detection[2]) / w, float(detection[3]) / h,
+                                int(detection[4]), int(detection[5]), float(detection[6])]
+"""
 
 def yolo8_save_tracks_to_txt(results, txt_path, conf=0.0):
     """
