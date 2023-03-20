@@ -134,11 +134,96 @@ class TestResults:
 
         # 2 версия считаем дополнительно совпадения инцидентов
 
+    def compare_to_file_v2(self, output_folder):
+        self.compare_list_to_file_v2(output_folder, self.test_items)
+
+    def compare_list_to_file_v2(self, output_folder, test_items):
+
+        # 1 версия считаем вход/выход
+
+        in_equals = 0  # количество не совпадений
+        out_equals = 0
+
+        sum_delta_in = 0
+        sum_delta_out = 0
+
+        by_item_info = []
+
+        total = len(self.result_items)
+        total_equal = 0
+
+        for result_item in self.result_items:
+            item = TestResults.get_for(test_items, result_item.file)
+
+            actual_counter_in = result_item.counter_in
+            actual_counter_out = result_item.counter_out
+
+            if item is not None:
+                expected_counter_in = item.counter_in
+                expected_counter_out = item.counter_out
+            else:
+                expected_counter_in = 0
+                expected_counter_out = 0
+
+            delta_in = expected_counter_in - actual_counter_in
+            delta_out = expected_counter_out - actual_counter_out
+
+            if delta_in == 0 and delta_out == 0:
+                total_equal += 1
+            if delta_in == 0:
+                in_equals += 1
+            if delta_out == 0:
+                out_equals += 1
+
+            if delta_in != 0:
+                item_info = dict()
+
+                item_info["file"] = item.file
+                item_info["expected_in"] = expected_counter_in
+                item_info["actual_in"] = actual_counter_in
+
+                by_item_info.append(item_info)
+
+            if delta_out != 0:
+                item_info = dict()
+
+                item_info["file"] = item.file
+                item_info["expected_out"] = expected_counter_out
+                item_info["actual_out"] = actual_counter_out
+
+                by_item_info.append(item_info)
+
+            sum_delta_in += abs(delta_in)
+            sum_delta_out += abs(delta_out)
+
+        results_info = dict()
+
+        results_info['equals_in'] = in_equals
+        results_info['equals_out'] = out_equals
+
+        results_info['delta_in_sum'] = sum_delta_in
+        results_info['delta_out_sum'] = sum_delta_out
+
+        results_info['not_equal_items'] = by_item_info
+
+        results_info['total_records'] = total
+        results_info['total_equal'] = total_equal
+        results_info['total_equal_percent'] = (100.0 * total_equal) / total
+
+        result_json_file = Path(output_folder) / "compare_track_results.json"
+
+        print(f"Save compare results info '{str(result_json_file)}'")
+
+        with open(result_json_file, "w") as write_file:
+            write_file.write(json.dumps(results_info, indent=4, sort_keys=True, default=lambda o: o.__dict__))
+
+        # 2 версия считаем дополнительно совпадения инцидентов
+
 
 def test_json():
     """
 Тест содержимого тестового файла.
-1. читаем показываем. если что-то не так то будет ошибка
+1. читаем показываем. если что-то не так, то будет ошибка
 2. создаем словарь по file, оно дожно быть уникально, иначе ошибка по ключу
     """
     test_file = "testinfo/all_track_results.json"
