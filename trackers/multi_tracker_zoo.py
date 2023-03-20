@@ -1,3 +1,5 @@
+
+
 from trackers.strongsort.utils.parser import get_config
 
 
@@ -87,6 +89,22 @@ def create_tracker(tracker_type, tracker_config, reid_weights, device, half):
             embedder=cfg.fastdeepsort.embedder
         )
         return tracker
+    elif tracker_type == 'norfair':
+        from norfair_tracker import NorFairTracker
+
+        norfair_tracker = NorFairTracker(
+            distance_function=cfg.NORFAIR_TRACK.DISTANCE_FUNCTION,
+            distance_threshold=cfg.NORFAIR_TRACK.DISTANCE_THRESHOLD,
+            hit_counter_max=cfg.NORFAIR_TRACK.HIT_COUNTER_MAX,
+            initialization_delay=cfg.NORFAIR_TRACK.INITIALIZATION_DELAY,
+            pointwise_hit_counter_max=cfg.NORFAIR_TRACK.POINTWISE_HIT_COUNTER_MAX,
+            detection_threshold=cfg.NORFAIR_TRACK.DETECTION_THRESHOLD,
+            past_detections_length=cfg.NORFAIR_TRACK.PAST_DETECTIONS_LENGTH,
+            reid_distance_threshold=cfg.NORFAIR_TRACK.REID_DISTANCE_THRESHOLD,
+            reid_hit_counter_max=cfg.NORFAIR_TRACK.REID_HIT_COUNTER_MAX,
+        )
+
+        return norfair_tracker
     else:
         print(f"No such tracker: {tracker_type}!")
         exit()

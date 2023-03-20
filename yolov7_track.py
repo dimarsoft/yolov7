@@ -188,7 +188,11 @@ def run_example():
 
     tracker_config = "trackers/fast_deep_sort/configs/fastdeepsort.yaml"
     reid_weights = "mars-small128.pb"
-    run_yolo7(model, video_source, "fastdeepsort", tracker_config,
+    # run_yolo7(model, video_source, "fastdeepsort", tracker_config,
+    #          output_folder, reid_weights, test_file, save_vid=True)
+
+    tracker_config = "trackers/NorFairTracker/configs/norfair_track.yaml"
+    run_yolo7(model, video_source, "norfair", tracker_config,
               output_folder, reid_weights, test_file, save_vid=True)
 
 
