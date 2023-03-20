@@ -39,7 +39,7 @@ def create_video_with_track(results, source_video, output_file):
 
 
 def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, output_folder,
-                           reid_weights, test_file, conf=0.3, save_vid=False):
+                           reid_weights, test_file, test_func, conf=0.3, save_vid=False):
     print(f"start {source}")
 
     source_path = Path(source)
@@ -69,7 +69,11 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
         print(f"Processed '{source}' to {output_folder}: ({(1E3 * (t2 - t1)):.1f} ms)")
 
     # count humans
-    humans_result = track_worker.test_humans()
+    if test_func is None:
+        humans_result = track_worker.test_humans()
+    else:
+        humans_result = test_func(track)
+
     humans_result.file = source_path.name
 
     # add result
@@ -77,10 +81,11 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
 
 
 def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, reid_weights,
-              test_result_file, conf=0.3, save_vid=False):
+              test_result_file, test_func=None, conf=0.3, save_vid=False):
     """
 
     Args:
+        test_func: внешняя функция пользователя для постобработки
         test_result_file: эталонный файл разметки проходов людей
         reid_weights: веса для трекера, нукоторым нужны
         conf: conf для трекера

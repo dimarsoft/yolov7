@@ -80,7 +80,8 @@ def run_single_video_yolo8(model, source, tracker, output_folder, test_file, tes
     test_file.add_test(humans_result)
 
 
-def run_yolo8(model: str, source, tracker, output_folder, test_result_file, test_func, conf=0.3, save_vid=False, save_vid2=False):
+def run_yolo8(model: str, source, tracker, output_folder, test_result_file, test_func,
+              conf=0.3, save_vid=False, save_vid2=False):
     """
 
     Args:
