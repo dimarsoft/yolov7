@@ -84,7 +84,8 @@ class YOLO7:
             t1 = time_synchronized()
 
             with torch.no_grad():  # Calculating gradients would cause a GPU memory leak
-                predict = self.model(self.to_tensor(frame))[0]
+                new_frame = self.to_tensor(frame)
+                predict = self.model(new_frame)[0]
                 t2 = time_synchronized()
 
                 # Apply NMS
