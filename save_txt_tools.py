@@ -28,7 +28,7 @@ def convert_toy7(results):
                 bbox_b = xywhn[1] + bbox_h / 2
                 track_id = int(box.id)
                 cls = int(box.cls)
-                results_y7.append([frame_index, bbox_left, bbox_top, bbox_r, bbox_b, track_id, cls, box.conf])
+                results_y7.append([frame_index, bbox_left, bbox_top, bbox_w, bbox_h, track_id, cls, box.conf])
     return results_y7
 """
  info = [frame_id,

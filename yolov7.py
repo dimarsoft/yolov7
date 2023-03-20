@@ -107,9 +107,19 @@ class YOLO7:
                         print(f"{det_id}: bb = {detection[:4]}, id = {detection[4]}, cls = {detection[5]}, "
                               f"conf = {detection[6]}")
 
+                        x1 = float(detection[0]) / w
+                        y1 = float(detection[1]) / h
+                        x2 = float(detection[2]) / w
+                        y2 = float(detection[3]) / h
+
+                        left = min(x1, x2)
+                        top = min(y1, y2)
+                        width = abs(x1-x2)
+                        height = abs(y1-y2)
+
                         info = [frame_id,
-                                float(detection[0]) / w, float(detection[1]) / h,
-                                float(detection[2]) / w, float(detection[3]) / h,
+                                left, top,
+                                width, height,
                                 int(detection[4]), int(detection[5]), float(detection[6])]
 
                         print(info)

@@ -481,10 +481,10 @@ class TrackWorker:
             frame_index = track[0]
             xywhn = track[1:5]
 
-            bbox_w = abs(xywhn[2] - xywhn[0])
-            bbox_h = abs(xywhn[3] - xywhn[1])
-            bbox_left = min(xywhn[0], xywhn[2])
-            bbox_top = min(xywhn[1], xywhn[3])
+            bbox_w = xywhn[2]
+            bbox_h = xywhn[3]
+            bbox_left = xywhn[0]
+            bbox_top = xywhn[1]
 
             track_id = int(track[5])
             cls = int(track[6])
