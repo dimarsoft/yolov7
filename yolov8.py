@@ -147,12 +147,12 @@ def run_yolo8(model: str, source, tracker, output_folder, test_result_file, test
         for entry in source_path.iterdir():
             # check if it is a file
             if entry.is_file() and entry.suffix == ".mp4":
-                run_single_video_yolo8(model, str(entry), tracker, output_folder,
+                run_single_video_yolo8(model, str(entry), tracker, session_folder,
                                        test_results, test_func, conf, save_vid, save_vid2)
 
         test_results.compare_to_file(session_folder)
     else:
-        run_single_video_yolo8(model, source, tracker, output_folder,
+        run_single_video_yolo8(model, source, tracker, session_folder,
                                test_results, test_func, conf, save_vid, save_vid2)
         test_results.compare_one_to_file(session_folder)
 
