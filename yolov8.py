@@ -1,7 +1,14 @@
+import json
+import os
+from datetime import datetime
+
 from ultralytics import YOLO
 from pathlib import Path
 
-from save_txt_tools import yolo8_save_tracks_to_txt
+from labeltools import TrackWorker
+from resultools import TestResults
+from save_txt_tools import yolo8_save_tracks_to_txt, convert_toy7
+from utils.torch_utils import time_synchronized
 
 
 def create_video_with_track(results, source_video, output_file):
@@ -32,7 +39,7 @@ def create_video_with_track(results, source_video, output_file):
     input_video.release()
 
 
-def run_single_video_yolo8(model, source, tracker, output_folder, conf=0.3, save_vid=False, save_vid2=False):
+def run_single_video_yolo8(model, source, tracker, output_folder, test_file, conf=0.3, save_vid=False, save_vid2=False):
     print(f"start {source}")
     model = YOLO(model)
 
@@ -50,15 +57,28 @@ def run_single_video_yolo8(model, source, tracker, output_folder, conf=0.3, save
 
     yolo8_save_tracks_to_txt(results=track, txt_path=text_path, conf=conf)
 
+    track_worker = TrackWorker(convert_toy7(track))
+
     if save_vid2:
-        out_video_path = Path(output_folder) / f"{source_path.stem}.mp4"
-        create_video_with_track(results=track, source_video=source, output_file=out_video_path)
+        t1 = time_synchronized()
+        track_worker.create_video(source, output_folder)
+        t2 = time_synchronized()
+
+        print(f"Processed '{source}' to {output_folder}: ({(1E3 * (t2 - t1)):.1f} ms)")
+
+    # count humans
+    humans_result = track_worker.test_humans()
+    humans_result.file = source_path.name
+
+    # add result
+    test_file.add_test(humans_result)
 
 
-def run_yolo8(model, source, tracker, output_folder,  conf=0.3, save_vid=False, save_vid2=False):
+def run_yolo8(model: str, source, tracker, output_folder, test_result_file, conf=0.3, save_vid=False, save_vid2=False):
     """
 
     Args:
+        test_result_file: файл с разметкой для проверки
         conf: conf для трекера
         save_vid2: Создаем наше видео с центром человека
         save_vid (Bool): save для model.track. Yolo создает свое видео
@@ -69,12 +89,62 @@ def run_yolo8(model, source, tracker, output_folder,  conf=0.3, save_vid=False, 
     """
     source_path = Path(source)
 
+    # в выходной папке создаем папку с сессией: дата_трекер туда уже сохраняем все файлы
+
+    now = datetime.now()
+
+    tracker_path = Path(tracker)
+
+    session_folder_name = f"{now.year:04d}_{now.month:02d}_{now.day:02d}_{now.hour:02d}_{now.minute:02d}_" \
+                          f"{now.second:02d}_{tracker_path.stem}"
+
+    session_folder = str(Path(output_folder) / session_folder_name)
+
+    try:
+        os.makedirs(session_folder, exist_ok=True)
+        print(f"Directory '{session_folder}' created successfully")
+    except OSError as error:
+        print(f"Directory '{session_folder}' can not be created")
+
+    import shutil
+
+    save_tracker_config = str(Path(session_folder) / tracker_path.name)
+
+    print(f"Copy '{tracker_path}' to '{save_tracker_config}")
+
+    shutil.copy(str(tracker_path), save_tracker_config)
+
+    save_test_result_file = str(Path(session_folder) / Path(test_result_file).name)
+
+    print(f"Copy '{test_result_file}' to '{save_test_result_file}")
+
+    shutil.copy(test_result_file, save_test_result_file)
+
+    session_info = dict()
+
+    session_info['model'] = str(Path(model).name)
+    # session_info['reid_weights'] = str(Path(reid_weights).name)
+    session_info['conf'] = conf
+    session_info['test_result_file'] = test_result_file
+
+    session_info_path = str(Path(session_folder) / 'session_info.json')
+
+    with open(session_info_path, "w") as session_info_file:
+        json.dump(session_info, fp=session_info_file, indent=4)
+
+    test_results = TestResults(test_result_file)
+
     if source_path.is_dir():
         print(f"process folder: {source_path}")
 
         for entry in source_path.iterdir():
             # check if it is a file
             if entry.is_file() and entry.suffix == ".mp4":
-                run_single_video_yolo8(model, str(entry), tracker, output_folder, conf, save_vid, save_vid2)
+                run_single_video_yolo8(model, str(entry), tracker, output_folder, test_results, conf, save_vid, save_vid2)
     else:
-        run_single_video_yolo8(model, source, tracker, output_folder, conf, save_vid, save_vid2)
+        run_single_video_yolo8(model, source, tracker, output_folder, test_results, conf, save_vid, save_vid2)
+
+    # save results
+
+    test_results.save_results(session_folder)
+    test_results.compare_to_file(session_folder)
