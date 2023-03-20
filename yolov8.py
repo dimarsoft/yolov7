@@ -96,7 +96,7 @@ def run_yolo8(model: str, source, tracker, output_folder, test_result_file, conf
     tracker_path = Path(tracker)
 
     session_folder_name = f"{now.year:04d}_{now.month:02d}_{now.day:02d}_{now.hour:02d}_{now.minute:02d}_" \
-                          f"{now.second:02d}_{tracker_path.stem}"
+                          f"{now.second:02d}_y8_{tracker_path.stem}"
 
     session_folder = str(Path(output_folder) / session_folder_name)
 
