@@ -152,7 +152,7 @@ def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, r
 
     test_results.save_results(session_folder)
 
-    test_results.compare_to_file(session_folder)
+    test_results.compare_to_file_v2(session_folder)
 
 
 def run_example():
