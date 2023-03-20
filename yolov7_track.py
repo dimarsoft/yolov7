@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 from labeltools import TrackWorker
+from post_processing.alex import count_humans
 from resultools import TestResults
 from save_txt_tools import yolo7_save_tracks_to_txt
 from utils.torch_utils import time_synchronized
@@ -70,7 +71,8 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
 
     # count humans
     if test_func is None:
-        humans_result = track_worker.test_humans()
+        # humans_result = track_worker.test_humans()
+        humans_result = count_humans(track)
     else:
         humans_result = test_func(track)
 
