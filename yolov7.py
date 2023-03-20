@@ -6,7 +6,8 @@ import torch
 
 from models.experimental import attempt_load
 from trackers.multi_tracker_zoo import create_tracker
-from utils.general import non_max_suppression
+from utils.datasets import letterbox
+from utils.general import non_max_suppression, scale_coords
 from utils.torch_utils import select_device, time_synchronized
 
 FILE = Path(__file__).resolve()
@@ -32,6 +33,9 @@ class YOLO7:
 
     def to_tensor(self, frame):
         img = frame  # , _, _ = letterbox(frame)
+
+        # Padded resize
+        img = letterbox(img)[0]
 
         # Convert
         img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x416x416
@@ -99,7 +103,11 @@ class YOLO7:
                         tracker.camera_update(prev_frame, curr_frame)
 
                 for tr_id, predict_track in enumerate(predict):
-                    tracker_outputs = tracker.update(predict_track.cpu(), frame)
+                    # Rescale boxes from img_size to im0 size
+                    conv_pred = scale_coords(new_frame.shape[2:], predict_track.cpu(), frame.shape).round()
+
+                    tracker_outputs = tracker.update(conv_pred, frame)
+                    # tracker_outputs = tracker.update(predict_track.cpu(), frame)
 
                     # print(f"predict_track = {len(tracker_outputs)}")
 
