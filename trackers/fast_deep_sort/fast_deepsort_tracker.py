@@ -1,9 +1,24 @@
 from deep_sort_realtime.deepsort_tracker import DeepSort
 
 
-class FastDeepSort:
-    def __init__(self, max_age=30):
-        self.tracker = DeepSort(max_age=max_age)
+class FastDeepSortTracker:
+    def __init__(
+            self,
+            max_iou_distance=0.7,
+            max_age=30,
+            n_init=3,
+            nms_max_overlap=1.0,
+            max_cosine_distance=0.2,
+            nn_budget=None,
+            embedder="mobilenet"
+    ):
+        self.tracker = DeepSort(max_iou_distance=max_iou_distance,
+                                max_age=max_age,
+                                n_init=n_init,
+                                nms_max_overlap=nms_max_overlap,
+                                max_cosine_distance=max_cosine_distance,
+                                nn_budget=nn_budget,
+                                embedder=embedder)
 
     def update(self, detections, frame):
         dets = []

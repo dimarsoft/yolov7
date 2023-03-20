@@ -76,8 +76,16 @@ def create_tracker(tracker_type, tracker_config, reid_weights, device, half):
                            nn_budget=cfg.deepsort.nn_budget)
         return tracker
     elif tracker_type == 'fastdeepsort':
-        from trackers.fast_deep_sort.fast_deepsort_tracker import FastDeepSort
-        tracker = FastDeepSort(max_age=cfg.fastdeepsort.max_age)
+        from trackers.fast_deep_sort.fast_deepsort_tracker import FastDeepSortTracker
+        tracker = FastDeepSortTracker(
+            max_age=cfg.fastdeepsort.max_age,
+            n_init=cfg.fastdeepsort.n_init,
+            nms_max_overlap=cfg.fastdeepsort.nms_max_overlap,
+            nn_budget=cfg.fastdeepsort.nn_budget,
+            max_iou_distance=cfg.fastdeepsort.max_iou_distance,
+            max_cosine_distance=cfg.fastdeepsort.max_cosine_distance,
+            embedder=cfg.fastdeepsort.embedder
+        )
         return tracker
     else:
         print(f"No such tracker: {tracker_type}!")
