@@ -3,22 +3,6 @@ from pathlib import Path
 from types import SimpleNamespace
 
 
-class Deviation(object):
-    def __init__(self, start, end, status):
-        self.start_frame = start
-        self.end_frame = end
-        self.status_id = status
-
-
-class Result:
-    def __init__(self, humans, c_in, c_out, deviations):
-        self.file = ""
-        self.humans = humans
-        self.counter_in = c_in
-        self.counter_out = c_out
-        self.deviations = deviations
-
-
 class TestResults:
     def __init__(self, test_file):
         self.test_file = test_file

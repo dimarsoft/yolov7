@@ -4,7 +4,7 @@ from typing import List
 
 import cv2
 
-from resultools import Result, Deviation
+from count_results import Result, Deviation
 
 
 # класс

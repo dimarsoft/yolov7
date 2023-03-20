@@ -39,7 +39,8 @@ def create_video_with_track(results, source_video, output_file):
     input_video.release()
 
 
-def run_single_video_yolo8(model, source, tracker, output_folder, test_file, conf=0.3, save_vid=False, save_vid2=False):
+def run_single_video_yolo8(model, source, tracker, output_folder, test_file, test_func,
+                           conf=0.3, save_vid=False, save_vid2=False):
     print(f"start {source}")
     model = YOLO(model)
 
@@ -57,7 +58,8 @@ def run_single_video_yolo8(model, source, tracker, output_folder, test_file, con
 
     yolo8_save_tracks_to_txt(results=track, txt_path=text_path, conf=conf)
 
-    track_worker = TrackWorker(convert_toy7(track))
+    tracks_y7 = convert_toy7(track)
+    track_worker = TrackWorker(tracks_y7)
 
     if save_vid2:
         t1 = time_synchronized()
@@ -67,17 +69,22 @@ def run_single_video_yolo8(model, source, tracker, output_folder, test_file, con
         print(f"Processed '{source}' to {output_folder}: ({(1E3 * (t2 - t1)):.1f} ms)")
 
     # count humans
-    humans_result = track_worker.test_humans()
+    if test_func is None:
+        humans_result = track_worker.test_humans()
+    else:
+        humans_result = test_func(tracks_y7)
+
     humans_result.file = source_path.name
 
     # add result
     test_file.add_test(humans_result)
 
 
-def run_yolo8(model: str, source, tracker, output_folder, test_result_file, conf=0.3, save_vid=False, save_vid2=False):
+def run_yolo8(model: str, source, tracker, output_folder, test_result_file, test_func, conf=0.3, save_vid=False, save_vid2=False):
     """
 
     Args:
+        test_func: def count(tracks) -> Result
         test_result_file: файл с разметкой для проверки
         conf: conf для трекера
         save_vid2: Создаем наше видео с центром человека
@@ -140,9 +147,11 @@ def run_yolo8(model: str, source, tracker, output_folder, test_result_file, conf
         for entry in source_path.iterdir():
             # check if it is a file
             if entry.is_file() and entry.suffix == ".mp4":
-                run_single_video_yolo8(model, str(entry), tracker, output_folder, test_results, conf, save_vid, save_vid2)
+                run_single_video_yolo8(model, str(entry), tracker, output_folder,
+                                       test_results, test_func, conf, save_vid, save_vid2)
     else:
-        run_single_video_yolo8(model, source, tracker, output_folder, test_results, conf, save_vid, save_vid2)
+        run_single_video_yolo8(model, source, tracker, output_folder,
+                               test_results, test_func, conf, save_vid, save_vid2)
 
     # save results
 
