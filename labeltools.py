@@ -1,4 +1,6 @@
 from enum import Enum
+from enum import IntEnum
+
 from pathlib import Path
 from typing import List
 
@@ -9,7 +11,7 @@ from count_results import Result, Deviation
 
 
 # класс
-class Labels(Enum):
+class Labels(IntEnum):
     human = 0
     helmet = 1
     uniform = 2
@@ -568,3 +570,9 @@ class TrackWorker:
 
     def test_humans(self):
         return self.get_humans_counter()
+
+
+if __name__ == '__main__':
+    print(f"human = {Labels.human} = {int(Labels.human)}")
+    print(f"human = {Labels.helmet} = {int(Labels.helmet)}")
+    print(f"uniform = {Labels.uniform} = {int(Labels.uniform)}")
