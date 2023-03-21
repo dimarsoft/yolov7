@@ -163,8 +163,12 @@ def get_camera(source):
 
 
 def timur_count_humans(tracks, source):
+
     camera_num, w, h = get_camera(source)
     people_tracks = tracks_to_dic(tracks, w, h)
+
+    if len(people_tracks) == 0:
+        return Result(0, 0, 0, [])
 
     people_tracks = process_filt(people_tracks)
     bound_line = bound_line_cameras.get(camera_num)
@@ -184,12 +188,3 @@ def timur_count_humans(tracks, source):
     deviations = []
 
     return Result(count_in + count_out, count_in, count_out, deviations)
-
-
-if __name__ == '__main__':
-
-    video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\1.mp4"
-
-    num, w, h = get_camera(video_source)
-
-    print(f"{num}, {w}, {h}")
