@@ -30,7 +30,7 @@ bbox_h(0-1.0), box.conf(0-1.0)] здесь можно написать свой 
 а не 640/640"""
 
 
-def count_humans(tracks):
+def alex_count_humans(tracks):
     deviations = []
     if len(tracks) == 0:
         count_all = 0
