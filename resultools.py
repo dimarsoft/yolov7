@@ -178,7 +178,7 @@ class TestResults:
             if delta_in != 0:
                 item_info = dict()
 
-                item_info["file"] = item.file
+                item_info["file"] = result_item.file
                 item_info["expected_in"] = expected_counter_in
                 item_info["actual_in"] = actual_counter_in
 
@@ -187,7 +187,7 @@ class TestResults:
             if delta_out != 0:
                 item_info = dict()
 
-                item_info["file"] = item.file
+                item_info["file"] = result_item.file
                 item_info["expected_out"] = expected_counter_out
                 item_info["actual_out"] = actual_counter_out
 
