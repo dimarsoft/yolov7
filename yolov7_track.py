@@ -74,10 +74,10 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
         humans_result = track_worker.test_humans()
         # humans_result = alex_count_humans(track)
     else:
-        #                         info = [frame_id,
-        #                                 left, top,
-        #                                 width, height,
-        #                                 int(detection[4]), int(detection[5]), float(detection[6])]
+        #  info = [frame_id,
+        #  left, top,
+        #  width, height,
+        #  int(detection[4]), int(detection[5]), float(detection[6])]
         # [frame_index, track_id, cls, bbox_left, bbox_top, bbox_w, bbox_h, box.conf]
         tracks_new = []
         for item in track:

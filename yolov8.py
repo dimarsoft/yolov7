@@ -72,7 +72,16 @@ def run_single_video_yolo8(model, source, tracker, output_folder, test_file, tes
     if test_func is None:
         humans_result = track_worker.test_humans()
     else:
-        humans_result = test_func(tracks_y7)
+        #  info = [frame_id,
+        #  left, top,
+        #  width, height,
+        #  int(detection[4]), int(detection[5]), float(detection[6])]
+        # [frame_index, track_id, cls, bbox_left, bbox_top, bbox_w, bbox_h, box.conf]
+        tracks_new = []
+        for item in tracks_y7:
+            tracks_new.append([item[0], item[5], item[6], item[1], item[2], item[3], item[4], item[7]])
+
+        humans_result = test_func(tracks_new)
 
     humans_result.file = source_path.name
 
