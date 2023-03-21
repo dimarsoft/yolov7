@@ -4,7 +4,7 @@ from pathlib import Path
 
 from labeltools import TrackWorker
 from post_processing.alex import alex_count_humans
-from post_processing.timur import timur_count_humans, get_camera, bound_line_cameras
+from post_processing.timur import timur_count_humans, get_camera, bound_line_cameras, convert_and_save
 from resultools import TestResults
 from save_txt_tools import yolo7_save_tracks_to_txt
 from utils.torch_utils import time_synchronized
@@ -223,3 +223,7 @@ if __name__ == '__main__':
     bound_line = bound_line_cameras.get(camera_num)
 
     print(f"bound_line =  {bound_line}")
+
+    video_source_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\"
+
+    convert_and_save(video_source_folder)

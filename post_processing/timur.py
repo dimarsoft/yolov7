@@ -13,6 +13,11 @@ def load_bound_line(cameras_path):
     return bound_line
 
 
+def save_bound_line(cameras_path, bound_line):
+    with open(cameras_path, 'w') as f:
+        json.dump(bound_line, fp=f, indent=4)
+
+
 config = {
     "device": "cpu",
     "GOFILE": True,
@@ -24,6 +29,7 @@ config = {
 bound_line_cameras = load_bound_line(config["cameras_path"])
 
 print(bound_line_cameras)
+
 
 def get_centrmass(p1, p2):
     res = (int((p2[0] + p1[0]) / 2), int(p2[1] + 0.35 * (p1[1] - p2[1])))
@@ -161,7 +167,31 @@ def get_camera(source):
     return num, w, h
 
 
+def convert_and_save(folder_path):
+    folder_path = Path(folder_path)
+    bl = {}
+    for i in bound_line_cameras.keys():
+        video_source = folder_path / f"{i}.mp4"
+
+        camera_num, w, h = get_camera(str(video_source))
+
+        item = bound_line_cameras[i]
+        p1 = item[0]
+        p2 = item[1]
+        p1[0] = p1[0] / w
+        p1[1] = p1[1] / h
+
+        p2[0] = p2[0] / w
+        p2[1] = p2[1] / h
+
+        bl[i] = [p1, p2]
+
+    file_to_save = os.path.join("cfg", "camera_config_v2.json")
+    save_bound_line(file_to_save, bl)
+
+
 def timur_count_humans(tracks, source):
+    print(f"Timur postprocessing v1.1")
 
     camera_num, w, h = get_camera(source)
 
@@ -190,5 +220,7 @@ def timur_count_humans(tracks, source):
     count_out = result["output"]
 
     deviations = []
+
+    print(f"count_in = {count_in}, count_out = {count_out}")
 
     return Result(count_in + count_out, count_in, count_out, deviations)
