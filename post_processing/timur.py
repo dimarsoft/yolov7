@@ -38,9 +38,7 @@ def tracks_to_dic(tracks, w, h):
         if cls != 0:
             continue
 
-        bbox = track[1:5]
-
-        x1, y1, x2, y2 = int(bbox[3]), int(bbox[4]), int(bbox[3] + bbox[5]), int(bbox[4] + bbox[6])
+        x1, y1, x2, y2 = int(track[3]), int(track[4]), int(track[3] + track[5]), int(track[4] + track[6])
 
         x1 *= w
         x2 *= w
