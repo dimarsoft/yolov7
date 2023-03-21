@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import List
 
 import cv2
+from ultralytics.yolo.utils.plotting import Colors
 
 from count_results import Result, Deviation
 
@@ -44,10 +45,14 @@ human_colors = \
         (127, 127, 0)
     ]
 
+# цвета возьмем стандартные
+object_colors = Colors()
+
 
 def get_color(item_id: int):
-    item_id = item_id % len(human_colors)
-    return human_colors[item_id]
+    return object_colors(item_id, True)
+    # item_id = item_id % len(human_colors)
+    # return human_colors[item_id]
 
 
 class Bbox:
@@ -114,6 +119,21 @@ class DetectedTrackLabel(DetectedLabel):
         return f"{self.track_id}: {self.label_str()}"
 
 
+def draw_label_text(im, p1, label, lw, txt_color):
+    tf = max(lw - 1, 1)  # font thickness
+    w, h = cv2.getTextSize(label, 0, fontScale=lw / 3, thickness=tf)[0]  # text width, height
+    outside = p1[1] - h >= 3
+    # p2 = p1[0] + w, p1[1] - h - 3 if outside else p1[1] + h + 3
+
+    cv2.putText(im,
+                label, (p1[0], p1[1] - 2 if outside else p1[1] + h + 2),
+                0,
+                lw / 3,
+                txt_color,
+                thickness=tf,
+                lineType=cv2.LINE_AA)
+
+
 def draw_track_on_frame(frame, draw_rect, frame_w, frame_h, frame_info: DetectedTrackLabel):
     # if frame_info.labels is not None:
     lab = frame_info
@@ -130,14 +150,23 @@ def draw_track_on_frame(frame, draw_rect, frame_w, frame_h, frame_info: Detected
 
     # рамка объекта
 
+    label_color = object_colors(lab.label, True)
+    line_width = 2
+
     if draw_rect:
         if lab.label is Labels.human:
             if lab.track_color is not None:
                 caption_color = lab.track_color
             else:
                 caption_color = (255, 255, 255)
-            cv2.putText(frame, frame_info.get_caption(), (x, y), 0, font_scale, caption_color, 1, cv2.LINE_AA)
-        cv2.rectangle(frame, (x, y), (x + ww, y + hh), label_colors[lab.label], 1)
+            # cv2.putText(frame, frame_info.get_caption(), (x, y), 0, font_scale, label_color, 1, cv2.LINE_AA)
+
+            draw_label_text(frame, (x, y), frame_info.get_caption(), line_width, label_color)
+
+        # cv2.rectangle(frame, (x, y), (x + ww, y + hh), label_colors[lab.label], 1)
+        cv2.rectangle(frame, (x, y), (x + ww, y + hh), label_color, line_width)
+
+
 
     # если человек, то рисуем центр масс
     if lab.label is Labels.human:
