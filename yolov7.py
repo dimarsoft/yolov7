@@ -133,7 +133,12 @@ class YOLO7:
                         info = [frame_id,
                                 left, top,
                                 width, height,
-                                int(detection[4]), int(detection[5]), float(detection[6])]
+                                # id
+                                int(detection[4]),
+                                # cls
+                                int(detection[5]),
+                                # conf
+                                float(detection[6])]
 
                         print(info)
                         results.append(info)

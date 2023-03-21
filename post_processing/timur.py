@@ -165,6 +165,9 @@ def get_camera(source):
 def timur_count_humans(tracks, source):
 
     camera_num, w, h = get_camera(source)
+
+    print(f"camera_num =  {camera_num}, ({w} {h})")
+
     people_tracks = tracks_to_dic(tracks, w, h)
 
     if len(people_tracks) == 0:
@@ -172,6 +175,8 @@ def timur_count_humans(tracks, source):
 
     people_tracks = process_filt(people_tracks)
     bound_line = bound_line_cameras.get(camera_num)
+
+    print(f"bound_line =  {bound_line}")
 
     tracks_info = []
     for p_id in people_tracks.keys():
