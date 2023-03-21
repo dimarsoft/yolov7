@@ -139,7 +139,11 @@ def draw_label_text(im, p1, label, lw, color, txt_color=(255, 255, 255)):
                 lineType=cv2.LINE_AA)
 
 
-def draw_track_on_frame(frame, draw_rect, frame_w, frame_h, frame_info: DetectedTrackLabel, draw_center=False):
+def draw_track_on_frame(frame, draw_rect, frame_w,
+                        frame_h,
+                        frame_info: DetectedTrackLabel,
+                        draw_center=False,
+                        draw_class=False):
     # if frame_info.labels is not None:
     lab = frame_info
 
@@ -166,7 +170,12 @@ def draw_track_on_frame(frame, draw_rect, frame_w, frame_h, frame_info: Detected
                 caption_color = (255, 255, 255)
             # cv2.putText(frame, frame_info.get_caption(), (x, y), 0, font_scale, label_color, 1, cv2.LINE_AA)
 
-            draw_label_text(frame, (x, y), frame_info.get_caption(), line_width, label_color)
+            if draw_class:
+                caption = frame_info.get_caption()
+            else:
+                caption = f"{frame_info.track_id}"
+
+            draw_label_text(frame, (x, y), caption, line_width, label_color)
 
         # cv2.rectangle(frame, (x, y), (x + ww, y + hh), label_colors[lab.label], 1)
         cv2.rectangle(frame, (x, y), (x + ww, y + hh), label_color, line_width)

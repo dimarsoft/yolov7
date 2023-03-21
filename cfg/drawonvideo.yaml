@@ -1,0 +1,6 @@
+# настройки для видео
+
+line_width: 2.0
+draw_human_center: False
+draw_human_class: False
+
