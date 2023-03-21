@@ -4,6 +4,7 @@ from pathlib import Path
 
 from labeltools import TrackWorker
 from post_processing.alex import alex_count_humans
+from post_processing.timur import timur_count_humans, get_camera
 from resultools import TestResults
 from save_txt_tools import yolo7_save_tracks_to_txt
 from utils.torch_utils import time_synchronized
@@ -71,8 +72,9 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
 
     # count humans
     if test_func is None:
-        humans_result = track_worker.test_humans()
+        # humans_result = track_worker.test_humans()
         # humans_result = alex_count_humans(track)
+        humans_result = timur_count_humans(track, source)
     else:
         #  info = [frame_id,
         #  left, top,
@@ -207,4 +209,10 @@ def run_example():
 
 
 if __name__ == '__main__':
-    run_example()
+    # run_example()
+
+    video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\20.mp4"
+
+    num, w, h = get_camera(video_source)
+
+    print(f"{num}, {w}, {h}")
