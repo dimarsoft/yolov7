@@ -71,8 +71,8 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
 
     # count humans
     if test_func is None:
-        # humans_result = track_worker.test_humans()
-        humans_result = alex_count_humans(track)
+        humans_result = track_worker.test_humans()
+        # humans_result = alex_count_humans(track)
     else:
         humans_result = test_func(track)
 
