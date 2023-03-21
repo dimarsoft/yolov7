@@ -121,11 +121,14 @@ class DetectedTrackLabel(DetectedLabel):
         return f"{self.track_id}: {self.label_str()}"
 
 
-def draw_label_text(im, p1, label, lw, txt_color):
+def draw_label_text(im, p1, label, lw, color, txt_color=(255, 255, 255)):
     tf = max(lw - 1, 1)  # font thickness
     w, h = cv2.getTextSize(label, 0, fontScale=lw / 3, thickness=tf)[0]  # text width, height
     outside = p1[1] - h >= 3
     # p2 = p1[0] + w, p1[1] - h - 3 if outside else p1[1] + h + 3
+
+    p2 = p1[0] + w, p1[1] - h - 3 if outside else p1[1] + h + 3
+    cv2.rectangle(im, p1, p2, color, -1, cv2.LINE_AA)  # filled
 
     cv2.putText(im,
                 label, (p1[0], p1[1] - 2 if outside else p1[1] + h + 2),
