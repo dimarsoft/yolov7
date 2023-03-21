@@ -3,11 +3,31 @@ import pandas as pd
 
 from count_results import Result, Deviation
 
-"""
-tracks это список: [] из [frame_index, track_id, cls, bbox_left (0-1.0), bbox_top(0-1.0), bbox_w(0-1.0), bbox_h(0-1.0), box.conf(0-1.0)]
-здесь можно написать свой подсчет и передать функцию
-0-1.0 - это условные координаты, а не 640/640
-"""
+
+class Rectangle:
+    def __init__(self, x, y, w, h):
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+
+    def intersection(self, other):
+        if ((other.x >= self.x + self.w) or (other.y >= self.y + self.h) or
+                (self.x >= other.x + other.w) or (self.y >= other.y + other.h)):
+            return
+        #           print('None')
+        else:
+            rect = Rectangle(0, 0, 0, 0)
+            rect.x = max(self.x, other.x)
+            rect.w = min(self.x + self.w, other.x + other.w) - rect.x
+            rect.y = max(self.y, other.y)
+            rect.h = min(self.y + self.h, other.y + other.h) - rect.y
+            return rect
+
+
+"""tracks это список: [] из [frame_index, track_id, cls, bbox_left (0-1.0), bbox_top(0-1.0), bbox_w(0-1.0), 
+bbox_h(0-1.0), box.conf(0-1.0)] здесь можно написать свой подсчет и передать функцию 0-1.0 - это условные координаты, 
+а не 640/640"""
 
 
 def count_humans(tracks):
@@ -20,14 +40,14 @@ def count_humans(tracks):
     class_hum = 0
     class_helm = 1
     class_uniform = 2
-    df = pd.DataFrame(tracks, columns=['frame', 'id', 'cls', 'bb_left', 'bb_top', 'bb_width', 'bb_height', 'conf'])
+    df = pd.DataFrame(tracks, columns=['frame', 'id', 'class', 'bb_left', 'bb_top', 'bb_width', 'bb_height', 'conf'])
 
     # Функция определения индекса первого и последнего индекса появления объекта в видео
     # n - индекс объекта
-    def first_last_time(n):
-        list = df.index[df.id == n].tolist()
-        first = list[0]
-        last = list[len(list) - 1]
+    def first_last_time(n_id):
+        list_n = df.index[df.id == n_id].tolist()
+        first = list_n[0]
+        last = list_n[len(list_n) - 1]
         return first, last
 
     # Рассчет количества объектов, пересекших середину кадра по вертикали. '+1' - сверху вниз, '-1' - снизу вверх.
@@ -70,25 +90,6 @@ def count_humans(tracks):
     #  print(list_1)
 
     # Функция расчета IoU
-    class Rectangle:
-        def __init__(self, x, y, w, h):
-            self.x = x
-            self.y = y
-            self.w = w
-            self.h = h
-
-        def intersection(self, other):
-            if ((other.x >= self.x + self.w) or (other.y >= self.y + self.h) or
-                    (self.x >= other.x + other.w) or (self.y >= other.y + other.h)):
-                return
-            #           print('None')
-            else:
-                R3 = Rectangle(0, 0, 0, 0)
-                R3.x = max(self.x, other.x)
-                R3.w = min(self.x + self.w, other.x + other.w) - R3.x
-                R3.y = max(self.y, other.y)
-                R3.h = min(self.y + self.h, other.y + other.h) - R3.y
-                return R3
 
     def IoU(i, j):
         x1 = df.bb_left[i] * 640
@@ -101,18 +102,19 @@ def count_humans(tracks):
         a3 = df.bb_width[j] * 640
         b3 = df.bb_height[j] * 640
 
-        if __name__ == '__main__':
-            rect1 = Rectangle(x1, y1, a1, b1)
-            rect2 = Rectangle(x3, y3, a3, b3)
-            if rect1.intersection(rect2):
-                rect3 = rect1.intersection(rect2)
-                I = rect3.w * rect3.h
-        try:
-            U = a1 * b1 + a3 * b3 - I
-            IoU = I / U
-        except UnboundLocalError:
-            IoU = 0
-        return IoU
+        rect1 = Rectangle(x1, y1, a1, b1)
+        rect2 = Rectangle(x3, y3, a3, b3)
+        if rect1.intersection(rect2):
+            rect3 = rect1.intersection(rect2)
+            rect_i = rect3.w * rect3.h
+            try:
+                rect_u = a1 * b1 + a3 * b3 - rect_i
+                iou = rect_i / rect_u
+            except UnboundLocalError:
+                iou = 0
+            return iou
+        else:
+            return 0
 
     # Проверка всех вошедших на наличие каски и жилета
     for hum in list_in:
@@ -126,8 +128,8 @@ def count_humans(tracks):
                 temp = df[mask]
                 for j in range(i, i + temp.shape[0]):  # Проход по кадру - поиск жилета
                     for uniform in list_2:
-                        if df.id[j] == uniform and df['class'][
-                            j] == class_uniform:  # Определяем жилет. Значение ид берем из list_2
+                        # Определяем жилет. Значение ид берем из list_2
+                        if df.id[j] == uniform and df['class'][j] == class_uniform:
                             df_0_2[uniform][i] = IoU(i, j)
         list_mean_2 = []
         for i in range(len(list_2)):
@@ -149,8 +151,8 @@ def count_humans(tracks):
                 temp1 = df[mask]
                 for j in range(i, i + temp1.shape[0]):  # Проход по кадру - поиск каски
                     for helm in list_1:
-                        if df.id[j] == helm and df['class'][
-                            j] == class_helm:  # Определяем жилет. Значение ид берем из списка list_1
+                        # Определяем жилет. Значение ид берем из списка list_1
+                        if df.id[j] == helm and df['class'][j] == class_helm:
                             df_0_1[helm][i] = IoU(i, j)
         # Определение принадлежности человеку каски
         list_mean_1 = []
@@ -175,12 +177,12 @@ def count_humans(tracks):
             else:
                 status_id = 1
             #          print('Выявлен инцидент: человек с id', hum, 'не имеет каски и жилета')
-            list = df.index[df.id == hum].tolist()
-            #        first = list[0]
-            start_frame = df.frame[list[0]]
-            #        last = list[len(list)-1]
-            end_frame = df.frame[list[len(list) - 1]]
+            list_hum = df.index[df.id == hum].tolist()
+            #        first = list_hum[0]
+            start_frame = df.frame[list_hum[0]]
+            #        last = list[len(list_hum)-1]
+            end_frame = df.frame[list_hum[len(list_hum) - 1]]
 
-    deviations.append(Deviation(start_frame, end_frame, status_id))
+            deviations.append(Deviation(start_frame, end_frame, status_id))
 
     return Result(count_all, count_in, count_out, deviations)
