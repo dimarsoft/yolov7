@@ -139,7 +139,7 @@ def draw_label_text(im, p1, label, lw, color, txt_color=(255, 255, 255)):
                 lineType=cv2.LINE_AA)
 
 
-def draw_track_on_frame(frame, draw_rect, frame_w, frame_h, frame_info: DetectedTrackLabel):
+def draw_track_on_frame(frame, draw_rect, frame_w, frame_h, frame_info: DetectedTrackLabel, draw_center=False):
     # if frame_info.labels is not None:
     lab = frame_info
 
@@ -172,9 +172,9 @@ def draw_track_on_frame(frame, draw_rect, frame_w, frame_h, frame_info: Detected
         cv2.rectangle(frame, (x, y), (x + ww, y + hh), label_color, line_width)
 
 
-
     # если человек, то рисуем центр масс
-    if lab.label is Labels.human:
+
+    if draw_center and lab.label is Labels.human:
         x = int(x + ww / 2)
         y = int(y + hh / 2)
 
