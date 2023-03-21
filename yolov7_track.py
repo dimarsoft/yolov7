@@ -81,7 +81,7 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
         # [frame_index, track_id, cls, bbox_left, bbox_top, bbox_w, bbox_h, box.conf]
         tracks_new = []
         for item in track:
-            tracks_new.append([item[0], item[5], item[6], item[1:5], item[7]])
+            tracks_new.append([item[0], item[5], item[6], item[1], item[2], item[3], item[4], item[7]])
         humans_result = test_func(tracks_new)
 
     humans_result.file = source_path.name
