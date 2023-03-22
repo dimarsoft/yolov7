@@ -12,7 +12,7 @@ from save_txt_tools import yolo7_save_tracks_to_txt
 from utils.torch_utils import time_synchronized
 from yolov7 import YOLO7
 from datetime import datetime
-from tqdm import tqdm
+# from tqdm import tqdm
 
 
 def save_exception(e: Exception, text_ex_path, caption: str):
@@ -23,34 +23,6 @@ def save_exception(e: Exception, text_ex_path, caption: str):
         for line in lines:
             write_file.write(line)
     print(f"Exception in {caption} {str(e)}! details in {str(text_ex_path)} ")
-
-
-def create_video_with_track(results, source_video, output_file):
-    import cv2
-
-    input_video = cv2.VideoCapture(source_video)
-
-    fps = int(input_video.get(cv2.CAP_PROP_FPS))
-    # ширина
-    w = int(input_video.get(cv2.CAP_PROP_FRAME_WIDTH))
-    # высота
-    h = int(input_video.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
-    # количесто кадров в видео
-    frames_in_video = int(input_video.get(cv2.CAP_PROP_FRAME_COUNT))
-
-    print(f"input = {source_video}, w = {w}, h = {h}, fps = {fps}, frames_in_video = {frames_in_video}")
-
-    output_video = cv2.VideoWriter(str(output_file), cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
-
-    # считываем все фреймы из видео
-    for i in range(frames_in_video):
-        ret, frame = input_video.read()
-
-        output_video.write(frame)
-
-    output_video.release()
-    input_video.release()
 
 
 def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, output_folder,
@@ -98,7 +70,7 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
                 humans_result = None
 
                 if test_func == "popov_alex":
-                    humans_result = alex_count_humans(tracks_new, source)
+                    humans_result = alex_count_humans(tracks_new)
                     pass
                 if test_func == "timur":
                     humans_result = timur_count_humans(tracks_new, source)
@@ -107,7 +79,6 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
                     humans_result = track_worker.test_humans()
                     pass
                 if humans_result is not None:
-                    humans_result = timur_count_humans(tracks_new, source)
                     humans_result.file = source_path.name
 
                     # add result
@@ -128,7 +99,7 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
             save_exception(e, text_ex_path, "post processing")
 
 
-def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, reid_weights,
+def run_yolo7(model: str, source: str, tracker_type: str, tracker_config, output_folder, reid_weights,
               test_result_file, test_func=None, files=None,  classes=None, change_bb=False, conf=0.3, save_vid=False):
     """
 
@@ -147,7 +118,7 @@ def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, r
         tracker_type: трекер (botsort, bytetrack)
         tracker_config: путь к своему файлу с настройками
         source: путь к видео, если папка, то для каждого видео файла запустит
-        model (object): модель для YOLO7
+        model (str): модель для YOLO7
     """
     source_path = Path(source)
 
@@ -164,7 +135,7 @@ def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, r
         os.makedirs(session_folder, exist_ok=True)
         print(f"Directory '{session_folder}' created successfully")
     except OSError as error:
-        print(f"Directory '{session_folder}' can not be created")
+        print(f"Directory '{session_folder}' can not be created. {error}")
 
     import shutil
 
@@ -186,6 +157,13 @@ def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, r
     session_info['reid_weights'] = str(Path(reid_weights).name)
     session_info['conf'] = conf
     session_info['test_result_file'] = test_result_file
+    session_info['save_vid'] = save_vid
+    session_info['files'] = files
+    session_info['classes'] = classes
+    session_info['change_bb'] = change_bb
+
+    if isinstance(test_func, str):
+        session_info['test_func'] = test_func
 
     session_info_path = str(Path(session_folder) / 'session_info.json')
 
@@ -202,11 +180,13 @@ def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, r
             if entry.is_file() and entry.suffix == ".mp4":
                 if files is None:
                     run_single_video_yolo7(model, str(entry), tracker_type, tracker_config, session_folder,
-                                           reid_weights, test_results, test_func, classes, change_bb, conf, save_vid)
+                                           reid_weights, test_results, test_func,
+                                           classes, change_bb, conf, save_vid)
                 else:
                     if entry.stem in files:
                         run_single_video_yolo7(model, str(entry), tracker_type, tracker_config, session_folder,
-                                               reid_weights, test_results, test_func, classes, change_bb, conf, save_vid)
+                                               reid_weights, test_results, test_func,
+                                               classes, change_bb, conf, save_vid)
 
     else:
         print(f"process file: {source_path}")
