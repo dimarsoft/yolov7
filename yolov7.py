@@ -59,7 +59,7 @@ class YOLO7:
         return im
 
     def track(self, source, tracker_type, tracker_config, reid_weights="osnet_x0_25_msmt17.pt", conf=0.3, iou=0.4,
-              classes=None):
+              classes=None, change_bb=False):
 
         self.reid_weights = Path(WEIGHTS) / reid_weights
         tracker = create_tracker(tracker_type, tracker_config, self.reid_weights, self.device, self.half)
@@ -103,6 +103,9 @@ class YOLO7:
                         tracker.camera_update(prev_frame, curr_frame)
 
                 for tr_id, predict_track in enumerate(predict):
+                    if change_bb:
+                        pass
+
                     # Rescale boxes from img_size to im0 size
                     conv_pred = scale_coords(new_frame.shape[2:], predict_track.cpu(), frame.shape).round()
 

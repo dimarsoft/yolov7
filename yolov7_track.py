@@ -15,6 +15,16 @@ from datetime import datetime
 from tqdm import tqdm
 
 
+def save_exception(e: Exception, text_ex_path, caption: str):
+    with open(text_ex_path, "w") as write_file:
+        write_file.write(f"Exception in {caption}!!!")
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+        for line in lines:
+            write_file.write(line)
+    print(f"Exception in {caption} {str(e)}! details in {str(text_ex_path)} ")
+
+
 def create_video_with_track(results, source_video, output_file):
     import cv2
 
@@ -44,7 +54,8 @@ def create_video_with_track(results, source_video, output_file):
 
 
 def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, output_folder,
-                           reid_weights, test_file, test_func, classes=None, conf=0.3, save_vid=False):
+                           reid_weights, test_file, test_func,
+                           classes=None, change_bb=False, conf=0.3, save_vid=False):
     print(f"start {source}")
 
     source_path = Path(source)
@@ -58,7 +69,8 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
         tracker_type=tracker_type,
         tracker_config=tracker_config,
         reid_weights=reid_weights,
-        classes=classes
+        classes=classes,
+        change_bb=change_bb
     )
 
     print(f"save tracks to: {text_path}")
@@ -75,53 +87,56 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
         print(f"Processed '{source}' to {output_folder}: ({(1E3 * (t2 - t1)):.1f} ms)")
 
     # count humans
-    if test_func is None:
-        # humans_result = track_worker.test_humans()
-        # humans_result = alex_count_humans(track)
-        tracks_new = []
-        for item in track:
-            tracks_new.append([item[0], item[5], item[6], item[1], item[2], item[3], item[4], item[7]])
-        humans_result = timur_count_humans(tracks_new, source)
-
-        humans_result.file = source_path.name
-
-        # add result
-        test_file.add_test(humans_result)
-
-    else:
-        #  info = [frame_id,
-        #  left, top,
-        #  width, height,
-        #  int(detection[4]), int(detection[5]), float(detection[6])]
-        # [frame_index, track_id, cls, bbox_left, bbox_top, bbox_w, bbox_h, box.conf]
-        tracks_new = []
-        for item in track:
-            tracks_new.append([item[0], item[5], item[6], item[1], item[2], item[3], item[4], item[7]])
+    if test_func is not None:
         try:
-            humans_result = test_func(tracks_new)
-            humans_result.file = source_path.name
-            # add result
-            test_file.add_test(humans_result)
+            tracks_new = []
+            for item in track:
+                tracks_new.append([item[0], item[5], item[6], item[1], item[2], item[3], item[4], item[7]])
+
+            if isinstance(test_func, str):
+
+                humans_result = None
+
+                if test_func == "popov_alex":
+                    humans_result = alex_count_humans(tracks_new, source)
+                    pass
+                if test_func == "timur":
+                    humans_result = timur_count_humans(tracks_new, source)
+                    pass
+                if test_func == "dimar":
+                    humans_result = track_worker.test_humans()
+                    pass
+                if humans_result is not None:
+                    humans_result = timur_count_humans(tracks_new, source)
+                    humans_result.file = source_path.name
+
+                    # add result
+                    test_file.add_test(humans_result)
+            else:
+                #  info = [frame_id,
+                #  left, top,
+                #  width, height,
+                #  int(detection[4]), int(detection[5]), float(detection[6])]
+                # [frame_index, track_id, cls, bbox_left, bbox_top, bbox_w, bbox_h, box.conf]
+                humans_result = test_func(tracks_new)
+                humans_result.file = source_path.name
+                # add result
+                test_file.add_test(humans_result)
 
         except Exception as e:
-            text_ex_path = Path(output_folder) / f"{source_path.stem}_ex.log"
-            with open(text_ex_path, "w") as write_file:
-                write_file.write("Exception in post processing!!!")
-                exc_type, exc_value, exc_traceback = sys.exc_info()
-                lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-                for line in lines:
-                    write_file.write(line)
-            print(f"Exception in post processing {str(e)}! details in {str(text_ex_path)} ")
+            text_ex_path = Path(output_folder) / f"{source_path.stem}_pp_ex.log"
+            save_exception(e, text_ex_path, "post processing")
 
 
 def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, reid_weights,
-              test_result_file, test_func=None, files=None,  classes=None, conf=0.3, save_vid=False):
+              test_result_file, test_func=None, files=None,  classes=None, change_bb=False, conf=0.3, save_vid=False):
     """
 
     Args:
+        change_bb: менять bbox после детекции для трекера,
+                   bbox будет меньше и по центру человека
         files: если указана папка, но можно указать имена фай1лов,
-        которые будут обрабатываться. ['1', '2' ...]
-
+                которые будут обрабатываться. ['1', '2' ...]
         classes: список классов, None все, [0, 1, 2....]
         test_func: внешняя функция пользователя для постобработки
         test_result_file: эталонный файл разметки проходов людей
@@ -129,7 +144,7 @@ def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, r
         conf: conf для трекера
         save_vid: Создаем наше видео с центром человека
         output_folder: путь к папке для результатов работы, txt
-        tracker_type: трекер (botsort.yaml, bytetrack.yaml)
+        tracker_type: трекер (botsort, bytetrack)
         tracker_config: путь к своему файлу с настройками
         source: путь к видео, если папка, то для каждого видео файла запустит
         model (object): модель для YOLO7
@@ -187,11 +202,11 @@ def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, r
             if entry.is_file() and entry.suffix == ".mp4":
                 if files is None:
                     run_single_video_yolo7(model, str(entry), tracker_type, tracker_config, session_folder,
-                                           reid_weights, test_results, test_func, classes, conf, save_vid)
+                                           reid_weights, test_results, test_func, classes, change_bb, conf, save_vid)
                 else:
                     if entry.stem in files:
                         run_single_video_yolo7(model, str(entry), tracker_type, tracker_config, session_folder,
-                                               reid_weights, test_results, test_func, classes, conf, save_vid)
+                                               reid_weights, test_results, test_func, classes, change_bb, conf, save_vid)
 
     else:
         run_single_video_yolo7(model, source, tracker_type, tracker_config, session_folder,
@@ -218,13 +233,7 @@ def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, r
         test_results.compare_to_file_v2(session_folder)
     except Exception as e:
         text_ex_path = Path(session_folder) / f"{source_path.stem}_ex_compare.log"
-        with open(text_ex_path, "w") as write_file:
-            write_file.write("Exception in compare_to_file_v2!!!")
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-            for line in lines:
-                write_file.write(line)
-        print(f"Exception in compare_to_file_v2 {str(e)}! details in {str(text_ex_path)} ")
+        save_exception(e, text_ex_path, "compare_to_file_v2")
 
 
 def run_example():
