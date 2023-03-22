@@ -61,17 +61,17 @@ class YOLO7:
     @staticmethod
     def change_bbox(bbox):
 
-        x1 = (bbox[0] + bbox[2]) / 2
-        y1 = (bbox[1] + bbox[3]) / 2
+        x1 = (bbox[:, 0] + bbox[:, 2]) / 2
+        y1 = (bbox[:, 1] + bbox[:, 3]) / 2
 
-        w = abs(bbox[0] - bbox[2]) / 2
-        h = abs(bbox[1] - bbox[3]) / 2
+        w = abs(bbox[:, 0] - bbox[:, 2]) / 2
+        h = abs(bbox[:, 1] - bbox[:, 3]) / 2
 
-        bbox[0] = x1 - w
-        bbox[2] = x1 + w
+        bbox[:, 0] = x1 - w
+        bbox[:, 2] = x1 + w
 
-        bbox[1] = y1 - h
-        bbox[3] = y1 + h
+        bbox[:, 1] = y1 - h
+        bbox[:, 3] = y1 + h
 
         return bbox
 
