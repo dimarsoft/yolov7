@@ -4,6 +4,8 @@ import sys
 import traceback
 from pathlib import Path
 
+import torch
+
 from labeltools import TrackWorker
 from post_processing.alex import alex_count_humans
 from post_processing.timur import timur_count_humans, get_camera, bound_line_cameras, convert_and_save
@@ -273,4 +275,15 @@ def run_test():
 
 
 if __name__ == '__main__':
-    run_example()
+    # run_example()
+
+    tensor = torch.zeros(3, 6)
+    tensor[:, [2]] = 50
+    tensor[:, [3]] = 50
+    tensor[:, [4]] = 40
+    tensor[:, [5]] = 60
+    print(tensor)
+
+    tensor2 = YOLO7.change_bbox(tensor)
+
+    print(tensor2)
