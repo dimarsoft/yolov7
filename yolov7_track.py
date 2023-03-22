@@ -209,8 +209,12 @@ def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, r
                                                reid_weights, test_results, test_func, classes, change_bb, conf, save_vid)
 
     else:
+        print(f"process file: {source_path}")
         run_single_video_yolo7(model, source, tracker_type, tracker_config, session_folder,
-                               reid_weights, test_results, test_func, classes, conf, save_vid)
+                               reid_weights, test_results, test_func, classes,
+                               change_bb=change_bb,
+                               conf=conf,
+                               save_vid=save_vid)
 
     # save results
 
