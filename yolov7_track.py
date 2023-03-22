@@ -119,6 +119,9 @@ def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, r
     """
 
     Args:
+        files: если указана папка, но можно указать имена фай1лов,
+        которые будут обрабатываться. ['1', '2' ...]
+
         classes: список классов, None все, [0, 1, 2....]
         test_func: внешняя функция пользователя для постобработки
         test_result_file: эталонный файл разметки проходов людей
