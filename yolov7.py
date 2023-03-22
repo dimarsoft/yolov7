@@ -58,6 +58,23 @@ class YOLO7:
             im = im[None]  # expand for batch dim
         return im
 
+    @staticmethod
+    def change_bbox(bbox):
+
+        x1 = (bbox[0] + bbox[2]) / 2
+        y1 = (bbox[1] + bbox[3]) / 2
+
+        w = abs(bbox[0] - bbox[2]) / 2
+        h = abs(bbox[1] - bbox[3]) / 2
+
+        bbox[0] = x1 - w
+        bbox[2] = x1 + w
+
+        bbox[1] = y1 - h
+        bbox[3] = y1 + h
+
+        return bbox
+
     def track(self, source, tracker_type, tracker_config, reid_weights="osnet_x0_25_msmt17.pt", conf=0.3, iou=0.4,
               classes=None, change_bb=False):
 
@@ -103,11 +120,13 @@ class YOLO7:
                         tracker.camera_update(prev_frame, curr_frame)
 
                 for tr_id, predict_track in enumerate(predict):
+                    predict_track = predict_track.cpu()
                     if change_bb:
+                        predict_track = self.change_bbox(predict_track)
                         pass
 
                     # Rescale boxes from img_size to im0 size
-                    conv_pred = scale_coords(new_frame.shape[2:], predict_track.cpu(), frame.shape).round()
+                    conv_pred = scale_coords(new_frame.shape[2:], predict_track, frame.shape).round()
 
                     tracker_outputs = tracker.update(conv_pred, frame)
                     # tracker_outputs = tracker.update(predict_track.cpu(), frame)
@@ -126,8 +145,8 @@ class YOLO7:
 
                         left = min(x1, x2)
                         top = min(y1, y2)
-                        width = abs(x1-x2)
-                        height = abs(y1-y2)
+                        width = abs(x1 - x2)
+                        height = abs(y1 - y2)
 
                         if detection[6] is None:
                             print("detection[6] is None")
