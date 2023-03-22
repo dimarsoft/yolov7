@@ -10,6 +10,7 @@ from save_txt_tools import yolo7_save_tracks_to_txt
 from utils.torch_utils import time_synchronized
 from yolov7 import YOLO7
 from datetime import datetime
+from tqdm import tqdm
 
 
 def create_video_with_track(results, source_video, output_file):
@@ -78,6 +79,12 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
         for item in track:
             tracks_new.append([item[0], item[5], item[6], item[1], item[2], item[3], item[4], item[7]])
         humans_result = timur_count_humans(tracks_new, source)
+
+        humans_result.file = source_path.name
+
+        # add result
+        test_file.add_test(humans_result)
+
     else:
         #  info = [frame_id,
         #  left, top,
@@ -87,12 +94,17 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
         tracks_new = []
         for item in track:
             tracks_new.append([item[0], item[5], item[6], item[1], item[2], item[3], item[4], item[7]])
-        humans_result = test_func(tracks_new)
+        try:
+            humans_result = test_func(tracks_new)
+            humans_result.file = source_path.name
+            # add result
+            test_file.add_test(humans_result)
 
-    humans_result.file = source_path.name
-
-    # add result
-    test_file.add_test(humans_result)
+        except Exception as e:
+            text_ex_path = Path(output_folder) / f"{source_path.stem})_ex.log"
+            with open(text_ex_path, "w") as write_file:
+                write_file.write(str(e))
+            print(f"{e}")
 
 
 def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, reid_weights,
