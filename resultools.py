@@ -208,7 +208,10 @@ class TestResults:
 
         results_info['total_records'] = total
         results_info['total_equal'] = total_equal
-        results_info['total_equal_percent'] = (100.0 * total_equal) / total
+        if total > 0:
+            results_info['total_equal_percent'] = (100.0 * total_equal) / total
+        else:
+            results_info['total_equal_percent'] = 0
 
         result_json_file = Path(output_folder) / "compare_track_results.json"
 

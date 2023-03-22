@@ -101,7 +101,7 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
             test_file.add_test(humans_result)
 
         except Exception as e:
-            text_ex_path = Path(output_folder) / f"{source_path.stem})_ex.log"
+            text_ex_path = Path(output_folder) / f"{source_path.stem}_ex.log"
             with open(text_ex_path, "w") as write_file:
                 write_file.write(str(e))
             print(f"{e}")
