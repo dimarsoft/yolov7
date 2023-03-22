@@ -2,6 +2,8 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 
+from count_results import Result
+
 
 class TestResults:
     def __init__(self, test_file):
@@ -35,7 +37,10 @@ class TestResults:
                 print(f"\t{i + 1}, status = {div.status_id}, frame: [{div.start_frame} - {div.end_frame}]")
 
     def add_test(self, test_info):
-        self.result_items.append(test_info)
+        if isinstance(test_info, Result):
+            self.result_items.append(test_info)
+        else:
+            print(f"not a Result type: {test_info}")
 
     def save_results(self, output_folder):
         result_json_file = Path(output_folder) / "current_all_track_results.json"
