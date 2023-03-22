@@ -44,7 +44,7 @@ def create_video_with_track(results, source_video, output_file):
 
 
 def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, output_folder,
-                           reid_weights, test_file, test_func, conf=0.3, save_vid=False):
+                           reid_weights, test_file, test_func, classes=None, conf=0.3, save_vid=False):
     print(f"start {source}")
 
     source_path = Path(source)
@@ -57,7 +57,8 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
         conf=conf,
         tracker_type=tracker_type,
         tracker_config=tracker_config,
-        reid_weights=reid_weights
+        reid_weights=reid_weights,
+        classes=classes
     )
 
     print(f"save tracks to: {text_path}")
@@ -114,19 +115,20 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
 
 
 def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, reid_weights,
-              test_result_file, test_func=None, conf=0.3, save_vid=False):
+              test_result_file, test_func=None, classes=None, conf=0.3, save_vid=False):
     """
 
     Args:
+        classes: список классов, None все, [0, 1, 2....]
         test_func: внешняя функция пользователя для постобработки
         test_result_file: эталонный файл разметки проходов людей
-        reid_weights: веса для трекера, нукоторым нужны
+        reid_weights: веса для трекера, некоторым нужны
         conf: conf для трекера
         save_vid: Создаем наше видео с центром человека
         output_folder: путь к папке для результатов работы, txt
         tracker_type: трекер (botsort.yaml, bytetrack.yaml)
         tracker_config: путь к своему файлу с настройками
-        source: путь к видео, если папка, то для каждого видеофайла запустит
+        source: путь к видео, если папка, то для каждого видео файла запустит
         model (object): модель для YOLO7
     """
     source_path = Path(source)
@@ -181,16 +183,36 @@ def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, r
             # check if it is a file
             if entry.is_file() and entry.suffix == ".mp4":
                 run_single_video_yolo7(model, str(entry), tracker_type, tracker_config, session_folder,
-                                       reid_weights, test_results, test_func, conf, save_vid)
+                                       reid_weights, test_results, test_func, classes, conf, save_vid)
     else:
         run_single_video_yolo7(model, source, tracker_type, tracker_config, session_folder,
-                               reid_weights, test_results, test_func, conf, save_vid)
+                               reid_weights, test_results, test_func, classes, conf, save_vid)
 
     # save results
 
-    test_results.save_results(session_folder)
+    try:
+        test_results.save_results(session_folder)
+    except Exception as e:
+        text_ex_path = Path(session_folder) / f"{source_path.stem}_ex_result.log"
+        with open(text_ex_path, "w") as write_file:
+            write_file.write("Exception in save_results!!!")
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+            for line in lines:
+                write_file.write(line)
+        print(f"Exception in save_results {str(e)}! details in {str(text_ex_path)} ")
 
-    test_results.compare_to_file_v2(session_folder)
+    try:
+        test_results.compare_to_file_v2(session_folder)
+    except Exception as e:
+        text_ex_path = Path(session_folder) / f"{source_path.stem}_ex_compare.log"
+        with open(text_ex_path, "w") as write_file:
+            write_file.write("Exception in compare_to_file_v2!!!")
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+            for line in lines:
+                write_file.write(line)
+        print(f"Exception in compare_to_file_v2 {str(e)}! details in {str(text_ex_path)} ")
 
 
 def run_example():
@@ -229,9 +251,7 @@ def run_example():
               output_folder, reid_weights, test_file, save_vid=True)
 
 
-if __name__ == '__main__':
-    # run_example()
-
+def run_test():
     video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\20.mp4"
 
     camera_num, w, h = get_camera(video_source)
@@ -245,3 +265,7 @@ if __name__ == '__main__':
     video_source_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\"
 
     convert_and_save(video_source_folder)
+
+
+if __name__ == '__main__':
+    run_example()
