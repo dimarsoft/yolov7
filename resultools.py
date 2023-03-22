@@ -46,7 +46,8 @@ class TestResults:
         result_json_file = Path(output_folder) / "current_all_track_results.json"
         print(f"Save result_items '{str(result_json_file)}'")
         with open(result_json_file, "w") as write_file:
-            write_file.write(json.dumps(self.result_items, indent=4, sort_keys=True, default=lambda o: o.__dict__))
+            write_file.write(json.dumps(self.result_items, indent=4, sort_keys=True))
+            # write_file.write(json.dumps(self.result_items, indent=4, sort_keys=True, default=lambda o: o.__dict__))
 
     def compare_to_file(self, output_folder):
         self.compare_list_to_file(output_folder, self.test_items)

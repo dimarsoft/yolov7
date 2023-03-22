@@ -210,7 +210,7 @@ def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, r
             for line in lines:
                 write_file.write(line)
             for item in test_results.result_items:
-                write_file.write(str(item))
+                write_file.write(f"{str(item)}\n")
 
         print(f"Exception in save_results {str(e)}! details in {str(text_ex_path)} ")
 
