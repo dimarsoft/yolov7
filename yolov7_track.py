@@ -1,5 +1,7 @@
 import json
 import os
+import sys
+import traceback
 from pathlib import Path
 
 from labeltools import TrackWorker
@@ -103,8 +105,12 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
         except Exception as e:
             text_ex_path = Path(output_folder) / f"{source_path.stem}_ex.log"
             with open(text_ex_path, "w") as write_file:
-                write_file.write(str(e))
-            print(f"{e}")
+                write_file.write("Exception in post processing!!!")
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+                for line in lines:
+                    write_file.write(line)
+            print(f"exception in processing {str(e)}")
 
 
 def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, reid_weights,
