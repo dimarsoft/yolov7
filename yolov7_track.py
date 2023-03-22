@@ -209,6 +209,9 @@ def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, r
             lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
             for line in lines:
                 write_file.write(line)
+            for item in test_results.result_items:
+                write_file.write(str(item))
+
         print(f"Exception in save_results {str(e)}! details in {str(text_ex_path)} ")
 
     try:
