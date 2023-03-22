@@ -115,7 +115,7 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
 
 
 def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, reid_weights,
-              test_result_file, test_func=None, classes=None, conf=0.3, save_vid=False):
+              test_result_file, test_func=None, files=None,  classes=None, conf=0.3, save_vid=False):
     """
 
     Args:
@@ -182,8 +182,14 @@ def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, r
         for entry in source_path.iterdir():
             # check if it is a file
             if entry.is_file() and entry.suffix == ".mp4":
-                run_single_video_yolo7(model, str(entry), tracker_type, tracker_config, session_folder,
-                                       reid_weights, test_results, test_func, classes, conf, save_vid)
+                if files is None:
+                    run_single_video_yolo7(model, str(entry), tracker_type, tracker_config, session_folder,
+                                           reid_weights, test_results, test_func, classes, conf, save_vid)
+                else:
+                    if entry.stem in files:
+                        run_single_video_yolo7(model, str(entry), tracker_type, tracker_config, session_folder,
+                                               reid_weights, test_results, test_func, classes, conf, save_vid)
+
     else:
         run_single_video_yolo7(model, source, tracker_type, tracker_config, session_folder,
                                reid_weights, test_results, test_func, classes, conf, save_vid)
@@ -217,7 +223,7 @@ def run_yolo7(model, source, tracker_type: str, tracker_config, output_folder, r
 
 def run_example():
     model = "D:\\AI\\2023\\models\\Yolov7\\25.02.2023_dataset_1.1_yolov7_best.pt"
-    video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\1.mp4"
+    video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\"
     test_file = "D:\\AI\\2023\\TestInfo\\all_track_results.json"
 
     tracker_config = "./trackers/strongsort/configs/strongsort.yaml"
@@ -248,7 +254,7 @@ def run_example():
 
     tracker_config = "trackers/NorFairTracker/configs/norfair_track.yaml"
     run_yolo7(model, video_source, "norfair", tracker_config,
-              output_folder, reid_weights, test_file, save_vid=True)
+              output_folder, reid_weights, test_file, files=['3', '2'], classes=[0],  save_vid=True)
 
 
 def run_test():
