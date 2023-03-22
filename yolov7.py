@@ -64,8 +64,8 @@ class YOLO7:
         x1 = (bbox[:, [0]] + bbox[:, [2]]) / 2
         y1 = (bbox[:, [1]] + bbox[:, [3]]) / 2
 
-        w = abs(bbox[:, [0]] - bbox[:, [2]]) / 4
-        h = abs(bbox[:, [1]] - bbox[:, [3]]) / 4
+        w = 10 # abs(bbox[:, [0]] - bbox[:, [2]]) / 4
+        h = 10 # abs(bbox[:, [1]] - bbox[:, [3]]) / 4
 
         bbox[:, [0]] = x1 - w
         bbox[:, [2]] = x1 + w
