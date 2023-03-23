@@ -11,34 +11,6 @@ from save_txt_tools import yolo8_save_tracks_to_txt, convert_toy7
 from utils.torch_utils import time_synchronized
 
 
-def create_video_with_track(results, source_video, output_file):
-    import cv2
-
-    input_video = cv2.VideoCapture(source_video)
-
-    fps = int(input_video.get(cv2.CAP_PROP_FPS))
-    # ширина
-    w = int(input_video.get(cv2.CAP_PROP_FRAME_WIDTH))
-    # высота
-    h = int(input_video.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
-    # количесто кадров в видео
-    frames_in_video = int(input_video.get(cv2.CAP_PROP_FRAME_COUNT))
-
-    print(f"input = {source_video}, w = {w}, h = {h}, fps = {fps}, frames_in_video = {frames_in_video}")
-
-    output_video = cv2.VideoWriter(str(output_file), cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
-
-    # считываем все фреймы из видео
-    for i in range(frames_in_video):
-        ret, frame = input_video.read()
-
-        output_video.write(frame)
-
-    output_video.release()
-    input_video.release()
-
-
 def run_single_video_yolo8(model, source, tracker, output_folder, test_file, test_func,
                            conf=0.3, save_vid=False, save_vid2=False):
     print(f"start {source}")
@@ -121,7 +93,7 @@ def run_yolo8(model: str, source, tracker, output_folder, test_result_file, test
         os.makedirs(session_folder, exist_ok=True)
         print(f"Directory '{session_folder}' created successfully")
     except OSError as error:
-        print(f"Directory '{session_folder}' can not be created")
+        print(f"Directory '{session_folder}' can not be created. {error}")
 
     import shutil
 
@@ -137,14 +109,16 @@ def run_yolo8(model: str, source, tracker, output_folder, test_result_file, test
 
     shutil.copy(test_result_file, save_test_result_file)
 
+    # заполняем информацию о сессии
     session_info = dict()
 
     session_info['model'] = str(Path(model).name)
-    # session_info['reid_weights'] = str(Path(reid_weights).name)
     session_info['conf'] = conf
     session_info['test_result_file'] = test_result_file
 
     session_info_path = str(Path(session_folder) / 'session_info.json')
+
+    print(f"Save session to '{session_info_path}")
 
     with open(session_info_path, "w") as session_info_file:
         json.dump(session_info, fp=session_info_file, indent=4)
@@ -170,4 +144,3 @@ def run_yolo8(model: str, source, tracker, output_folder, test_result_file, test
 
     test_results.save_results(session_folder)
     test_results.compare_to_file_v2(session_folder)
-
