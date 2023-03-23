@@ -58,8 +58,25 @@ class YOLO7:
             im = im[None]  # expand for batch dim
         return im
 
+    @staticmethod
+    def change_bbox(bbox):
+
+        x1 = (bbox[:, [0]] + bbox[:, [2]]) / 2
+        y1 = (bbox[:, [1]] + bbox[:, [3]]) / 2
+
+        w = 10  # abs(bbox[:, [0]] - bbox[:, [2]]) / 4
+        h = 10  # abs(bbox[:, [1]] - bbox[:, [3]]) / 4
+
+        bbox[:, [0]] = x1 - w
+        bbox[:, [2]] = x1 + w
+
+        bbox[:, [1]] = y1 - h
+        bbox[:, [3]] = y1 + h
+
+        return bbox
+
     def track(self, source, tracker_type, tracker_config, reid_weights="osnet_x0_25_msmt17.pt", conf=0.3, iou=0.4,
-              classes=None):
+              classes=None, change_bb=False):
 
         self.reid_weights = Path(WEIGHTS) / reid_weights
         tracker = create_tracker(tracker_type, tracker_config, self.reid_weights, self.device, self.half)
@@ -103,18 +120,29 @@ class YOLO7:
                         tracker.camera_update(prev_frame, curr_frame)
 
                 for tr_id, predict_track in enumerate(predict):
-                    # Rescale boxes from img_size to im0 size
-                    conv_pred = scale_coords(new_frame.shape[2:], predict_track.cpu(), frame.shape).round()
+                    # predict_track = predict_track.cpu()
+                    if change_bb:
+                        predict_track = self.change_bbox(predict_track)
 
-                    tracker_outputs = tracker.update(conv_pred, frame)
+                    # conf_ = predict_track[:, [4]]
+                    # cls = predict_track[:, [5]]
+
+                    # print(f"cls = {cls}")
+                    # print(f"conf_ = {conf_}")
+
+                    # Rescale boxes from img_size to im0 size
+                    conv_pred = scale_coords(new_frame.shape[2:], predict_track, frame.shape).round()
+
+                    tracker_outputs = tracker.update(conv_pred.cpu(), frame)
                     # tracker_outputs = tracker.update(predict_track.cpu(), frame)
 
                     # print(f"predict_track = {len(tracker_outputs)}")
 
                     # Process detections [f, x1, y1, x2, y2, track_id, class_id, conf]
                     for det_id, detection in enumerate(tracker_outputs):  # detections per image
-                        print(f"{det_id}: bb = {detection[:4]}, id = {detection[4]}, cls = {detection[5]}, "
-                              f"conf = {detection[6]}")
+                        # print(f"{det_id}: detection = {detection}")
+                        # print(f"{det_id}: bb = {detection[:4]}, id = {detection[4]}, cls = {detection[5]}, "
+                        #      f"conf = {detection[6]}")
 
                         x1 = float(detection[0]) / w
                         y1 = float(detection[1]) / h
@@ -123,8 +151,8 @@ class YOLO7:
 
                         left = min(x1, x2)
                         top = min(y1, y2)
-                        width = abs(x1-x2)
-                        height = abs(y1-y2)
+                        width = abs(x1 - x2)
+                        height = abs(y1 - y2)
 
                         if detection[6] is None:
                             print("detection[6] is None")
@@ -140,7 +168,7 @@ class YOLO7:
                                 # conf
                                 float(detection[6])]
 
-                        print(info)
+                        # print(info)
                         results.append(info)
 
             t4 = time_synchronized()
