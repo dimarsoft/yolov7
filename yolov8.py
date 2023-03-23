@@ -2,13 +2,205 @@ import json
 import os
 from datetime import datetime
 
+import cv2
+import numpy as np
+import torch
 from ultralytics import YOLO
 from pathlib import Path
 
+from ultralytics.nn.autobackend import AutoBackend
+from ultralytics.yolo.data.augment import LetterBox
+from ultralytics.yolo.utils.ops import scale_boxes, non_max_suppression
+
 from labeltools import TrackWorker
 from resultools import TestResults
-from save_txt_tools import yolo8_save_tracks_to_txt, convert_toy7
-from utils.torch_utils import time_synchronized
+from save_txt_tools import yolo8_save_tracks_to_txt, convert_toy7, yolo7_save_tracks_to_txt
+from trackers.multi_tracker_zoo import create_tracker
+from utils.datasets import letterbox
+# from utils.general import non_max_suppression, scale_coords
+from utils.torch_utils import time_synchronized, select_device
+
+FILE = Path(__file__).resolve()
+ROOT = FILE.parents[0]  # yolov5 strongsort root directory
+WEIGHTS = ROOT / 'weights'
+
+
+class YOLO8:
+    def __init__(self, weights_path, half=False, device=''):
+        self.device = select_device(device)
+        # Load model
+        # self.model = YOLO(weights_path)
+
+        self.half = half
+        if half:
+            self.half = self.device.type != 'cpu'  # half precision only supported on CUDA
+
+        print(f"device = {self.device}, half = {self.half}")
+
+        # Load model
+
+        self.model = AutoBackend(weights=weights_path,
+                                 fp16=self.half,
+                                 device=self.device)
+
+        self.names = self.model.names
+
+        #        if self.half:
+        #            self.model.half()  # to FP16
+
+        self.reid_weights = Path(WEIGHTS) / 'osnet_x0_25_msmt17.pt'  # model.pt path,
+
+    def _to_tensor(self, im):
+        im = torch.from_numpy(im).to(self.device)
+        im = im.half() if self.half else im.float()  # uint8 to fp16/32
+        im /= 255.0  # 0 - 255 to 0.0 - 1.0
+        if len(im.shape) == 3:
+            im = im[None]  # expand for batch dim
+        return im
+
+    def to_tensor(self, frame):
+        img = frame  # , _, _ = letterbox(frame)
+
+        # Padded resize
+        img = LetterBox()(image=img)
+
+        img = img.transpose((2, 0, 1))[::-1]  # HWC to CHW, BGR to RGB
+        img = np.ascontiguousarray(img)  # contiguous
+
+        # Convert
+        img = torch.from_numpy(img).to(self.device)
+        img = img.half() if self.half else img.float()  # uint8 to fp16/32
+        img /= 255.0  # 0 - 255 to 0.0 - 1.0
+
+        if len(img.shape) == 3:
+            img = img[None]  # expand for batch dim
+
+        return img
+
+    def track(self, source, tracker_type, tracker_config, reid_weights="osnet_x0_25_msmt17.pt", conf=0.3, iou=0.4,
+              classes=None, change_bb=False):
+
+        self.reid_weights = Path(WEIGHTS) / reid_weights
+        tracker = create_tracker(tracker_type, tracker_config, self.reid_weights, self.device, self.half)
+
+        input_video = cv2.VideoCapture(source)
+
+        fps = int(input_video.get(cv2.CAP_PROP_FPS))
+        # ширина
+        w = int(input_video.get(cv2.CAP_PROP_FRAME_WIDTH))
+        # высота
+        h = int(input_video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+        # количесто кадров в видео
+        frames_in_video = int(input_video.get(cv2.CAP_PROP_FRAME_COUNT))
+
+        print(f"input = {source}, w = {w}, h = {h}, fps = {fps}, frames_in_video = {frames_in_video}")
+
+        curr_frame, prev_frame = None, None
+
+        results = []
+
+        for frame_id in range(frames_in_video):
+            ret, frame = input_video.read()
+
+            # Inference
+            t1 = time_synchronized()
+            s = ""
+
+            with torch.no_grad():  # Calculating gradients would cause a GPU memory leak
+                new_frame = self.to_tensor(frame)
+                predict = self.model(new_frame)[0]
+                t2 = time_synchronized()
+
+                # Apply NMS
+                # predict = non_max_suppression(predict, conf, iou, classes=classes)
+                predict = non_max_suppression(predict, conf, iou, classes=classes)
+                t3 = time_synchronized()
+
+                curr_frame = frame
+
+                if hasattr(tracker, 'camera_update'):
+                    if prev_frame is not None and curr_frame is not None:  # camera motion compensation
+                        tracker.camera_update(prev_frame, curr_frame)
+
+                dets = 0
+                for tr_id, predict_track in enumerate(predict):
+                    if predict_track is not None and len(predict_track) > 0:
+
+                        dets += 1
+                        bbox = predict_track[:, :4]
+                        conf_ = predict_track[:, [4]]
+                        cls = predict_track[:, [5]]
+
+                        # print(f"cls = {cls}")
+                        # print(f"conf_ = {conf_}")
+                        # print(f"bbox = {bbox}")
+
+                        # Rescale boxes from img_size to im0 size
+                        predict_track[:, :4] = scale_boxes(new_frame.shape[2:], predict_track[:, :4],
+                                                           new_frame.shape).round()  # rescale boxes to im0 size
+
+                        # Print results
+                        for c in predict_track[:, 5].unique():
+                            n = (predict_track[:, 5] == c).sum()  # detections per class
+                            s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "  # add to string
+
+                        # conv_pred = scale_coords(new_frame.shape[2:], predict_track, frame.shape).round()
+
+                        tracker_outputs = tracker.update(predict_track.cpu(), frame)
+
+                        # print(f"tracker_outputs count = {len(tracker_outputs)}")
+
+                        # Process detections [f, x1, y1, x2, y2, track_id, class_id, conf]
+                        for det_id, detection in enumerate(tracker_outputs):  # detections per image
+
+                            bbox = detection[0:4]
+                            track_id = detection[4]
+                            cls = detection[5]
+                            conf = detection[6]
+
+                            x1 = float(detection[0]) / w
+                            y1 = float(detection[1]) / h
+                            x2 = float(detection[2]) / w
+                            y2 = float(detection[3]) / h
+
+                            left = min(x1, x2)
+                            top = min(y1, y2)
+                            width = abs(x1 - x2)
+                            height = abs(y1 - y2)
+
+                            if detection[6] is None:
+                                print("detection[6] is None")
+                                continue
+
+                            info = [frame_id,
+                                    left, top,
+                                    width, height,
+                                    # id
+                                    int(detection[4]),
+                                    # cls
+                                    int(detection[5]),
+                                    # conf
+                                    float(detection[6])]
+
+                            # print(info)
+                            results.append(info)
+
+                ss = f"{s}{'' if dets > 0 else '(no detections), '}"
+
+                t4 = time_synchronized()
+
+                prev_frame = frame
+
+                # Print total time (preprocessing + inference + NMS + tracking)
+
+                # Print time (inference + NMS)
+                print(f'frame ({frame_id + 1}/{frames_in_video}) Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, '
+                      f'({(1E3 * (t3 - t2)):.1f}ms) NMS, {(1E3 * (t4 - t3)):.1f}ms) [{ss}]')
+
+        input_video.release()
+
+        return results
 
 
 def run_single_video_yolo8(model, source, tracker, output_folder, test_file, test_func,
@@ -82,10 +274,10 @@ def run_yolo8(model: str, source, tracker, output_folder, test_result_file, test
 
     now = datetime.now()
 
-    tracker_path = Path(tracker)
+    # tracker_path = Path(tracker)
 
     session_folder_name = f"{now.year:04d}_{now.month:02d}_{now.day:02d}_{now.hour:02d}_{now.minute:02d}_" \
-                          f"{now.second:02d}_y8_{tracker_path.stem}"
+                          f"{now.second:02d}_y8_{tracker}"
 
     session_folder = str(Path(output_folder) / session_folder_name)
 
@@ -97,11 +289,11 @@ def run_yolo8(model: str, source, tracker, output_folder, test_result_file, test
 
     import shutil
 
-    save_tracker_config = str(Path(session_folder) / tracker_path.name)
+    # save_tracker_config = str(Path(session_folder) / tracker_path.name)
 
-    print(f"Copy '{tracker_path}' to '{save_tracker_config}")
+    # print(f"Copy '{tracker_path}' to '{save_tracker_config}")
 
-    shutil.copy(str(tracker_path), save_tracker_config)
+    # shutil.copy(str(tracker_path), save_tracker_config)
 
     save_test_result_file = str(Path(session_folder) / Path(test_result_file).name)
 
@@ -144,3 +336,43 @@ def run_yolo8(model: str, source, tracker, output_folder, test_result_file, test
 
     test_results.save_results(session_folder)
     test_results.compare_to_file_v2(session_folder)
+
+
+def run_example():
+    model = "D:\\AI\\2023\\models\\Yolo8s_batch32_epoch100.pt"
+    video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\"
+    test_file = "D:\\AI\\2023\\TestInfo\\all_track_results.json"
+
+    tracker_config = "./trackers/strongsort/configs/strongsort.yaml"
+    output_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\"
+    reid_weights = "osnet_x0_25_msmt17.pt"
+    # run_yolo7(model, video_source, "strongsort", tracker_config, output_folder, reid_weights, test_file)
+
+    tracker_config = "trackers/deep_sort/configs/deepsort.yaml"
+    reid_weights = "mars-small128.pb"
+    # run_yolo7(model, video_source, "deepsort", tracker_config, output_folder, reid_weights)
+
+    tracker_config = "trackers/botsort/configs/botsort.yaml"
+    reid_weights = "osnet_x0_25_msmt17.pt"
+    # run_yolo7(model, video_source, "botsort", tracker_config, output_folder, reid_weights)
+
+    tracker_config = "trackers/ocsort/configs/ocsort.yaml"
+    reid_weights = "osnet_x0_25_msmt17.pt"
+    # run_yolo7(model, video_source, "ocsort", tracker_config, output_folder, reid_weights)
+
+    tracker_config = "trackers/bytetrack/configs/bytetrack.yaml"
+    reid_weights = "osnet_x0_25_msmt17.pt"
+    # run_yolo7(model, video_source, "bytetrack", tracker_config, output_folder, reid_weights)
+
+    tracker_config = "trackers/fast_deep_sort/configs/fastdeepsort.yaml"
+    reid_weights = "mars-small128.pb"
+    # run_yolo7(model, video_source, "fastdeepsort", tracker_config,
+    #          output_folder, reid_weights, test_file, save_vid=True)
+
+    tracker_config = "trackers/botsort/configs/botsort.yaml"
+    run_yolo8(model, video_source, "botsort",
+              output_folder, test_file, test_func=None)
+
+
+if __name__ == '__main__':
+    run_example()
