@@ -124,22 +124,23 @@ class YOLO7:
                     if change_bb:
                         predict_track = self.change_bbox(predict_track)
 
-                    cls = predict_track[:, [4]]
-                    conf_ = predict_track[:, [5]]
+                    conf_ = predict_track[:, [4]]
+                    cls = predict_track[:, [5]]
 
                     print(f"cls = {cls}")
                     print(f"conf_ = {conf_}")
 
                     # Rescale boxes from img_size to im0 size
-                    conv_pred = scale_coords(new_frame.shape[2:], predict_track.cpu(), frame.shape).round()
+                    conv_pred = scale_coords(new_frame.shape[2:], predict_track, frame.shape).round()
 
-                    tracker_outputs = tracker.update(conv_pred, frame)
+                    tracker_outputs = tracker.update(conv_pred.cpu(), frame)
                     # tracker_outputs = tracker.update(predict_track.cpu(), frame)
 
                     # print(f"predict_track = {len(tracker_outputs)}")
 
                     # Process detections [f, x1, y1, x2, y2, track_id, class_id, conf]
                     for det_id, detection in enumerate(tracker_outputs):  # detections per image
+                        print(f"{det_id}: detection = {detection}")
                         print(f"{det_id}: bb = {detection[:4]}, id = {detection[4]}, cls = {detection[5]}, "
                               f"conf = {detection[6]}")
 
