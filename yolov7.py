@@ -120,13 +120,18 @@ class YOLO7:
                         tracker.camera_update(prev_frame, curr_frame)
 
                 for tr_id, predict_track in enumerate(predict):
-                    predict_track = predict_track.cpu()
+                    # predict_track = predict_track.cpu()
                     if change_bb:
                         predict_track = self.change_bbox(predict_track)
-                        pass
+
+                    cls = predict_track[:, [4]]
+                    conf_ = predict_track[:, [5]]
+
+                    print(f"cls = {cls}")
+                    print(f"conf_ = {conf_}")
 
                     # Rescale boxes from img_size to im0 size
-                    conv_pred = scale_coords(new_frame.shape[2:], predict_track, frame.shape).round()
+                    conv_pred = scale_coords(new_frame.shape[2:], predict_track.cpu(), frame.shape).round()
 
                     tracker_outputs = tracker.update(conv_pred, frame)
                     # tracker_outputs = tracker.update(predict_track.cpu(), frame)

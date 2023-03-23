@@ -273,10 +273,7 @@ def run_test():
 
     convert_and_save(video_source_folder)
 
-
-if __name__ == '__main__':
-    # run_example()
-
+def test_tensor():
     tensor = torch.zeros(3, 6)
     tensor[:, [2]] = 50
     tensor[:, [3]] = 50
@@ -287,3 +284,8 @@ if __name__ == '__main__':
     tensor2 = YOLO7.change_bbox(tensor)
 
     print(tensor2)
+
+
+if __name__ == '__main__':
+    run_example()
+
