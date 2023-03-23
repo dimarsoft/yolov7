@@ -64,8 +64,8 @@ class YOLO7:
         x1 = (bbox[:, [0]] + bbox[:, [2]]) / 2
         y1 = (bbox[:, [1]] + bbox[:, [3]]) / 2
 
-        w = 10 # abs(bbox[:, [0]] - bbox[:, [2]]) / 4
-        h = 10 # abs(bbox[:, [1]] - bbox[:, [3]]) / 4
+        w = 10  # abs(bbox[:, [0]] - bbox[:, [2]]) / 4
+        h = 10  # abs(bbox[:, [1]] - bbox[:, [3]]) / 4
 
         bbox[:, [0]] = x1 - w
         bbox[:, [2]] = x1 + w
@@ -124,11 +124,11 @@ class YOLO7:
                     if change_bb:
                         predict_track = self.change_bbox(predict_track)
 
-                    conf_ = predict_track[:, [4]]
-                    cls = predict_track[:, [5]]
+                    # conf_ = predict_track[:, [4]]
+                    # cls = predict_track[:, [5]]
 
-                    print(f"cls = {cls}")
-                    print(f"conf_ = {conf_}")
+                    # print(f"cls = {cls}")
+                    # print(f"conf_ = {conf_}")
 
                     # Rescale boxes from img_size to im0 size
                     conv_pred = scale_coords(new_frame.shape[2:], predict_track, frame.shape).round()
@@ -140,9 +140,9 @@ class YOLO7:
 
                     # Process detections [f, x1, y1, x2, y2, track_id, class_id, conf]
                     for det_id, detection in enumerate(tracker_outputs):  # detections per image
-                        print(f"{det_id}: detection = {detection}")
-                        print(f"{det_id}: bb = {detection[:4]}, id = {detection[4]}, cls = {detection[5]}, "
-                              f"conf = {detection[6]}")
+                        # print(f"{det_id}: detection = {detection}")
+                        # print(f"{det_id}: bb = {detection[:4]}, id = {detection[4]}, cls = {detection[5]}, "
+                        #      f"conf = {detection[6]}")
 
                         x1 = float(detection[0]) / w
                         y1 = float(detection[1]) / h
@@ -168,7 +168,7 @@ class YOLO7:
                                 # conf
                                 float(detection[6])]
 
-                        print(info)
+                        # print(info)
                         results.append(info)
 
             t4 = time_synchronized()
