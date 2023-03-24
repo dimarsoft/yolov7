@@ -117,7 +117,7 @@ def run_yolo8v2(model: str, source: str, tracker_type: str, tracker_config, outp
     now = datetime.now()
 
     session_folder_name = f"{now.year:04d}_{now.month:02d}_{now.day:02d}_{now.hour:02d}_{now.minute:02d}_" \
-                          f"{now.second:02d}_y7_{tracker_type}"
+                          f"{now.second:02d}_y8v2_{tracker_type}"
 
     session_folder = str(Path(output_folder) / session_folder_name)
 
