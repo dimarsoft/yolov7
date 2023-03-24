@@ -14,9 +14,10 @@ from ultralytics.yolo.utils.ops import scale_boxes, non_max_suppression
 
 from labeltools import TrackWorker
 from resultools import TestResults
-from save_txt_tools import yolo8_save_tracks_to_txt, convert_toy7, yolo7_save_tracks_to_txt
+from save_txt_tools import yolo8_save_tracks_to_txt, convert_toy7
 from trackers.multi_tracker_zoo import create_tracker
 from utils.torch_utils import time_synchronized, select_device
+from yolov7 import YOLO7
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # yolov5 strongsort root directory
@@ -26,8 +27,6 @@ WEIGHTS = ROOT / 'weights'
 class YOLO8:
     def __init__(self, weights_path, half=False, device=''):
         self.device = select_device(device)
-        # Load model
-        # self.model = YOLO(weights_path)
 
         self.half = half
         if half:
@@ -117,6 +116,9 @@ class YOLO8:
                 empty_conf_count = 0
                 for tr_id, predict_track in enumerate(predict):
                     if predict_track is not None and len(predict_track) > 0:
+
+                        if change_bb:
+                            predict_track = YOLO7.change_bbox(predict_track)
 
                         dets += 1
                         # bbox = predict_track[:, :4]
