@@ -138,7 +138,7 @@ class YOLO8:
 
                         # Rescale boxes from img_size to im0 size
                         predict_track[:, :4] = scale_boxes(new_frame.shape[2:], predict_track[:, :4],
-                                                           new_frame.shape).round()  # rescale boxes to im0 size
+                                                           frame.shape).round()  # rescale boxes to im0 size
 
                         # Print results
                         for c in predict_track[:, 5].unique():
@@ -159,10 +159,10 @@ class YOLO8:
                             # cls = detection[5]
                             # conf = detection[6]
 
-                            x1 = float(detection[0])
-                            y1 = float(detection[1])
-                            x2 = float(detection[2])
-                            y2 = float(detection[3])
+                            x1 = float(detection[0]) / w
+                            y1 = float(detection[1]) / h
+                            x2 = float(detection[2]) / w
+                            y2 = float(detection[3]) / h
 
                             left = min(x1, x2)
                             top = min(y1, y2)
