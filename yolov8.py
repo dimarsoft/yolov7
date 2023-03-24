@@ -16,8 +16,6 @@ from labeltools import TrackWorker
 from resultools import TestResults
 from save_txt_tools import yolo8_save_tracks_to_txt, convert_toy7, yolo7_save_tracks_to_txt
 from trackers.multi_tracker_zoo import create_tracker
-from utils.datasets import letterbox
-# from utils.general import non_max_suppression, scale_coords
 from utils.torch_utils import time_synchronized, select_device
 
 FILE = Path(__file__).resolve()
@@ -50,19 +48,12 @@ class YOLO8:
 
         self.reid_weights = Path(WEIGHTS) / 'osnet_x0_25_msmt17.pt'  # model.pt path,
 
-    def _to_tensor(self, im):
-        im = torch.from_numpy(im).to(self.device)
-        im = im.half() if self.half else im.float()  # uint8 to fp16/32
-        im /= 255.0  # 0 - 255 to 0.0 - 1.0
-        if len(im.shape) == 3:
-            im = im[None]  # expand for batch dim
-        return im
+        self.letter_box = LetterBox()
 
-    def to_tensor(self, frame):
-        img = frame  # , _, _ = letterbox(frame)
+    def to_tensor(self, img):
 
         # Padded resize
-        img = LetterBox()(image=img)
+        img = self.letter_box(image=img)
 
         img = img.transpose((2, 0, 1))[::-1]  # HWC to CHW, BGR to RGB
         img = np.ascontiguousarray(img)  # contiguous
@@ -113,7 +104,6 @@ class YOLO8:
                 t2 = time_synchronized()
 
                 # Apply NMS
-                # predict = non_max_suppression(predict, conf, iou, classes=classes)
                 predict = non_max_suppression(predict, conf, iou, classes=classes)
                 t3 = time_synchronized()
 
@@ -124,6 +114,7 @@ class YOLO8:
                         tracker.camera_update(prev_frame, curr_frame)
 
                 dets = 0
+                empty_conf_count = 0
                 for tr_id, predict_track in enumerate(predict):
                     if predict_track is not None and len(predict_track) > 0:
 
@@ -152,6 +143,9 @@ class YOLO8:
                         # print(f"tracker_outputs count = {len(tracker_outputs)}")
 
                         # Process detections [f, x1, y1, x2, y2, track_id, class_id, conf]
+
+                        # empty_conf_count += (tracker_outputs[:, 6] is None).sum()  # detections per class
+
                         for det_id, detection in enumerate(tracker_outputs):  # detections per image
 
                             # bbox = detection[0:4]
@@ -170,7 +164,8 @@ class YOLO8:
                             height = abs(y1 - y2)
 
                             if detection[6] is None:
-                                print("detection[6] is None")
+                                # print("detection[6] is None")
+                                empty_conf_count += 1
                                 continue
 
                             info = [frame_id,
@@ -186,7 +181,9 @@ class YOLO8:
                             # print(info)
                             results.append(info)
 
-                ss = f"{s}{'' if dets > 0 else '(no detections), '}"
+                detections_info = f"{s}{'' if dets > 0 else ', (no detections)'}"
+
+                empty_conf_count_str = f"{'' if empty_conf_count == 0 else f', empty_confs = {empty_conf_count}'}"
 
                 t4 = time_synchronized()
 
@@ -196,7 +193,8 @@ class YOLO8:
 
                 # Print time (inference + NMS)
                 print(f'frame ({frame_id + 1}/{frames_in_video}) Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, '
-                      f'({(1E3 * (t3 - t2)):.1f}ms) NMS, {(1E3 * (t4 - t3)):.1f}ms) [{ss}]')
+                      f'({(1E3 * (t3 - t2)):.1f}ms) NMS, {(1E3 * (t4 - t3)):.1f}ms) '
+                      f'{detections_info} {empty_conf_count_str}')
 
         input_video.release()
 
