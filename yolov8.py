@@ -154,15 +154,15 @@ class YOLO8:
                         # Process detections [f, x1, y1, x2, y2, track_id, class_id, conf]
                         for det_id, detection in enumerate(tracker_outputs):  # detections per image
 
-                            bbox = detection[0:4]
-                            track_id = detection[4]
-                            cls = detection[5]
+                            # bbox = detection[0:4]
+                            # track_id = detection[4]
+                            # cls = detection[5]
                             # conf = detection[6]
 
-                            x1 = float(detection[0]) / w
-                            y1 = float(detection[1]) / h
-                            x2 = float(detection[2]) / w
-                            y2 = float(detection[3]) / h
+                            x1 = float(detection[0])
+                            y1 = float(detection[1])
+                            x2 = float(detection[2])
+                            y2 = float(detection[3])
 
                             left = min(x1, x2)
                             top = min(y1, y2)
