@@ -128,9 +128,9 @@ class YOLO8:
                     if predict_track is not None and len(predict_track) > 0:
 
                         dets += 1
-                        bbox = predict_track[:, :4]
-                        conf_ = predict_track[:, [4]]
-                        cls = predict_track[:, [5]]
+                        # bbox = predict_track[:, :4]
+                        # conf_ = predict_track[:, [4]]
+                        # cls = predict_track[:, [5]]
 
                         # print(f"cls = {cls}")
                         # print(f"conf_ = {conf_}")
@@ -157,7 +157,7 @@ class YOLO8:
                             bbox = detection[0:4]
                             track_id = detection[4]
                             cls = detection[5]
-                            conf = detection[6]
+                            # conf = detection[6]
 
                             x1 = float(detection[0]) / w
                             y1 = float(detection[1]) / h
