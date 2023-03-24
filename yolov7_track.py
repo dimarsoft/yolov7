@@ -60,6 +60,11 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
 
         print(f"Processed '{source}' to {output_folder}: ({(1E3 * (t2 - t1)):.1f} ms)")
 
+    num, w, h = get_camera(source)
+    bound_line = bound_line_cameras.get(num)
+
+    print(f"num = {num}, w = {w}, h = {h}, bound_line = {bound_line}")
+
     # count humans
     if test_func is not None:
         try:
@@ -91,7 +96,7 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
                 #  width, height,
                 #  int(detection[4]), int(detection[5]), float(detection[6])]
                 # [frame_index, track_id, cls, bbox_left, bbox_top, bbox_w, bbox_h, box.conf]
-                humans_result = test_func(tracks_new)
+                humans_result = test_func(tracks_new, num, w, h, bound_line)
                 humans_result.file = source_path.name
                 # add result
                 test_file.add_test(humans_result)

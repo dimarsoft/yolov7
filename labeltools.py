@@ -484,7 +484,7 @@ class TrackWorker:
                 label.human_pos = HumanPos.below
 
     # заделить трек по id
-    # получаем словать: ключ = id, значение список треков по это id
+    # получаем словарь: ключ = id, значение список треков по это id
     # также указываем класс
     @staticmethod
     def get_tracks_info_by_id(tracks, label_type: Labels = Labels.human):
