@@ -162,61 +162,62 @@ class YOLO7:
                 empty_conf_count = 0
 
                 for tr_id, predict_track in enumerate(predict):
-                    dets += 1
-                    predict_track = self.change_bbox(predict_track, change_bb)
+                    if predict_track is not None and len(predict_track) > 0:
+                        dets += 1
+                        predict_track = self.change_bbox(predict_track, change_bb)
 
-                    # conf_ = predict_track[:, [4]]
-                    # cls = predict_track[:, [5]]
+                        # conf_ = predict_track[:, [4]]
+                        # cls = predict_track[:, [5]]
 
-                    # print(f"cls = {cls}")
-                    # print(f"conf_ = {conf_}")
+                        # print(f"cls = {cls}")
+                        # print(f"conf_ = {conf_}")
 
-                    # Rescale boxes from img_size to im0 size
-                    conv_pred = scale_coords(new_frame.shape[2:], predict_track, frame.shape).round()
+                        # Rescale boxes from img_size to im0 size
+                        conv_pred = scale_coords(new_frame.shape[2:], predict_track, frame.shape).round()
 
-                    # Print results
-                    for c in predict_track[:, 5].unique():
-                        n = (predict_track[:, 5] == c).sum()  # detections per class
-                        s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "  # add to string
+                        # Print results
+                        for c in predict_track[:, 5].unique():
+                            n = (predict_track[:, 5] == c).sum()  # detections per class
+                            s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "  # add to string
 
-                    tracker_outputs = tracker.update(conv_pred.cpu(), frame)
-                    # tracker_outputs = tracker.update(predict_track.cpu(), frame)
+                        tracker_outputs = tracker.update(conv_pred.cpu(), frame)
+                        # tracker_outputs = tracker.update(predict_track.cpu(), frame)
 
-                    # print(f"predict_track = {len(tracker_outputs)}")
+                        # print(f"predict_track = {len(tracker_outputs)}")
 
-                    # Process detections [f, x1, y1, x2, y2, track_id, class_id, conf]
-                    for det_id, detection in enumerate(tracker_outputs):  # detections per image
-                        # print(f"{det_id}: detection = {detection}")
-                        # print(f"{det_id}: bb = {detection[:4]}, id = {detection[4]}, cls = {detection[5]}, "
-                        #      f"conf = {detection[6]}")
+                        # Process detections [f, x1, y1, x2, y2, track_id, class_id, conf]
+                        for det_id, detection in enumerate(tracker_outputs):  # detections per image
+                            # print(f"{det_id}: detection = {detection}")
+                            # print(f"{det_id}: bb = {detection[:4]}, id = {detection[4]}, cls = {detection[5]}, "
+                            #      f"conf = {detection[6]}")
 
-                        x1 = float(detection[0]) / w
-                        y1 = float(detection[1]) / h
-                        x2 = float(detection[2]) / w
-                        y2 = float(detection[3]) / h
+                            x1 = float(detection[0]) / w
+                            y1 = float(detection[1]) / h
+                            x2 = float(detection[2]) / w
+                            y2 = float(detection[3]) / h
 
-                        left = min(x1, x2)
-                        top = min(y1, y2)
-                        width = abs(x1 - x2)
-                        height = abs(y1 - y2)
+                            left = min(x1, x2)
+                            top = min(y1, y2)
+                            width = abs(x1 - x2)
+                            height = abs(y1 - y2)
 
-                        if detection[6] is None:
-                            # print("detection[6] is None")
-                            empty_conf_count += 1
-                            continue
+                            if detection[6] is None:
+                                # print("detection[6] is None")
+                                empty_conf_count += 1
+                                continue
 
-                        info = [frame_id,
-                                left, top,
-                                width, height,
-                                # id
-                                int(detection[4]),
-                                # cls
-                                int(detection[5]),
-                                # conf
-                                float(detection[6])]
+                            info = [frame_id,
+                                    left, top,
+                                    width, height,
+                                    # id
+                                    int(detection[4]),
+                                    # cls
+                                    int(detection[5]),
+                                    # conf
+                                    float(detection[6])]
 
-                        # print(info)
-                        results.append(info)
+                            # print(info)
+                            results.append(info)
 
             t4 = time_synchronized()
 
