@@ -118,7 +118,11 @@ def run_yolo7(model: str, source: str, tracker_type: str, tracker_config, output
     """
 
     Args:
-        change_bb: менять bbox после детекции для трекера,
+        change_bb(bool, float):
+                None или False bbox меняться не будет
+                True -  bbox на квадрат 20/20
+                float - w*scale/h*scale
+                менять bbox после детекции для трекера,
                    bbox будет меньше и по центру человека
         files: если указана папка, но можно указать имена фай1лов,
                 которые будут обрабатываться. ['1', '2' ...]
@@ -304,12 +308,13 @@ def test_tensor():
     tensor[:, [5]] = 60
     print(tensor)
 
-    tensor2 = YOLO7.change_bbox(tensor)
+    tensor2 = YOLO7.change_bbox(tensor, 0.5)
 
     print(tensor2)
 
 
 if __name__ == '__main__':
     # run_example()
-    run_test()
+    # run_test()
+    test_tensor()
 

@@ -117,8 +117,7 @@ class YOLO8:
                 for tr_id, predict_track in enumerate(predict):
                     if predict_track is not None and len(predict_track) > 0:
 
-                        if change_bb:
-                            predict_track = YOLO7.change_bbox(predict_track)
+                        predict_track = YOLO7.change_bbox(predict_track, change_bb)
 
                         dets += 1
                         # bbox = predict_track[:, :4]

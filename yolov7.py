@@ -59,7 +59,19 @@ class YOLO7:
         return im
 
     @staticmethod
-    def change_bbox(bbox):
+    def change_bbox(bbox, change_bb):
+
+        if change_bb is None:
+            return bbox
+
+        if isinstance(change_bb, float):
+            return YOLO7.change_bbox_v2(bbox, change_bb)
+
+        if not isinstance(change_bb, bool):
+            return bbox
+
+        if not change_bb:
+            return bbox
 
         x1 = (bbox[:, [0]] + bbox[:, [2]]) / 2
         y1 = (bbox[:, [1]] + bbox[:, [3]]) / 2
@@ -72,6 +84,30 @@ class YOLO7:
 
         bbox[:, [1]] = y1 - h
         bbox[:, [3]] = y1 + h
+
+        return bbox
+
+    @staticmethod
+    def change_bbox_v2(bbox, scale: float):
+        """
+
+        Args:
+            bbox: bbox на замену
+            scale (float):
+        """
+        x1_center = (bbox[:, [0]] + bbox[:, [2]]) / 2
+        y1_center = (bbox[:, [1]] + bbox[:, [3]]) / 2
+
+        scale /= 2
+
+        w = abs(bbox[:, [0]] - bbox[:, [2]]) * scale
+        h = abs(bbox[:, [1]] - bbox[:, [3]]) * scale
+
+        bbox[:, [0]] = x1_center - w
+        bbox[:, [2]] = x1_center + w
+
+        bbox[:, [1]] = y1_center - h
+        bbox[:, [3]] = y1_center + h
 
         return bbox
 
@@ -120,8 +156,9 @@ class YOLO7:
                         tracker.camera_update(prev_frame, curr_frame)
 
                 for tr_id, predict_track in enumerate(predict):
+
                     if change_bb:
-                        predict_track = self.change_bbox(predict_track)
+                        predict_track = self.change_bbox(predict_track, change_bb)
 
                     # conf_ = predict_track[:, [4]]
                     # cls = predict_track[:, [5]]
