@@ -31,6 +31,10 @@ bound_line_cameras = load_bound_line(config["cameras_path"])
 print(bound_line_cameras)
 
 
+def read_bound_line_cameras(file_path):
+    bound_line_cameras = load_bound_line(file_path)
+
+
 def get_centrmass(p1, p2):
     res = (int((p2[0] + p1[0]) / 2), int(p2[1] + 0.35 * (p1[1] - p2[1])))
     return res

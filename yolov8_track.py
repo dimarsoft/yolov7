@@ -2,44 +2,32 @@ import json
 import os
 import sys
 import traceback
+from datetime import datetime
 from pathlib import Path
-
-import torch
 
 from configs import load_default_bound_line, CAMERAS_PATH
 from labeltools import TrackWorker
 from post_processing.alex import alex_count_humans
-from post_processing.timur import timur_count_humans, get_camera, convert_and_save
+from post_processing.timur import timur_count_humans, get_camera
 from resultools import TestResults
 from save_txt_tools import yolo7_save_tracks_to_txt
 from utils.torch_utils import time_synchronized
-from yolov7 import YOLO7
-from datetime import datetime
-# from tqdm import tqdm
+from yolov7_track import save_exception
+from yolov8 import YOLO8
 
 # настройки камер, считываются при старте сессии
 cameras_info = {}
 
 
-def save_exception(e: Exception, text_ex_path, caption: str):
-    with open(text_ex_path, "w") as write_file:
-        write_file.write(f"Exception in {caption}!!!")
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-        for line in lines:
-            write_file.write(line)
-    print(f"Exception in {caption} {str(e)}! details in {str(text_ex_path)} ")
-
-
-def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, output_folder,
-                           reid_weights, test_file, test_func,
-                           classes=None, change_bb=False, conf=0.3, save_vid=False):
+def run_single_video_yolo8v2(model, source, tracker_type: str, tracker_config, output_folder,
+                             reid_weights, test_file, test_func,
+                             classes=None, change_bb=False, conf=0.3, save_vid=False):
     print(f"start {source}")
 
     source_path = Path(source)
     text_path = Path(output_folder) / f"{source_path.stem}.txt"
 
-    model = YOLO7(model)
+    model = YOLO8(model)
 
     track = model.track(
         source=source,
@@ -65,7 +53,6 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
         print(f"Processed '{source}' to {output_folder}: ({(1E3 * (t2 - t1)):.1f} ms)")
 
     num, w, h = get_camera(source)
-
     bound_line = cameras_info.get(num)
 
     print(f"num = {num}, w = {w}, h = {h}, bound_line = {bound_line}")
@@ -101,8 +88,10 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
                 #  width, height,
                 #  int(detection[4]), int(detection[5]), float(detection[6])]
                 # [frame_index, track_id, cls, bbox_left, bbox_top, bbox_w, bbox_h, box.conf]
+                # humans_result = test_func(tracks_new)
                 # bound_line =  [[490, 662], [907, 613]]
                 # num(str), w(int), h(int)
+
                 humans_result = test_func(tracks_new, num, w, h, bound_line)
                 humans_result.file = source_path.name
                 # add result
@@ -113,8 +102,8 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
             save_exception(e, text_ex_path, "post processing")
 
 
-def run_yolo7(model: str, source: str, tracker_type: str, tracker_config, output_folder, reid_weights,
-              test_result_file, test_func=None, files=None,  classes=None, change_bb=False, conf=0.3, save_vid=False):
+def run_yolo8v2(model: str, source: str, tracker_type: str, tracker_config, output_folder, reid_weights,
+                test_result_file, test_func=None, files=None, classes=None, change_bb=False, conf=0.3, save_vid=False):
     """
 
     Args:
@@ -134,6 +123,7 @@ def run_yolo7(model: str, source: str, tracker_type: str, tracker_config, output
         source: путь к видео, если папка, то для каждого видео файла запустит
         model (str): модель для YOLO7
     """
+
     # при старте сессии считываем настройки камер
     global cameras_info
     cameras_info = load_default_bound_line()
@@ -145,7 +135,7 @@ def run_yolo7(model: str, source: str, tracker_type: str, tracker_config, output
     now = datetime.now()
 
     session_folder_name = f"{now.year:04d}_{now.month:02d}_{now.day:02d}_{now.hour:02d}_{now.minute:02d}_" \
-                          f"{now.second:02d}_y7_{tracker_type}"
+                          f"{now.second:02d}_y8v2_{tracker_type}"
 
     session_folder = str(Path(output_folder) / session_folder_name)
 
@@ -179,7 +169,6 @@ def run_yolo7(model: str, source: str, tracker_type: str, tracker_config, output
     session_info['files'] = files
     session_info['classes'] = classes
     session_info['change_bb'] = change_bb
-
     session_info['cameras_path'] = str(CAMERAS_PATH)
 
     if isinstance(test_func, str):
@@ -199,22 +188,22 @@ def run_yolo7(model: str, source: str, tracker_type: str, tracker_config, output
             # check if it is a file
             if entry.is_file() and entry.suffix == ".mp4":
                 if files is None:
-                    run_single_video_yolo7(model, str(entry), tracker_type, tracker_config, session_folder,
-                                           reid_weights, test_results, test_func,
-                                           classes, change_bb, conf, save_vid)
+                    run_single_video_yolo8v2(model, str(entry), tracker_type, tracker_config, session_folder,
+                                             reid_weights, test_results, test_func,
+                                             classes, change_bb, conf, save_vid)
                 else:
                     if entry.stem in files:
-                        run_single_video_yolo7(model, str(entry), tracker_type, tracker_config, session_folder,
-                                               reid_weights, test_results, test_func,
-                                               classes, change_bb, conf, save_vid)
+                        run_single_video_yolo8v2(model, str(entry), tracker_type, tracker_config, session_folder,
+                                                 reid_weights, test_results, test_func,
+                                                 classes, change_bb, conf, save_vid)
 
     else:
         print(f"process file: {source_path}")
-        run_single_video_yolo7(model, source, tracker_type, tracker_config, session_folder,
-                               reid_weights, test_results, test_func, classes,
-                               change_bb=change_bb,
-                               conf=conf,
-                               save_vid=save_vid)
+        run_single_video_yolo8v2(model, source, tracker_type, tracker_config, session_folder,
+                                 reid_weights, test_results, test_func, classes,
+                                 change_bb=change_bb,
+                                 conf=conf,
+                                 save_vid=save_vid)
 
     # save results
 
@@ -241,7 +230,7 @@ def run_yolo7(model: str, source: str, tracker_type: str, tracker_config, output
 
 
 def run_example():
-    model = "D:\\AI\\2023\\models\\Yolov7\\25.02.2023_dataset_1.1_yolov7_best.pt"
+    model = "D:\\AI\\2023\\models\\Yolo8s_batch32_epoch100.pt"
     video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\"
     test_file = "D:\\AI\\2023\\TestInfo\\all_track_results.json"
 
@@ -268,46 +257,18 @@ def run_example():
 
     tracker_config = "trackers/fast_deep_sort/configs/fastdeepsort.yaml"
     reid_weights = "mars-small128.pb"
+    reid_weights = "osnet_x0_25_msmt17.pt"
+
+    run_yolo8v2(model, video_source, "fastdeepsort", tracker_config,
+                output_folder, reid_weights, test_file, files=['1'], save_vid=True)
+
     # run_yolo7(model, video_source, "fastdeepsort", tracker_config,
     #          output_folder, reid_weights, test_file, save_vid=True)
 
     tracker_config = "trackers/NorFairTracker/configs/norfair_track.yaml"
-    run_yolo7(model, video_source, "norfair", tracker_config,
-              output_folder, reid_weights, test_file, files=['3', '2'], classes=[0], change_bb=True, save_vid=True)
-
-
-def run_test():
-    video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\20.mp4"
-
-    camera_num, w, h = get_camera(video_source)
-
-    print(f"{camera_num}, {w}, {h}")
-
-    cameras = load_default_bound_line()
-
-    bound_line = cameras.get(camera_num)
-
-    print(f"bound_line =  {bound_line}")
-
-    video_source_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\"
-
-    # convert_and_save(video_source_folder)
-
-
-def test_tensor():
-    tensor = torch.zeros(3, 6)
-    tensor[:, [2]] = 50
-    tensor[:, [3]] = 50
-    tensor[:, [4]] = 40
-    tensor[:, [5]] = 60
-    print(tensor)
-
-    tensor2 = YOLO7.change_bbox(tensor)
-
-    print(tensor2)
+    # run_yolo8v2(model, video_source, "norfair", tracker_config,
+    #            output_folder, reid_weights, test_file, files=['1'], save_vid=True)
 
 
 if __name__ == '__main__':
-    # run_example()
-    run_test()
-
+    run_example()

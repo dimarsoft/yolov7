@@ -120,7 +120,6 @@ class YOLO7:
                         tracker.camera_update(prev_frame, curr_frame)
 
                 for tr_id, predict_track in enumerate(predict):
-                    # predict_track = predict_track.cpu()
                     if change_bb:
                         predict_track = self.change_bbox(predict_track)
 
