@@ -6,7 +6,7 @@ from pathlib import Path
 
 import torch
 
-from configs import load_default_bound_line, CAMERAS_PATH
+from configs import load_default_bound_line, CAMERAS_PATH, get_all_trackers_full_path
 from labeltools import TrackWorker
 from post_processing.alex import alex_count_humans
 from post_processing.timur import timur_count_humans, get_camera
@@ -314,7 +314,10 @@ def test_tensor():
 
 
 if __name__ == '__main__':
-    run_example()
+    # run_example()
     # run_test()
     # test_tensor()
 
+    all_trackers = get_all_trackers_full_path()
+
+    print(all_trackers)

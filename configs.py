@@ -11,6 +11,7 @@ TEST_ROOT = ROOT / 'testinfo'
 CAMERAS_PATH = CONFIG_ROOT / 'camera_config.json'
 TEST_TRACKS_PATH = TEST_ROOT / 'all_track_results.json'
 
+
 def load_default_bound_line():
     """
     Загрузка информации по камерам по видео файлам.
@@ -25,3 +26,31 @@ def load_default_bound_line():
     print(f"read camera info from '{CAMERAS_PATH}'")
 
     return load_bound_line(CAMERAS_PATH)
+
+
+def get_all_trackers():
+    all_trackers = \
+        {
+            'sort': 'trackers/botsort/configs/botsort.yaml',
+            'botsort': 'trackers/botsort/configs/botsort.yaml',
+            'bytetrack': 'trackers/bytetrack/configs/bytetrack.yaml',
+
+            'ocsort': 'trackers/ocsort/configs/ocsort.yaml',
+            'strongsort': 'trackers/strongsort/configs/strongsort.yaml',
+            'fastdeepsort': 'trackers/fast_deep_sort/configs/fastdeepsort.yaml',
+            'norfair': 'trackers/NorFairTracker/configs/norfair_track.yaml',
+        }
+
+    return all_trackers
+
+
+def get_all_trackers_full_path():
+    all_trackers = get_all_trackers()
+
+    for key in all_trackers.keys():
+        path = ROOT / all_trackers[key]
+
+        all_trackers[key] = str(path)
+
+    return all_trackers
+
