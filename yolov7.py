@@ -21,6 +21,8 @@ class YOLO7:
         # Load model
         self.model = attempt_load(weights_path, map_location=self.device)  # load FP32 model
 
+        self.names = self.model.module.names if hasattr(self.model, 'module') else self.model.names
+
         self.half = half
         if half:
             self.half = self.device.type != 'cpu'  # half precision only supported on CUDA
@@ -139,6 +141,7 @@ class YOLO7:
 
             # Inference
             t1 = time_synchronized()
+            s = ""
 
             with torch.no_grad():  # Calculating gradients would cause a GPU memory leak
                 new_frame = self.to_tensor(frame)
@@ -155,8 +158,11 @@ class YOLO7:
                     if prev_frame is not None and curr_frame is not None:  # camera motion compensation
                         tracker.camera_update(prev_frame, curr_frame)
 
-                for tr_id, predict_track in enumerate(predict):
+                dets = 0
+                empty_conf_count = 0
 
+                for tr_id, predict_track in enumerate(predict):
+                    dets += 1
                     predict_track = self.change_bbox(predict_track, change_bb)
 
                     # conf_ = predict_track[:, [4]]
@@ -167,6 +173,11 @@ class YOLO7:
 
                     # Rescale boxes from img_size to im0 size
                     conv_pred = scale_coords(new_frame.shape[2:], predict_track, frame.shape).round()
+
+                    # Print results
+                    for c in predict_track[:, 5].unique():
+                        n = (predict_track[:, 5] == c).sum()  # detections per class
+                        s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "  # add to string
 
                     tracker_outputs = tracker.update(conv_pred.cpu(), frame)
                     # tracker_outputs = tracker.update(predict_track.cpu(), frame)
@@ -190,7 +201,8 @@ class YOLO7:
                         height = abs(y1 - y2)
 
                         if detection[6] is None:
-                            print("detection[6] is None")
+                            # print("detection[6] is None")
+                            empty_conf_count += 1
                             continue
 
                         info = [frame_id,
@@ -208,11 +220,17 @@ class YOLO7:
 
             t4 = time_synchronized()
 
+            detections_info = f"{s}{'' if dets > 0 else ', (no detections)'}"
+
+            empty_conf_count_str = f"{'' if empty_conf_count == 0 else f', empty_confs = {empty_conf_count}'}"
+
             prev_frame = frame
 
             # Print time (inference + NMS)
+
             print(f'frame ({frame_id + 1}/{frames_in_video}) Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, '
-                  f'({(1E3 * (t3 - t2)):.1f}ms) NMS, {(1E3 * (t4 - t3)):.1f}ms) track')
+                  f'({(1E3 * (t3 - t2)):.1f}ms) NMS, {(1E3 * (t4 - t3)):.1f}ms) '
+                  f'{detections_info} {empty_conf_count_str}')
 
         input_video.release()
 

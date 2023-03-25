@@ -279,7 +279,7 @@ def run_example():
 
     tracker_config = "trackers/NorFairTracker/configs/norfair_track.yaml"
     run_yolo7(model, video_source, "norfair", tracker_config,
-              output_folder, reid_weights, test_file, files=['3', '2'], classes=[0], change_bb=True, save_vid=True)
+              output_folder, reid_weights, test_file, files=['3', '2'], classes=[0], change_bb=False, save_vid=True)
 
 
 def run_test():
@@ -314,7 +314,7 @@ def test_tensor():
 
 
 if __name__ == '__main__':
-    # run_example()
+    run_example()
     # run_test()
-    test_tensor()
+    # test_tensor()
 
