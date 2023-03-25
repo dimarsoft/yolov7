@@ -3,10 +3,36 @@ import os
 from datetime import datetime
 from pathlib import Path
 
+from ultralytics import YOLO
+
 from labeltools import TrackWorker
-from save_txt_tools import yolo7_save_tracks_to_txt
+from save_txt_tools import yolo7_save_tracks_to_txt, yolo8_save_tracks_to_txt, convert_toy7
 from utils.torch_utils import time_synchronized
 from yolov8 import YOLO8
+
+
+def detect_single_video_yolo8(model, source,  output_folder, conf=0.3, save_vid=False, save_vid2=False):
+    print(f"start detect_single_video_yolo8: {source}")
+    model = YOLO(model)
+
+    results = model.predict(source, stream=False, save=save_vid, conf=conf)
+
+    source_path = Path(source)
+    text_path = Path(output_folder) / f"{source_path.stem}.txt"
+
+    print(f"save to: {text_path}")
+
+    yolo8_save_tracks_to_txt(results=results, txt_path=text_path, conf=conf)
+
+    tracks_y7 = convert_toy7(results)
+    track_worker = TrackWorker(tracks_y7)
+
+    if save_vid2:
+        t1 = time_synchronized()
+        track_worker.create_video(source, output_folder)
+        t2 = time_synchronized()
+
+        print(f"Processed '{source}' to {output_folder}: ({(1E3 * (t2 - t1)):.1f} ms)")
 
 
 def detect_single_video_yolo8v2(model, source, output_folder, classes=None, conf=0.3, save_txt=True, save_vid=False):
