@@ -31,7 +31,7 @@ def load_default_bound_line():
 def get_all_trackers():
     all_trackers = \
         {
-            'sort': 'trackers/botsort/configs/botsort.yaml',
+            'sort': 'trackers/sort/configs/sort.yaml',
             'botsort': 'trackers/botsort/configs/botsort.yaml',
             'bytetrack': 'trackers/bytetrack/configs/bytetrack.yaml',
 
