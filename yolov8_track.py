@@ -5,14 +5,18 @@ import traceback
 from datetime import datetime
 from pathlib import Path
 
+from configs import load_default_bound_line, CAMERAS_PATH
 from labeltools import TrackWorker
 from post_processing.alex import alex_count_humans
-from post_processing.timur import timur_count_humans
+from post_processing.timur import timur_count_humans, get_camera
 from resultools import TestResults
 from save_txt_tools import yolo7_save_tracks_to_txt
 from utils.torch_utils import time_synchronized
 from yolov7_track import save_exception
 from yolov8 import YOLO8
+
+# настройки камер, считываются при старте сессии
+cameras_info = {}
 
 
 def run_single_video_yolo8v2(model, source, tracker_type: str, tracker_config, output_folder,
@@ -48,6 +52,11 @@ def run_single_video_yolo8v2(model, source, tracker_type: str, tracker_config, o
 
         print(f"Processed '{source}' to {output_folder}: ({(1E3 * (t2 - t1)):.1f} ms)")
 
+    num, w, h = get_camera(source)
+    bound_line = cameras_info.get(num)
+
+    print(f"num = {num}, w = {w}, h = {h}, bound_line = {bound_line}")
+
     # count humans
     if test_func is not None:
         try:
@@ -79,7 +88,11 @@ def run_single_video_yolo8v2(model, source, tracker_type: str, tracker_config, o
                 #  width, height,
                 #  int(detection[4]), int(detection[5]), float(detection[6])]
                 # [frame_index, track_id, cls, bbox_left, bbox_top, bbox_w, bbox_h, box.conf]
-                humans_result = test_func(tracks_new)
+                # humans_result = test_func(tracks_new)
+                # bound_line =  [[490, 662], [907, 613]]
+                # num(str), w(int), h(int)
+
+                humans_result = test_func(tracks_new, num, w, h, bound_line)
                 humans_result.file = source_path.name
                 # add result
                 test_file.add_test(humans_result)
@@ -110,6 +123,11 @@ def run_yolo8v2(model: str, source: str, tracker_type: str, tracker_config, outp
         source: путь к видео, если папка, то для каждого видео файла запустит
         model (str): модель для YOLO7
     """
+
+    # при старте сессии считываем настройки камер
+    global cameras_info
+    cameras_info = load_default_bound_line()
+
     source_path = Path(source)
 
     # в выходной папке создаем папку с сессией: дата_трекер туда уже сохраняем все файлы
@@ -151,6 +169,7 @@ def run_yolo8v2(model: str, source: str, tracker_type: str, tracker_config, outp
     session_info['files'] = files
     session_info['classes'] = classes
     session_info['change_bb'] = change_bb
+    session_info['cameras_path'] = str(CAMERAS_PATH)
 
     if isinstance(test_func, str):
         session_info['test_func'] = test_func
