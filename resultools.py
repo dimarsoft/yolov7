@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 
+from configs import TEST_TRACKS_PATH
 from count_results import Result
 
 
@@ -228,24 +229,33 @@ class TestResults:
         # 2 версия считаем дополнительно совпадения инцидентов
 
 
-def test_json():
+def test_tracks_file(test_file):
     """
 Тест содержимого тестового файла.
 1. читаем показываем. если что-то не так, то будет ошибка
-2. создаем словарь по file, оно дожно быть уникально, иначе ошибка по ключу
+2. создаем словарь по file, оно должно быть уникально, иначе ошибка по ключу
     """
-    test_file = "testinfo/all_track_results.json"
+    print(f"test_tracks_file: {test_file}")
     result = TestResults(test_file)
     result.print_info()
 
     test = dict()
+
+    already_present_count = 0
 
     for i, item in enumerate(result.test_items):
         if item.file in test:
             print(f"{i}, {item.file} already present")
             print(f"{test[item.file]}, {item}")
 
+            already_present_count += 1
+
         test[item.file] = item
+
+    if already_present_count > 0:
+        print(f"Error: File has duplicated file names, count error {already_present_count}!!!")
+    else:
+        print(f"Good: File has unique file name keys")
 
     for key, item in test.items():
         print(
@@ -254,16 +264,16 @@ def test_json():
         for i, div in enumerate(item.deviations):
             print(f"\t{i + 1}, status = {div.status_id}, [{div.start_frame} - {div.end_frame}]")
 
-    result_json_file = "testinfo/tmp_track_results.json"
-    print(f"Save compare results info '{str(result_json_file)}'")
+    # result_json_file = "testinfo/tmp_track_results.json"
+    # print(f"Save compare results info '{str(result_json_file)}'")
 
-    with open(result_json_file, "w") as write_file:
-        write_file.write(json.dumps(test, indent=4, sort_keys=True, default=lambda o: o.__dict__))
+    # with open(result_json_file, "w") as write_file:
+    #     write_file.write(json.dumps(test, indent=4, sort_keys=True, default=lambda o: o.__dict__))
 
-    result.result_items = TestResults.read_info(test_file)
+    # result.result_items = TestResults.read_info(test_file)
 
-    result.compare_to_file("testinfo")
+    # result.compare_to_file("testinfo")
 
 
 if __name__ == '__main__':
-    test_json()
+    test_tracks_file(test_file=TEST_TRACKS_PATH)
