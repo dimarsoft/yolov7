@@ -201,6 +201,110 @@ class YOLO8:
 
         return results
 
+    def detect(self, source, conf=0.3, iou=0.4, classes=None):
+
+        input_video = cv2.VideoCapture(source)
+
+        fps = int(input_video.get(cv2.CAP_PROP_FPS))
+        # ширина
+        w = int(input_video.get(cv2.CAP_PROP_FRAME_WIDTH))
+        # высота
+        h = int(input_video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+        # количество кадров в видео
+        frames_in_video = int(input_video.get(cv2.CAP_PROP_FRAME_COUNT))
+
+        print(f"input = {source}, w = {w}, h = {h}, fps = {fps}, frames_in_video = {frames_in_video}")
+
+        results = []
+
+        for frame_id in range(frames_in_video):
+            ret, frame = input_video.read()
+
+            # Inference
+            t1 = time_synchronized()
+            s = ""
+
+            with torch.no_grad():  # Calculating gradients would cause a GPU memory leak
+                new_frame = self.to_tensor(frame)
+                predict = self.model(new_frame)[0]
+                t2 = time_synchronized()
+
+                # Apply NMS
+                predict = non_max_suppression(predict, conf, iou, classes=classes)
+                t3 = time_synchronized()
+
+                dets = 0
+                empty_conf_count = 0
+                for tr_id, predict_track in enumerate(predict):
+                    if predict_track is not None and len(predict_track) > 0:
+
+                        dets += 1
+                        # bbox = predict_track[:, :4]
+                        # conf_ = predict_track[:, [4]]
+                        # cls = predict_track[:, [5]]
+
+                        # print(f"cls = {cls}")
+                        # print(f"conf_ = {conf_}")
+                        # print(f"bbox = {bbox}")
+
+                        # Print results
+                        for c in predict_track[:, 5].unique():
+                            n = (predict_track[:, 5] == c).sum()  # detections per class
+                            s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "  # add to string
+
+                        for det_id, detection in enumerate(predict_track):  # detections per image
+
+                            # bbox = detection[0:4]
+                            # track_id = detection[4]
+                            cls = detection[5]
+                            conf = detection[4]
+
+                            x1 = float(detection[0]) / w
+                            y1 = float(detection[1]) / h
+                            x2 = float(detection[2]) / w
+                            y2 = float(detection[3]) / h
+
+                            left = min(x1, x2)
+                            top = min(y1, y2)
+                            width = abs(x1 - x2)
+                            height = abs(y1 - y2)
+
+                            if conf is None:
+                                # print("detection[6] is None")
+                                empty_conf_count += 1
+                                continue
+
+                            info = [frame_id,
+                                    left, top,
+                                    width, height,
+                                    # track id (но его тут нет), для совместимости формата
+                                    -1,
+                                    # cls
+                                    int(cls),
+                                    # conf
+                                    float(conf)]
+
+                            # print(info)
+                            results.append(info)
+
+                detections_info = f"{s}{'' if dets > 0 else ', (no detections)'}"
+
+                empty_conf_count_str = f"{'' if empty_conf_count == 0 else f', empty_confs = {empty_conf_count}'}"
+
+                t4 = time_synchronized()
+
+                # Print total time (preprocessing + inference + NMS)
+
+                # Print time (inference + NMS)
+                print(f'frame ({frame_id + 1}/{frames_in_video}) Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, '
+                      f'({(1E3 * (t3 - t2)):.1f}ms) NMS, {(1E3 * (t4 - t3)):.1f}ms) '
+                      f'{detections_info} {empty_conf_count_str}')
+
+        input_video.release()
+
+        return results
+
 
 def run_single_video_yolo8(model, source, tracker, output_folder, test_file, test_func,
                            conf=0.3, save_vid=False, save_vid2=False):

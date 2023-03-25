@@ -164,11 +164,6 @@ def draw_track_on_frame(frame, draw_rect, frame_w,
 
     if draw_rect:
         if lab.label is Labels.human:
-            if lab.track_color is not None:
-                caption_color = lab.track_color
-            else:
-                caption_color = (255, 255, 255)
-            # cv2.putText(frame, frame_info.get_caption(), (x, y), 0, font_scale, label_color, 1, cv2.LINE_AA)
 
             if draw_class:
                 caption = frame_info.get_caption()
@@ -545,7 +540,7 @@ class TrackWorker:
         y2 = int(self.get_y(1) * frame_h)
         cv2.line(frame, (0, y1), (frame_w, y2), (0, 0, 255), 1)
 
-    def create_video(self, source_video, output_folder):
+    def create_video(self, source_video, output_folder, draw_class=False):
         input_video = cv2.VideoCapture(str(source_video))
 
         fps = int(input_video.get(cv2.CAP_PROP_FPS))
@@ -554,7 +549,7 @@ class TrackWorker:
         # высота
         h = int(input_video.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-        # количесто кадров в видео
+        # количество кадров в видео
         frames_in_video = int(input_video.get(cv2.CAP_PROP_FRAME_COUNT))
 
         results = []
@@ -568,7 +563,7 @@ class TrackWorker:
             self.draw_turnic_on_frame(results[i], w, h)
 
         for label in self.track_labels:
-            draw_track_on_frame(results[label.frame], True, w, h, label)
+            draw_track_on_frame(results[label.frame], True, w, h, label, draw_class=draw_class)
 
         output_video_path = str(Path(output_folder) / Path(source_video).name)
         output_video = cv2.VideoWriter(
