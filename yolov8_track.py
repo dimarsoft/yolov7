@@ -9,7 +9,7 @@ from configs import load_default_bound_line, CAMERAS_PATH
 from labeltools import TrackWorker
 from post_processing.alex import alex_count_humans
 from post_processing.timur import timur_count_humans, get_camera
-from resultools import TestResults
+from resultools import TestResults, test_tracks_file
 from save_txt_tools import yolo7_save_tracks_to_txt
 from utils.torch_utils import time_synchronized
 from yolov7_track import save_exception
@@ -170,6 +170,8 @@ def run_yolo8v2(model: str, source: str, tracker_type: str, tracker_config, outp
     session_info['classes'] = classes
     session_info['change_bb'] = change_bb
     session_info['cameras_path'] = str(CAMERAS_PATH)
+
+    test_tracks_file(test_result_file)
 
     if isinstance(test_func, str):
         session_info['test_func'] = test_func
