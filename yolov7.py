@@ -42,6 +42,7 @@ class YOLO7:
         # Convert
         img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x416x416
         img = np.ascontiguousarray(img)
+
         img = torch.from_numpy(img).to(self.device)
         img = img.half() if self.half else img.float()  # uint8 to fp16/32
         # img = img.float()  # uint8 to fp16/32
@@ -151,6 +152,9 @@ class YOLO7:
                     if predict_track is not None and len(predict_track) > 0:
                         dets += 1
 
+                        # Rescale boxes from img_size to im0 size
+                        conv_pred = scale_coords(new_frame.shape[2:], predict_track, frame.shape).round()
+
                         # conf_ = predict_track[:, [4]]
                         # cls = predict_track[:, [5]]
 
@@ -218,8 +222,6 @@ class YOLO7:
 
         return results
 
-
-
     def track(self, source, tracker_type, tracker_config, reid_weights="osnet_x0_25_msmt17.pt", conf=0.3, iou=0.4,
               classes=None, change_bb=False):
 
@@ -241,7 +243,7 @@ class YOLO7:
 
         curr_frame, prev_frame = None, None
 
-        results = []
+        results, results_det = [], []
 
         for frame_id in range(frames_in_video):
             ret, frame = input_video.read()
@@ -286,6 +288,42 @@ class YOLO7:
                         for c in predict_track[:, 5].unique():
                             n = (predict_track[:, 5] == c).sum()  # detections per class
                             s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "  # add to string
+
+                        for det_id, detection in enumerate(predict_track):  # detections per image
+                            # print(f"{det_id}: detection = {detection}")
+                            # print(f"{det_id}: bb = {detection[:4]}, id = {detection[4]}, cls = {detection[5]}, "
+                            #      f"conf = {detection[6]}")
+
+                            x1 = float(detection[0]) / w
+                            y1 = float(detection[1]) / h
+                            x2 = float(detection[2]) / w
+                            y2 = float(detection[3]) / h
+
+                            left = min(x1, x2)
+                            top = min(y1, y2)
+                            width = abs(x1 - x2)
+                            height = abs(y1 - y2)
+
+                            conf = detection[4]
+                            cls = detection[5]
+
+                            if conf is None:
+                                # print("detection[6] is None")
+                                empty_conf_count += 1
+                                continue
+
+                            info = [frame_id,
+                                    left, top,
+                                    width, height,
+                                    # id
+                                    int(-1),
+                                    # cls
+                                    int(cls),
+                                    # conf
+                                    float(conf)]
+
+                            # print(info)
+                            results_det.append(info)
 
                         tracker_outputs = tracker.update(conv_pred.cpu(), frame)
                         # tracker_outputs = tracker.update(predict_track.cpu(), frame)
@@ -342,4 +380,4 @@ class YOLO7:
 
         input_video.release()
 
-        return results
+        return results, results_det

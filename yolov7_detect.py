@@ -112,7 +112,7 @@ def run_example():
 
     files = ['1']
 
-    run_detect_yolo7(model, video_source, output_folder, files=files, conf=0.1, save_txt=True, save_vid=True)
+    run_detect_yolo7(model, video_source, output_folder, files=files, conf=0.25, save_txt=True, save_vid=True)
 
 
 if __name__ == '__main__':

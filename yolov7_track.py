@@ -41,7 +41,7 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
 
     model = YOLO7(model)
 
-    track = model.track(
+    track, detections = model.track(
         source=source,
         conf=conf,
         tracker_type=tracker_type,
@@ -54,6 +54,9 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
     print(f"save tracks to: {text_path}")
 
     yolo7_save_tracks_to_txt(results=track, txt_path=text_path, conf=conf)
+
+    det_path = Path(output_folder) / f"{source_path.stem}_det.txt"
+    yolo7_save_tracks_to_txt(results=detections, txt_path=det_path, conf=conf)
 
     track_worker = TrackWorker(track)
 
@@ -279,7 +282,8 @@ def run_example():
 
     tracker_config = "trackers/NorFairTracker/configs/norfair_track.yaml"
     run_yolo7(model, video_source, "norfair", tracker_config,
-              output_folder, reid_weights, test_file, files=['3', '2'], classes=[0], change_bb=False, save_vid=True)
+              output_folder, reid_weights, test_file, files=['1'], classes=None, conf=0.25,
+              change_bb=False, save_vid=True)
 
 
 def run_test():
@@ -314,7 +318,7 @@ def test_tensor():
 
 
 if __name__ == '__main__':
-    # run_example()
+    run_example()
     # run_test()
     # test_tensor()
 
