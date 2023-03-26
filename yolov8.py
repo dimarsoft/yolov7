@@ -257,8 +257,8 @@ class YOLO8:
 
                             # bbox = detection[0:4]
                             # track_id = detection[4]
-                            cls = detection[5]
                             conf = detection[4]
+                            cls = detection[5]
 
                             x1 = float(detection[0]) / w
                             y1 = float(detection[1]) / h

@@ -113,6 +113,111 @@ class YOLO7:
 
         return bbox
 
+    def detect(self, source, conf=0.3, iou=0.4, classes=None):
+        input_video = cv2.VideoCapture(source)
+
+        fps = int(input_video.get(cv2.CAP_PROP_FPS))
+        # ширина
+        w = int(input_video.get(cv2.CAP_PROP_FRAME_WIDTH))
+        # высота
+        h = int(input_video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+        # количество кадров в видео
+        frames_in_video = int(input_video.get(cv2.CAP_PROP_FRAME_COUNT))
+
+        print(f"input = {source}, w = {w}, h = {h}, fps = {fps}, frames_in_video = {frames_in_video}")
+        results = []
+
+        for frame_id in range(frames_in_video):
+            ret, frame = input_video.read()
+
+            # Inference
+            t1 = time_synchronized()
+            s = ""
+
+            with torch.no_grad():  # Calculating gradients would cause a GPU memory leak
+                new_frame = self.to_tensor(frame)
+                predict = self.model(new_frame)[0]
+                t2 = time_synchronized()
+
+                # Apply NMS
+                predict = non_max_suppression(predict, conf, iou, classes=classes)
+                t3 = time_synchronized()
+
+                dets = 0
+                empty_conf_count = 0
+
+                for tr_id, predict_track in enumerate(predict):
+                    if predict_track is not None and len(predict_track) > 0:
+                        dets += 1
+
+                        # conf_ = predict_track[:, [4]]
+                        # cls = predict_track[:, [5]]
+
+                        # print(f"cls = {cls}")
+                        # print(f"conf_ = {conf_}")
+
+                        # Rescale boxes from img_size to im0 size
+
+                        # Print results
+                        for c in predict_track[:, 5].unique():
+                            n = (predict_track[:, 5] == c).sum()  # detections per class
+                            s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "  # add to string
+
+                        for det_id, detection in enumerate(predict_track):  # detections per image
+                            # print(f"{det_id}: detection = {detection}")
+                            # print(f"{det_id}: bb = {detection[:4]}, id = {detection[4]}, cls = {detection[5]}, "
+                            #      f"conf = {detection[6]}")
+
+                            x1 = float(detection[0]) / w
+                            y1 = float(detection[1]) / h
+                            x2 = float(detection[2]) / w
+                            y2 = float(detection[3]) / h
+
+                            left = min(x1, x2)
+                            top = min(y1, y2)
+                            width = abs(x1 - x2)
+                            height = abs(y1 - y2)
+
+                            conf = detection[4]
+                            cls = detection[5]
+
+                            if conf is None:
+                                # print("detection[6] is None")
+                                empty_conf_count += 1
+                                continue
+
+                            info = [frame_id,
+                                    left, top,
+                                    width, height,
+                                    # id
+                                    int(-1),
+                                    # cls
+                                    int(cls),
+                                    # conf
+                                    float(conf)]
+
+                            # print(info)
+                            results.append(info)
+
+            t4 = time_synchronized()
+
+            detections_info = f"{s}{'' if dets > 0 else ', (no detections)'}"
+
+            empty_conf_count_str = f"{'' if empty_conf_count == 0 else f', empty_confs = {empty_conf_count}'}"
+
+            # Print time (inference + NMS)
+
+            print(f'frame ({frame_id + 1}/{frames_in_video}) Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, '
+                  f'({(1E3 * (t3 - t2)):.1f}ms) NMS, {(1E3 * (t4 - t3)):.1f}ms) '
+                  f'{detections_info} {empty_conf_count_str}')
+
+        input_video.release()
+
+        return results
+
+
+
     def track(self, source, tracker_type, tracker_config, reid_weights="osnet_x0_25_msmt17.pt", conf=0.3, iou=0.4,
               classes=None, change_bb=False):
 

@@ -40,19 +40,20 @@ def convert_toy7(results):
 """
 
 
-def yolo8_save_tracks_to_txt(results, txt_path, conf=0.0):
+def yolo8_save_tracks_to_txt(results, txt_path, conf=0.0, save_id=False):
     """
 
     Args:
+        save_id:
         conf: элементы с conf менее указанной не сохраняются
-        txt_path: тектосвый файл для сохрения
+        txt_path: текcтовый файл для сохранения
         results: результат работы модели
     """
     with open(txt_path, 'a') as text_file:
         for frame_index, track in enumerate(results):
             if track.boxes is not None:
                 for box in track.boxes:
-                    if box.id is None:
+                    if box.id is None and not save_id:
                         continue
                     if box.conf < conf:
                         continue
@@ -63,7 +64,7 @@ def yolo8_save_tracks_to_txt(results, txt_path, conf=0.0):
                     bbox_h = xywhn[3]
                     bbox_left = xywhn[0] - bbox_w / 2
                     bbox_top = xywhn[1] - bbox_h / 2
-                    track_id = int(box.id)
+                    track_id = int(box.id) if box.id is not None else -1
                     cls = int(box.cls)
                     text_file.write(('%g ' * 8 + '\n') % (frame_index, track_id, cls, bbox_left,
                                                           bbox_top, bbox_w, bbox_h, box.conf))
