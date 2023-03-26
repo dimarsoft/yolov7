@@ -214,6 +214,8 @@ class YOLO7:
 
         input_video.release()
 
+        print(f"total detections = {len(results)}")
+
         return results
 
 

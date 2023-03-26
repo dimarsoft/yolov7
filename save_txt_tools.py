@@ -75,7 +75,7 @@ def yolo7_save_tracks_to_txt(results, txt_path, conf=0.0):
 
     Args:
         conf: элементы с conf менее указанной не сохраняются
-        txt_path: тектосвый файл для сохрения
+        txt_path: текстовый файл для сохранения
         results: результат работы модели
     """
     with open(txt_path, 'a') as text_file:
