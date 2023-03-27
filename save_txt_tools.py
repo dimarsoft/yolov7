@@ -7,14 +7,19 @@ bbox - в относительный величинах
 """
 
 
-def convert_toy7(results):
+def convert_toy7(results, save_none_id=False):
     results_y7 = []
 
     for frame_index, track in enumerate(results):
         if track.boxes is not None:
             for box in track.boxes:
-                if box.id is None:
-                    continue
+                if save_none_id:
+                    track_id = -1 if box.id is None else int(box.id)
+
+                else:
+                    if box.id is None:
+                        continue
+                    track_id = int(box.id)
                 # if box.conf < conf:
                 #    continue
                 # print(frame_index, " ", box.id, ", cls = ", box.cls, ", ", box.xywhn)
@@ -26,7 +31,7 @@ def convert_toy7(results):
                 bbox_top = xywhn[1] - bbox_h / 2
                 bbox_r = xywhn[0] + bbox_w / 2
                 bbox_b = xywhn[1] + bbox_h / 2
-                track_id = int(box.id)
+                # track_id = int(box.id)
                 cls = int(box.cls)
                 results_y7.append([frame_index, bbox_left, bbox_top, bbox_w, bbox_h, track_id, cls, box.conf])
     return results_y7
@@ -41,6 +46,36 @@ def convert_toy7(results):
 
 
 def yolo8_save_tracks_to_txt(results, txt_path, conf=0.0, save_id=False):
+    """
+
+    Args:
+        save_id:
+        conf: элементы с conf менее указанной не сохраняются
+        txt_path: текcтовый файл для сохранения
+        results: результат работы модели
+    """
+    with open(txt_path, 'a') as text_file:
+        for frame_index, track in enumerate(results):
+            if track.boxes is not None:
+                for box in track.boxes:
+                    if box.id is None and not save_id:
+                        continue
+                    if box.conf < conf:
+                        continue
+                    # print(frame_index, " ", box.id, ", cls = ", box.cls, ", ", box.xywhn)
+                    xywhn = box.xywhn.numpy()[0]
+                    # print(frame_index, " ", xywhn)
+                    bbox_w = xywhn[2]
+                    bbox_h = xywhn[3]
+                    bbox_left = xywhn[0] - bbox_w / 2
+                    bbox_top = xywhn[1] - bbox_h / 2
+                    track_id = int(box.id) if box.id is not None else -1
+                    cls = int(box.cls)
+                    text_file.write(('%g ' * 8 + '\n') % (frame_index, track_id, cls, bbox_left,
+                                                          bbox_top, bbox_w, bbox_h, box.conf))
+
+
+def yolo8_save_detection_to_txt(results, txt_path, conf=0.0, save_id=False):
     """
 
     Args:
@@ -93,3 +128,14 @@ def yolo7_save_tracks_to_txt(results, txt_path, conf=0.0):
             cls = int(track[6])
             text_file.write(('%g ' * 8 + '\n') % (track[0], track_id, cls, bbox_left,
                                                   bbox_top, bbox_w, bbox_h, track[7]))
+
+
+def yolo_load_detections_from_txt(txt_path):
+    import numpy as np
+    import pandas as pd
+    df = pd.read_csv(txt_path, delimiter=" ", dtype=float, header=None)
+    # df = pd.DataFrame(df, columns=['frame', 'id', 'class', 'bb_left', 'bb_top', 'bb_width', 'bb_height', 'conf'])
+
+    return df
+
+    # return np.genfromtxt(txt_path, delimiter=" ", dtype=float)

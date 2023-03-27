@@ -8,7 +8,7 @@ from models.experimental import attempt_load
 from trackers.multi_tracker_zoo import create_tracker
 from utils.datasets import letterbox
 from utils.general import non_max_suppression, scale_coords
-from utils.torch_utils import select_device, time_synchronized
+from utils.torch_utils import select_device, time_synchronized, TracedModel
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # yolov5 strongsort root directory
@@ -20,6 +20,8 @@ class YOLO7:
         self.device = select_device(device)
         # Load model
         self.model = attempt_load(weights_path, map_location=self.device)  # load FP32 model
+
+        self.model = TracedModel(self.model, self.device, img_size=640)
 
         self.names = self.model.module.names if hasattr(self.model, 'module') else self.model.names
 

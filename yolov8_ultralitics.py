@@ -4,6 +4,7 @@ from pathlib import Path
 from ultralytics.yolo.data.augment import LetterBox
 
 from configs import WEIGHTS
+from save_txt_tools import convert_toy7
 from utils.torch_utils import select_device
 
 
@@ -29,4 +30,8 @@ class YOLO8UL:
         self.letter_box = LetterBox()
 
     def detect(self, source, conf=0.3, iou=0.4, classes=None):
-        return self.model.predict(source, conf=conf, iou=iou, classes=classes)
+        detections = self.model.predict(source, conf=conf, iou=iou, classes=classes)
+
+        detections = convert_toy7(detections, save_none_id=True)
+
+        return detections

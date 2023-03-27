@@ -118,6 +118,8 @@ class DetectedTrackLabel(DetectedLabel):
         self.track_color = None
 
     def get_caption(self):
+        if self.track_id < 0:
+            return self.label_str()
         return f"{self.track_id}: {self.label_str()}"
 
 

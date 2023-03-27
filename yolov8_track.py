@@ -12,6 +12,7 @@ from post_processing.timur import timur_count_humans, get_camera
 from resultools import TestResults, test_tracks_file
 from save_txt_tools import yolo7_save_tracks_to_txt
 from utils.torch_utils import time_synchronized
+from yolo_track_bbox import YoloTrackBbox
 from yolov7_track import save_exception
 from yolov8 import YOLO8
 
@@ -261,8 +262,7 @@ def run_example():
     reid_weights = "mars-small128.pb"
     reid_weights = "osnet_x0_25_msmt17.pt"
 
-    run_yolo8v2(model, video_source, "fastdeepsort", tracker_config,
-                output_folder, reid_weights, test_file, files=['1'], save_vid=True)
+    # run_yolo8v2(model, video_source, "fastdeepsort", tracker_config,                 output_folder, reid_weights, test_file, files=['1'], save_vid=True)
 
     # run_yolo7(model, video_source, "fastdeepsort", tracker_config,
     #          output_folder, reid_weights, test_file, save_vid=True)
@@ -270,6 +270,15 @@ def run_example():
     tracker_config = "trackers/NorFairTracker/configs/norfair_track.yaml"
     # run_yolo8v2(model, video_source, "norfair", tracker_config,
     #            output_folder, reid_weights, test_file, files=['1'], save_vid=True)
+
+    ybb = YoloTrackBbox()
+
+    txt = "D:\\AI\\2023\\corridors\\dataset-v1.1\\1.txt"
+    mp4 = "D:\\AI\\2023\\corridors\\dataset-v1.1\\1.mp4"
+
+    tr = ybb.track(mp4, txt, "norfair", tracker_config, reid_weights)
+
+    print(tr)
 
 
 if __name__ == '__main__':

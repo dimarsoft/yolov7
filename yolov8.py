@@ -14,10 +14,12 @@ from ultralytics.yolo.utils.ops import scale_boxes, non_max_suppression
 
 from labeltools import TrackWorker
 from resultools import TestResults
-from save_txt_tools import yolo8_save_tracks_to_txt, convert_toy7
+from save_txt_tools import yolo8_save_tracks_to_txt, convert_toy7, yolo_load_detections_from_txt
 from trackers.multi_tracker_zoo import create_tracker
 from utils.torch_utils import time_synchronized, select_device
+from yolo_track_bbox import YoloTrackBbox
 from yolov7 import YOLO7
+from yolov8_ultralitics import YOLO8UL
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # yolov5 strongsort root directory
@@ -306,6 +308,32 @@ class YOLO8:
         return results
 
 
+def detect_single_video_yolo8(model, source, output_folder, conf=0.3, save_vid2=False):
+    print(f"start {source}")
+    model = YOLO8UL(model)
+
+    track = model.detect(
+        source=source,
+        conf=conf
+    )
+    source_path = Path(source)
+    text_path = Path(output_folder) / f"{source_path.stem}.txt"
+
+    print(f"save to: {text_path}")
+
+    yolo8_save_tracks_to_txt(results=track, txt_path=text_path, conf=conf, save_id=True)
+
+    tracks_y7 = convert_toy7(track, save_none_id=True)
+    track_worker = TrackWorker(tracks_y7)
+
+    if save_vid2:
+        t1 = time_synchronized()
+        track_worker.create_video(source, output_folder, draw_class=True)
+        t2 = time_synchronized()
+
+        print(f"Processed '{source}' to {output_folder}: ({(1E3 * (t2 - t1)):.1f} ms)")
+
+
 def run_single_video_yolo8(model, source, tracker, output_folder, test_file, test_func,
                            conf=0.3, save_vid=False, save_vid2=False):
     print(f"start {source}")
@@ -443,7 +471,7 @@ def run_yolo8(model: str, source, tracker, output_folder, test_result_file, test
 
 def run_example():
     model = "D:\\AI\\2023\\models\\Yolo8s_batch32_epoch100.pt"
-    video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\"
+    video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\1.mp4"
     test_file = "D:\\AI\\2023\\TestInfo\\all_track_results.json"
 
     tracker_config = "./trackers/strongsort/configs/strongsort.yaml"
@@ -473,9 +501,41 @@ def run_example():
     #          output_folder, reid_weights, test_file, save_vid=True)
 
     tracker_config = "trackers/botsort/configs/botsort.yaml"
-    run_yolo8(model, video_source, "botsort",
-              output_folder, test_file, test_func=None)
+    # run_yolo8(model, video_source, "botsort", output_folder, test_file, test_func=None)
+
+    detect_single_video_yolo8(model, video_source, output_folder, save_vid2=True)
 
 
 if __name__ == '__main__':
-    run_example()
+
+    # run_example()
+
+    inf = yolo_load_detections_from_txt("D:\\AI\\2023\\corridors\\dataset-v1.1\\1.txt")
+    # print(inf)
+
+    files = inf[0].unique()
+
+    for file in files:
+        print(file)
+
+        ww = inf[inf[0] == file]
+
+        # torch_tensor = torch.zeros(ww.shape[0], 6)
+
+        # torch_tensor = torch.tensor([3, 5, 7])
+        # torch_tensor[:, :4] = ww.values[:, 3:7]
+
+        # print(torch_tensor)
+
+        res = []
+        for item in ww.values:
+            print(item)
+            res.append([item[3], item[4], item[5], item[6], item[2], item[7]])
+
+        torch_tensor = torch.tensor(res)
+
+        print(torch_tensor)
+
+    # print(inf[0].unique())
+    # for item in inf.values:
+      #   print(item)
