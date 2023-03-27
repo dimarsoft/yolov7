@@ -32,6 +32,6 @@ class YOLO8UL:
     def detect(self, source, conf=0.3, iou=0.4, classes=None):
         detections = self.model.predict(source, conf=conf, iou=iou, classes=classes)
 
-        detections = convert_toy7(detections, save_none_id=True)
+        detections = convert_toy7(detections.cpy(), save_none_id=True)
 
         return detections
