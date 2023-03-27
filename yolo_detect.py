@@ -125,13 +125,14 @@ def run_detect_yolo(yolo_info, model: str, source: str, output_folder,
 
 
 def run_example():
-    model = "D:\\AI\\2023\\models\\Yolov7\\25.02.2023_dataset_1.1_yolov7_best.pt"
     video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\"
     output_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\"
 
     files = ['1']
 
-    #run_detect_yolo(7, model, video_source, output_folder, files=files, conf=0.25, save_txt=True, save_vid=True)
+    #  model = "D:\\AI\\2023\\models\\Yolov7\\25.02.2023_dataset_1.1_yolov7_best.pt"
+
+    #  run_detect_yolo(7, model, video_source, output_folder, files=files, conf=0.25, save_txt=True, save_vid=True)
 
     model = "D:\\AI\\2023\\models\\Yolo8s_batch32_epoch100.pt"
 
