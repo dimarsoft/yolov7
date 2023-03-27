@@ -11,6 +11,7 @@ def convert_toy7(results, save_none_id=False):
     results_y7 = []
 
     for frame_index, track in enumerate(results):
+        track = track.cpu()
         if track.boxes is not None:
             for box in track.boxes:
                 if save_none_id:
