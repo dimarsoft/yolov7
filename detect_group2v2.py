@@ -2,21 +2,18 @@ import argparse
 import time
 from pathlib import Path
 
-import cv2
 import torch
 from numpy import random
 
-from models.experimental import attempt_load
 from utils.datasets import LoadImages
 from utils.general import check_img_size, non_max_suppression, scale_coords, xyxy2xywh, set_logging
-from utils.plots import plot_one_box
 from utils.torch_utils import select_device, time_synchronized, TracedModel
 
 
-def get_detect(opt, model, save_img=False):
-    source, weights, save_txt, imgsz = opt.source, opt.weights, opt.save_txt, opt.img_size
+def get_detect(opt, model):
+    source, save_txt = opt.source, opt.save_txt
 
-    print("detect: version 1.6")
+    print("detect: version 1.8")
     # Directories
     save_dir = Path(opt.project)  # increment run
 
@@ -127,10 +124,6 @@ def get_detect(opt, model, save_img=False):
                             f.write(('%g ' * len(line)).rstrip() % line + '\n')
 
                             results.append([frame, -1, cls, xywh[0], xywh[1], xywh[2], xywh[3], conf])
-
-                    if save_img:  # Add bbox to image
-                        label = f'{names[int(cls)]} {conf:.2f}'
-                        plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=1)
 
             # Print time (inference + NMS)
             print(f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS, detections = {total_detections}')
