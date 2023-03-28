@@ -31,10 +31,6 @@ def detect(opt, save_img=False):
     print(f"opt.augment = {opt.augment}, agnostic_nms = {opt.agnostic_nms}, "
           f"conf_thres = {opt.conf_thres}, iou_thres = {opt.iou_thres}")
 
-    conf = opt.conf_thres
-    iou = opt.iou_thres
-    classes = opt.classes
-
     # Initialize
     set_logging()
     device = select_device(opt.device)
@@ -62,8 +58,8 @@ def detect(opt, save_img=False):
 
     if webcam:
         view_img = check_imshow()
-        cudnn.benchmark = True  # set True to speed up constant image size inference
-        dataset = LoadStreams(source, img_size=imgsz, stride=stride)
+        # cudnn.benchmark = True  # set True to speed up constant image size inference
+        # dataset = LoadStreams(source, img_size=imgsz, stride=stride)
     else:
         dataset = LoadImages(source, img_size=imgsz, stride=stride)
 
