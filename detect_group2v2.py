@@ -6,16 +6,16 @@ import torch
 from numpy import random
 
 from utils.datasets import LoadImages
-from utils.general import check_img_size, non_max_suppression, scale_coords, xyxy2xywh, set_logging
-from utils.torch_utils import select_device, time_synchronized, TracedModel
+from utils.general import non_max_suppression, scale_coords, xyxy2xywh, set_logging
+from utils.torch_utils import time_synchronized
 
 
-def get_detect(opt, model):
-    source, save_txt = opt.source, opt.save_txt
+def get_detect(opt, source, model, save_dir, save_txt):
+    # source, save_txt = opt.source, opt.save_txt
 
-    print("detect: version 1.8")
+    print("detect: version 1.9")
     # Directories
-    save_dir = Path(opt.project)  # increment run
+    save_dir = Path(save_dir)  # increment run
 
     (save_dir / 'labels' if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
 
