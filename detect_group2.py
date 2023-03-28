@@ -25,8 +25,9 @@ def detect(save_img=False):
     save_dir = Path(increment_path(Path(opt.project) / opt.name, exist_ok=opt.exist_ok))  # increment run
     (save_dir / 'labels' if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
 
-    print(f"opt.augment = {opt.augment}, agnostic_nms = {opt.agnostic_nms}")
-    
+    print(f"opt.augment = {opt.augment}, agnostic_nms = {opt.agnostic_nms}, "
+          f"conf_thres = {opt.conf_thres}, iou_thres = {opt.iou_thres}")
+
     # Initialize
     set_logging()
     device = select_device(opt.device)

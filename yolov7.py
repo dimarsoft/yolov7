@@ -35,6 +35,13 @@ class YOLO7:
 
         self.reid_weights = Path(WEIGHTS) / 'osnet_x0_25_msmt17.pt'  # model.pt path,
 
+        self.augment = False
+        self.agnostic_nms = False;
+
+        print(f"augment = {self.augment}, agnostic_nms = {self.agnostic_nms}")
+
+
+
     def to_tensor(self, frame):
         img = frame  # , _, _ = letterbox(frame)
 
@@ -116,7 +123,7 @@ class YOLO7:
 
         return bbox
 
-    def detect(self, source, conf=0.3, iou=0.4, classes=None):
+    def detect(self, source, conf=0.25, iou=0.45, classes=None):
         input_video = cv2.VideoCapture(source)
 
         fps = int(input_video.get(cv2.CAP_PROP_FPS))
@@ -140,71 +147,72 @@ class YOLO7:
 
             with torch.no_grad():  # Calculating gradients would cause a GPU memory leak
                 new_frame = self.to_tensor(frame)
-                predict = self.model(new_frame)[0]
-                t2 = time_synchronized()
+                predict = self.model(new_frame, augment=self.augment)[0]
 
-                # Apply NMS
-                predict = non_max_suppression(predict, conf, iou, classes=classes)
-                t3 = time_synchronized()
+            t2 = time_synchronized()
 
-                dets = 0
-                empty_conf_count = 0
+            # Apply NMS
+            predict = non_max_suppression(predict, conf, iou, classes=classes, agnostic=self.agnostic_nms)
+            t3 = time_synchronized()
 
-                for tr_id, predict_track in enumerate(predict):
-                    if predict_track is not None and len(predict_track) > 0:
-                        dets += 1
+            dets = 0
+            empty_conf_count = 0
 
-                        # Rescale boxes from img_size to im0 size
-                        conv_pred = scale_coords(new_frame.shape[2:], predict_track, frame.shape).round()
+            for tr_id, det in enumerate(predict):
+                if len(det) > 0:
+                    dets += 1
 
-                        # conf_ = predict_track[:, [4]]
-                        # cls = predict_track[:, [5]]
+                    # Rescale boxes from img_size to im0 size
+                    det[:, :4] = scale_coords(new_frame.shape[2:], det[:, :4], frame.shape).round()
 
-                        # print(f"cls = {cls}")
-                        # print(f"conf_ = {conf_}")
+                    # conf_ = predict_track[:, [4]]
+                    # cls = predict_track[:, [5]]
 
-                        # Rescale boxes from img_size to im0 size
+                    # print(f"cls = {cls}")
+                    # print(f"conf_ = {conf_}")
 
-                        # Print results
-                        for c in predict_track[:, 5].unique():
-                            n = (predict_track[:, 5] == c).sum()  # detections per class
-                            s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "  # add to string
+                    # Rescale boxes from img_size to im0 size
 
-                        for det_id, detection in enumerate(predict_track):  # detections per image
-                            # print(f"{det_id}: detection = {detection}")
-                            # print(f"{det_id}: bb = {detection[:4]}, id = {detection[4]}, cls = {detection[5]}, "
-                            #      f"conf = {detection[6]}")
+                    # Print results
+                    for c in det[:, 5].unique():
+                        n = (det[:, 5] == c).sum()  # detections per class
+                        s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "  # add to string
 
-                            x1 = float(detection[0]) / w
-                            y1 = float(detection[1]) / h
-                            x2 = float(detection[2]) / w
-                            y2 = float(detection[3]) / h
+                    for det_id, detection in enumerate(det):  # detections per image
+                        # print(f"{det_id}: detection = {detection}")
+                        # print(f"{det_id}: bb = {detection[:4]}, id = {detection[4]}, cls = {detection[5]}, "
+                        #      f"conf = {detection[6]}")
 
-                            left = min(x1, x2)
-                            top = min(y1, y2)
-                            width = abs(x1 - x2)
-                            height = abs(y1 - y2)
+                        x1 = float(detection[0]) / w
+                        y1 = float(detection[1]) / h
+                        x2 = float(detection[2]) / w
+                        y2 = float(detection[3]) / h
 
-                            conf = detection[4]
-                            cls = detection[5]
+                        left = min(x1, x2)
+                        top = min(y1, y2)
+                        width = abs(x1 - x2)
+                        height = abs(y1 - y2)
 
-                            if conf is None:
-                                # print("detection[6] is None")
-                                empty_conf_count += 1
-                                continue
+                        conf = detection[4]
+                        cls = detection[5]
 
-                            info = [frame_id,
-                                    left, top,
-                                    width, height,
-                                    # id
-                                    int(-1),
-                                    # cls
-                                    int(cls),
-                                    # conf
-                                    float(conf)]
+                        if conf is None:
+                            # print("detection[6] is None")
+                            empty_conf_count += 1
+                            continue
 
-                            # print(info)
-                            results.append(info)
+                        info = [frame_id,
+                                left, top,
+                                width, height,
+                                # id
+                                int(-1),
+                                # cls
+                                int(cls),
+                                # conf
+                                float(conf)]
+
+                        # print(info)
+                        results.append(info)
 
             t4 = time_synchronized()
 
