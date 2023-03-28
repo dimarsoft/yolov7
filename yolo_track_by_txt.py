@@ -139,7 +139,7 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type: str, track
     now = datetime.now()
 
     session_folder_name = f"{now.year:04d}_{now.month:02d}_{now.day:02d}_{now.hour:02d}_{now.minute:02d}_" \
-                          f"{now.second:02d}_yolo_{tracker_type}"
+                          f"{now.second:02d}_yolo_tracks_by_txt_{tracker_type}"
 
     session_folder = str(Path(output_folder) / session_folder_name)
 
