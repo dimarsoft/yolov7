@@ -4,22 +4,20 @@ from pathlib import Path
 
 import cv2
 import torch
-import torch.backends.cudnn as cudnn
 from numpy import random
 
 from models.experimental import attempt_load
-from utils.datasets import LoadStreams, LoadImages
-from utils.general import check_img_size, check_requirements, check_imshow, non_max_suppression, apply_classifier, \
-    scale_coords, xyxy2xywh, strip_optimizer, set_logging, increment_path
+from utils.datasets import LoadImages
+from utils.general import check_img_size, non_max_suppression, scale_coords, xyxy2xywh, set_logging
 from utils.plots import plot_one_box
-from utils.torch_utils import select_device, load_classifier, time_synchronized, TracedModel
+from utils.torch_utils import select_device, time_synchronized, TracedModel
 
 
-def detect(opt, save_img=False):
+def get_detect(opt, model, save_img=False):
     source, weights, view_img, save_txt, imgsz, trace = opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size, not opt.no_trace
     save_img = not opt.nosave and not source.endswith('.txt')  # save inference images
 
-    print("detect: version 1.3")
+    print("detect: version 1.6")
     # Directories
     save_dir = Path(opt.project)  # increment run
 
@@ -32,16 +30,17 @@ def detect(opt, save_img=False):
 
     # Initialize
     set_logging()
-    device = select_device(opt.device)
-    half = device.type != 'cpu'  # half precision only supported on CUDA
+
+    device = model.device # select_device(opt.device)
+    half = model.half # device.type != 'cpu'  # half precision only supported on CUDA
 
     # Load model
-    model = attempt_load(weights, map_location=device)  # load FP32 model
-    stride = int(model.stride.max())  # model stride
+    # model = attempt_load(weights, map_location=device)  # load FP32 model
+    stride = model.stride # int(model.stride.max())  # model stride
     imgsz = check_img_size(imgsz, s=stride)  # check img_size
-
-    if trace:
-        model = TracedModel(model, device, opt.img_size)
+    model = model.model
+    # if trace:
+    #    model = TracedModel(model, device, opt.img_size)
 
     if half:
         model.half()  # to FP16
