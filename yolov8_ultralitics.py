@@ -29,8 +29,8 @@ class YOLO8UL:
 
         self.letter_box = LetterBox()
 
-    def detect(self, source, conf=0.3, iou=0.4, classes=None):
-        detections = self.model.predict(source, conf=conf, iou=iou, classes=classes)
+    def detect(self, source, conf_threshold=0.3, iou=0.4, classes=None):
+        detections = self.model.predict(source, conf=conf_threshold, iou=iou, classes=classes)
 
         detections = convert_toy7(detections, save_none_id=True)
 

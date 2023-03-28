@@ -12,18 +12,16 @@ from ultralytics.nn.autobackend import AutoBackend
 from ultralytics.yolo.data.augment import LetterBox
 from ultralytics.yolo.utils.ops import scale_boxes, non_max_suppression
 
+from configs import WEIGHTS
 from labeltools import TrackWorker
 from resultools import TestResults
 from save_txt_tools import yolo8_save_tracks_to_txt, convert_toy7, yolo_load_detections_from_txt
 from trackers.multi_tracker_zoo import create_tracker
+from utils.general import scale_coords, xyxy2xywh
 from utils.torch_utils import time_synchronized, select_device
 from yolo_track_bbox import YoloTrackBbox
 from yolov7 import YOLO7
 from yolov8_ultralitics import YOLO8UL
-
-FILE = Path(__file__).resolve()
-ROOT = FILE.parents[0]  # yolov5 strongsort root directory
-WEIGHTS = ROOT / 'weights'
 
 
 class YOLO8:
@@ -69,7 +67,8 @@ class YOLO8:
 
         return img
 
-    def track(self, source, tracker_type, tracker_config, reid_weights="osnet_x0_25_msmt17.pt", conf=0.3, iou=0.4,
+    def track(self, source, tracker_type, tracker_config, reid_weights="osnet_x0_25_msmt17.pt",
+              conf_threshold=0.3, iou=0.4,
               classes=None, change_bb=False):
 
         self.reid_weights = Path(WEIGHTS) / reid_weights
@@ -105,7 +104,7 @@ class YOLO8:
                 t2 = time_synchronized()
 
                 # Apply NMS
-                predict = non_max_suppression(predict, conf, iou, classes=classes)
+                predict = non_max_suppression(predict, conf_threshold, iou, classes=classes)
                 t3 = time_synchronized()
 
                 curr_frame = frame
@@ -117,7 +116,7 @@ class YOLO8:
                 dets = 0
                 empty_conf_count = 0
                 for tr_id, predict_track in enumerate(predict):
-                    if predict_track is not None and len(predict_track) > 0:
+                    if len(predict_track) > 0:
 
                         predict_track = YOLO7.change_bbox(predict_track, change_bb)
 
@@ -138,8 +137,6 @@ class YOLO8:
                         for c in predict_track[:, 5].unique():
                             n = (predict_track[:, 5] == c).sum()  # detections per class
                             s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "  # add to string
-
-                        # conv_pred = scale_coords(new_frame.shape[2:], predict_track, frame.shape).round()
 
                         tracker_outputs = tracker.update(predict_track.cpu(), frame)
 
@@ -203,7 +200,7 @@ class YOLO8:
 
         return results
 
-    def detect(self, source, conf=0.3, iou=0.4, classes=None):
+    def detect(self, source, conf_threshold=0.3, iou=0.4, classes=None):
 
         input_video = cv2.VideoCapture(source)
 
@@ -233,13 +230,17 @@ class YOLO8:
                 t2 = time_synchronized()
 
                 # Apply NMS
-                predict = non_max_suppression(predict, conf, iou, classes=classes)
+                predict = non_max_suppression(predict, conf_threshold, iou, classes=classes)
                 t3 = time_synchronized()
 
                 dets = 0
                 empty_conf_count = 0
-                for tr_id, predict_track in enumerate(predict):
-                    if predict_track is not None and len(predict_track) > 0:
+                gn = torch.tensor(frame.shape)[[1, 0, 1, 0]]  # normalization gain whwh
+
+                for tr_id, det in enumerate(predict):
+                    if len(det) > 0:
+
+                        det[:, :4] = scale_coords(new_frame.shape[2:], det[:, :4], frame.shape).round()
 
                         dets += 1
                         # bbox = predict_track[:, :4]
@@ -251,26 +252,19 @@ class YOLO8:
                         # print(f"bbox = {bbox}")
 
                         # Print results
-                        for c in predict_track[:, 5].unique():
-                            n = (predict_track[:, 5] == c).sum()  # detections per class
+                        for c in det[:, 5].unique():
+                            n = (det[:, 5] == c).sum()  # detections per class
                             s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "  # add to string
 
-                        for det_id, detection in enumerate(predict_track):  # detections per image
+                        for *xyxy, conf, cls in det:
+                        #for det_id, detection in enumerate(det):  # detections per image
 
-                            # bbox = detection[0:4]
-                            # track_id = detection[4]
-                            conf = detection[4]
-                            cls = detection[5]
+                            xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
 
-                            x1 = float(detection[0]) / w
-                            y1 = float(detection[1]) / h
-                            x2 = float(detection[2]) / w
-                            y2 = float(detection[3]) / h
-
-                            left = min(x1, x2)
-                            top = min(y1, y2)
-                            width = abs(x1 - x2)
-                            height = abs(y1 - y2)
+                            left = xywh[0]
+                            top = xywh[1]
+                            width = xywh[2]
+                            height = xywh[3]
 
                             if conf is None:
                                 # print("detection[6] is None")
@@ -310,11 +304,11 @@ class YOLO8:
 
 def detect_single_video_yolo8(model, source, output_folder, conf=0.3, save_vid2=False):
     print(f"start {source}")
-    model = YOLO8UL(model)
+    model = YOLO8(model)
 
     track = model.detect(
         source=source,
-        conf=conf
+        conf_threshold=conf
     )
     source_path = Path(source)
     text_path = Path(output_folder) / f"{source_path.stem}.txt"

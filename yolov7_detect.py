@@ -5,22 +5,23 @@ from pathlib import Path
 
 from labeltools import TrackWorker
 from save_txt_tools import yolo7_save_tracks_to_txt
+from utils.general import set_logging
 from utils.torch_utils import time_synchronized
 from yolov7 import YOLO7
 
 
-def detect_single_video_yolo7(model, source, output_folder, classes=None, conf=0.1, save_txt=True, save_vid=False):
+def detect_single_video_yolo7(weights, source, output_folder, classes=None, conf=0.1, save_txt=True, save_vid=False):
     print(f"start detect_single_video_yolo7 {source}")
 
     source_path = Path(source)
     text_path = Path(output_folder) / f"{source_path.stem}.txt"
 
-    model = YOLO7(model)
+    model = YOLO7(weights)
 
     detections = model.detect(
-        source=source,
-        conf=conf,
-        classes=classes
+       source=source,
+       conf_threshold=conf,
+       classes=classes
     )
 
     if save_txt:
@@ -52,6 +53,8 @@ def run_detect_yolo7(model: str, source: str, output_folder,
         source: путь к видео, если папка, то для каждого видео файла запустит
         model (str): модель для YOLO8
     """
+
+    set_logging()
 
     source_path = Path(source)
 
@@ -103,17 +106,3 @@ def run_detect_yolo7(model: str, source: str, output_folder,
         print(f"process file: {source_path}")
         detect_single_video_yolo7(model, str(source_path), session_folder,
                                   classes, conf, save_txt, save_vid)
-
-
-def run_example():
-    model = "D:\\AI\\2023\\models\\Yolov7\\25.02.2023_dataset_1.1_yolov7_best.pt"
-    video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\"
-    output_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\"
-
-    files = ['1']
-
-    run_detect_yolo7(model, video_source, output_folder, files=files, conf=0.25, save_txt=True, save_vid=True)
-
-
-if __name__ == '__main__':
-    run_example()

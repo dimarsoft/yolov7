@@ -39,7 +39,8 @@ class YoloTrackBbox:
 
         return torch.tensor(res, device=self.device)
 
-    def track(self, source, txt_source, tracker_type, tracker_config, reid_weights="osnet_x0_25_msmt17.pt", conf=0.3,
+    def track(self, source, txt_source, tracker_type, tracker_config, reid_weights="osnet_x0_25_msmt17.pt",
+              conf_threshold=0.3,
               iou=0.4,
               classes=None, change_bb=False):
 

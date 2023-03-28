@@ -32,7 +32,7 @@ def run_single_video_yolo8v2(model, source, tracker_type: str, tracker_config, o
 
     track = model.track(
         source=source,
-        conf=conf,
+        conf_threshold=conf,
         tracker_type=tracker_type,
         tracker_config=tracker_config,
         reid_weights=reid_weights,

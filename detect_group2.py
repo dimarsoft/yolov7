@@ -15,14 +15,16 @@ from utils.plots import plot_one_box
 from utils.torch_utils import select_device, load_classifier, time_synchronized, TracedModel
 
 
-def detect(save_img=False):
+def detect(opt, save_img=False):
     source, weights, view_img, save_txt, imgsz, trace = opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size, not opt.no_trace
     save_img = not opt.nosave and not source.endswith('.txt')  # save inference images
     webcam = source.isnumeric() or source.endswith('.txt') or source.lower().startswith(
         ('rtsp://', 'rtmp://', 'http://', 'https://'))
 
     # Directories
-    save_dir = Path(increment_path(Path(opt.project) / opt.name, exist_ok=opt.exist_ok))  # increment run
+    # save_dir = Path(increment_path(Path(opt.project) / opt.name, exist_ok=opt.exist_ok))  # increment run
+    save_dir = Path(opt.project)  # increment run
+
     (save_dir / 'labels' if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
 
     print(f"opt.augment = {opt.augment}, agnostic_nms = {opt.agnostic_nms}, "
@@ -70,6 +72,21 @@ def detect(save_img=False):
     old_img_b = 1
 
     t0 = time.time()
+    total_detections = 0
+
+    if save_txt:  # Write to file
+        p = Path(source)
+        single_txt_file = str(save_dir / 'labels' / p.stem) + '.txt'
+
+        print(f"create txt: '{single_txt_file}'")
+
+        # просто создание пустого файла, если он есть то очистим
+
+        with open(single_txt_file, 'w') as f:
+            pass
+
+    results = []
+
     for path, img, im0s, vid_cap in dataset:
         img = torch.from_numpy(img).to(device)
         img = img.half() if half else img.float()  # uint8 to fp16/32
@@ -78,7 +95,8 @@ def detect(save_img=False):
             img = img.unsqueeze(0)
 
         # Warmup
-        if device.type != 'cpu' and (old_img_b != img.shape[0] or old_img_h != img.shape[2] or old_img_w != img.shape[3]):
+        if device.type != 'cpu' and (
+                old_img_b != img.shape[0] or old_img_h != img.shape[2] or old_img_w != img.shape[3]):
             old_img_b = img.shape[0]
             old_img_h = img.shape[2]
             old_img_w = img.shape[3]
@@ -87,7 +105,7 @@ def detect(save_img=False):
 
         # Inference
         t1 = time_synchronized()
-        with torch.no_grad():   # Calculating gradients would cause a GPU memory leak
+        with torch.no_grad():  # Calculating gradients would cause a GPU memory leak
             pred = model(img, augment=opt.augment)[0]
         t2 = time_synchronized()
 
@@ -121,18 +139,29 @@ def detect(save_img=False):
 
                 # Write results
                 for *xyxy, conf, cls in reversed(det):
+                    total_detections += 1
+
                     if save_txt:  # Write to file
                         xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
+
                         line = (cls, *xywh, conf) if opt.save_conf else (cls, *xywh)  # label format
                         with open(txt_path + '.txt', 'a') as f:
                             f.write(('%g ' * len(line)).rstrip() % line + '\n')
+
+                        with open(single_txt_file, 'a') as f:
+                            # нащ формат -1 для ИД трека
+                            line = (frame, -1, cls, *xywh, conf)
+                            f.write(('%g ' * len(line)).rstrip() % line + '\n')
+
+                            results.append([frame, -1, cls, xywh[0], xywh[1], xywh[2], xywh[3], conf])
 
                     if save_img or view_img:  # Add bbox to image
                         label = f'{names[int(cls)]} {conf:.2f}'
                         plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=1)
 
             # Print time (inference + NMS)
-            print(f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS')
+            print(
+                f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS, detections = {total_detections}')
 
             # Stream results
             if view_img:
@@ -161,9 +190,20 @@ def detect(save_img=False):
 
     if save_txt or save_img:
         s = f"\n{len(list(save_dir.glob('labels/*.txt')))} labels saved to {save_dir / 'labels'}" if save_txt else ''
-        #print(f"Results saved to {save_dir}{s}")
+        # print(f"Results saved to {save_dir}{s}")
 
+    print(f"total detections = {total_detections}")
     print(f'Done. ({time.time() - t0:.3f}s)')
+
+    return results
+
+
+def run_example_2(model, video_source):
+    opt.weights = model
+    opt.source = video_source
+    opt.save_vid = True
+    opt.save_txt = True
+    return detect(opt)
 
 
 if __name__ == '__main__':
@@ -188,12 +228,18 @@ if __name__ == '__main__':
     parser.add_argument('--no-trace', action='store_true', help='don`t trace model')
     opt = parser.parse_args()
     print(opt)
-    #check_requirements(exclude=('pycocotools', 'thop'))
+    # check_requirements(exclude=('pycocotools', 'thop'))
 
-    with torch.no_grad():
-        if opt.update:  # update all models (to fix SourceChangeWarning)
-            for opt.weights in ['yolov7.pt']:
-                detect()
-                strip_optimizer(opt.weights)
-        else:
-            detect()
+    model = "D:\\AI\\2023\\models\\Yolov7\\25.02.2023_dataset_1.1_yolov7_best.pt"
+    video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\1.mp4"
+
+    run_example_2(model, video_source)
+
+    # with torch.no_grad():
+    #     if opt.update:  # update all models (to fix SourceChangeWarning)
+    #         for opt.weights in ['yolov7.pt']:
+    #             detect()
+    #             strip_optimizer(opt.weights)
+    #     else:
+    #         pass
+    #         # detect()

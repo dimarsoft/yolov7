@@ -34,7 +34,7 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
     track = model.track(
         source=source,
         txt_source=txt_source,
-        conf=conf,
+        conf_threshold=conf,
         tracker_type=tracker_type,
         tracker_config=tracker_config,
         reid_weights=reid_weights,

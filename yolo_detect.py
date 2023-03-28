@@ -6,9 +6,11 @@ from pathlib import Path
 from configs import parse_yolo_version, YoloVersion
 from labeltools import TrackWorker
 from save_txt_tools import yolo7_save_tracks_to_txt
+from utils.general import set_logging
 from utils.torch_utils import time_synchronized
 from yolov7 import YOLO7
-from yolov8_ultralitics import YOLO8UL
+from yolov8 import YOLO8
+# from yolov8_ultralitics import YOLO8UL
 
 
 def create_yolo_model(yolo_version, model):
@@ -16,7 +18,8 @@ def create_yolo_model(yolo_version, model):
         return YOLO7(model)
 
     if yolo_version == YoloVersion.yolo_v8:
-        return YOLO8UL(model)
+        return YOLO8(model)
+        # return YOLO8UL(model)
 
 
 def detect_single_video_yolo(yolo_version, model, source, output_folder, classes=None, conf=0.1, save_txt=True,
@@ -30,7 +33,7 @@ def detect_single_video_yolo(yolo_version, model, source, output_folder, classes
 
     detections = model.detect(
         source=source,
-        conf=conf,
+        conf_threshold=conf,
         classes=classes
     )
 
@@ -64,6 +67,8 @@ def run_detect_yolo(yolo_info, model: str, source: str, output_folder,
         source: путь к видео, если папка, то для каждого видео файла запустит
         model (str): модель для YOLO8
     """
+
+    set_logging()
 
     print(f"yolo version = {yolo_info}")
     yolo_version = parse_yolo_version(yolo_info)

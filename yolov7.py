@@ -1,25 +1,29 @@
+import time
 from pathlib import Path
 
 import cv2
 import numpy as np
 import torch
+from utils.general import check_img_size, xyxy2xywh
 
+from configs import WEIGHTS
 from models.experimental import attempt_load
 from trackers.multi_tracker_zoo import create_tracker
-from utils.datasets import letterbox
+from utils.datasets import letterbox, LoadImages
 from utils.general import non_max_suppression, scale_coords
 from utils.torch_utils import select_device, time_synchronized, TracedModel
 
-FILE = Path(__file__).resolve()
-ROOT = FILE.parents[0]  # yolov5 strongsort root directory
-WEIGHTS = ROOT / 'weights'
-
 
 class YOLO7:
-    def __init__(self, weights_path, half=False, device=''):
+    def __init__(self, weights_path, half=False, device='', imgsz=640):
         self.device = select_device(device)
         # Load model
+        self.weights_path = weights_path
         self.model = attempt_load(weights_path, map_location=self.device)  # load FP32 model
+
+        self.stride = int(self.model.stride.max())  # model stride
+
+        self.imgsz = check_img_size(imgsz, s=self.stride)  # check img_size
 
         self.model = TracedModel(self.model, self.device, img_size=640)
 
@@ -36,11 +40,9 @@ class YOLO7:
         self.reid_weights = Path(WEIGHTS) / 'osnet_x0_25_msmt17.pt'  # model.pt path,
 
         self.augment = False
-        self.agnostic_nms = False;
+        self.agnostic_nms = False
 
         print(f"augment = {self.augment}, agnostic_nms = {self.agnostic_nms}")
-
-
 
     def to_tensor(self, frame):
         img = frame  # , _, _ = letterbox(frame)
@@ -123,7 +125,74 @@ class YOLO7:
 
         return bbox
 
-    def detect(self, source, conf=0.25, iou=0.45, classes=None):
+    def detect2(self, source, conf_threshold=0.25, iou=0.45, classes=None):
+        dataset = LoadImages(source, img_size=self.imgsz, stride=self.stride)
+
+        results = []
+
+        t0 = time.time()
+        total_detections = 0
+
+        for path, img, im0s, vid_cap in dataset:
+            img = torch.from_numpy(img).to(self.device)
+            img = img.half() if self.half else img.float()  # uint8 to fp16/32
+            img /= 255.0  # 0 - 255 to 0.0 - 1.0
+            if img.ndimension() == 3:
+                img = img.unsqueeze(0)
+
+            # Warmup
+            if self.device.type != 'cpu' and (
+                    old_img_b != img.shape[0] or old_img_h != img.shape[2] or old_img_w != img.shape[3]):
+                old_img_b = img.shape[0]
+                old_img_h = img.shape[2]
+                old_img_w = img.shape[3]
+                for i in range(3):
+                    self.model(img, augment=self.augment)[0]
+
+            # Inference
+            t1 = time_synchronized()
+            with torch.no_grad():  # Calculating gradients would cause a GPU memory leak
+                pred = self.model(img, augment=self.augment)[0]
+            t2 = time_synchronized()
+
+            # Apply NMS
+            pred = non_max_suppression(pred, conf_threshold, iou, classes=classes, agnostic=self.agnostic_nms)
+
+            t3 = time_synchronized()
+
+            # Process detections
+            for i, det in enumerate(pred):  # detections per image
+                p, s, im0, frame = path, '', im0s, getattr(dataset, 'frame', 0)
+
+                gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
+                if len(det):
+                    # Rescale boxes from img_size to im0 size
+                    det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
+
+                    # Print results
+                    for c in det[:, -1].unique():
+                        n = (det[:, -1] == c).sum()  # detections per class
+                        s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "  # add to string
+
+                    # Write results
+                    for *xyxy, conf, cls in det:
+                        total_detections += 1
+
+                        xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
+                        results.append([frame, -1, cls, xywh[0], xywh[1], xywh[2], xywh[3], conf])
+
+                # Print time (inference + NMS)
+                print(f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS, detections = {total_detections}')
+
+                # Save results (image with detections)
+
+        print(f"total detections = {total_detections}")
+        print(f'Done. ({time.time() - t0:.3f}s)')
+
+        return results
+
+    def detect(self, source, conf_threshold=0.25, iou=0.45, classes=None):
+
         input_video = cv2.VideoCapture(source)
 
         fps = int(input_video.get(cv2.CAP_PROP_FPS))
@@ -139,6 +208,7 @@ class YOLO7:
         results = []
 
         for frame_id in range(frames_in_video):
+
             ret, frame = input_video.read()
 
             # Inference
@@ -152,17 +222,19 @@ class YOLO7:
             t2 = time_synchronized()
 
             # Apply NMS
-            predict = non_max_suppression(predict, conf, iou, classes=classes, agnostic=self.agnostic_nms)
+            predict = non_max_suppression(predict, conf_threshold, iou, classes=classes, agnostic=self.agnostic_nms)
             t3 = time_synchronized()
 
             dets = 0
             empty_conf_count = 0
 
+            gn = torch.tensor(frame.shape)[[1, 0, 1, 0]]  # normalization gain whwh
+
             for tr_id, det in enumerate(predict):
                 if len(det) > 0:
-                    dets += 1
 
                     # Rescale boxes from img_size to im0 size
+                    # det[:, :4] = scale_coords(new_frame.shape[2:], det[:, :4], frame.shape).round()
                     det[:, :4] = scale_coords(new_frame.shape[2:], det[:, :4], frame.shape).round()
 
                     # conf_ = predict_track[:, [4]]
@@ -174,32 +246,29 @@ class YOLO7:
                     # Rescale boxes from img_size to im0 size
 
                     # Print results
-                    for c in det[:, 5].unique():
-                        n = (det[:, 5] == c).sum()  # detections per class
+                    for c in det[:, -1].unique():
+                        n = (det[:, -1] == c).sum()  # detections per class
                         s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "  # add to string
 
-                    for det_id, detection in enumerate(det):  # detections per image
+                    for *xyxy, conf, cls in det:
+                        # for det_id, detection in enumerate(det):
+                        dets += 1
+                        # detections per image
                         # print(f"{det_id}: detection = {detection}")
                         # print(f"{det_id}: bb = {detection[:4]}, id = {detection[4]}, cls = {detection[5]}, "
                         #      f"conf = {detection[6]}")
 
-                        x1 = float(detection[0]) / w
-                        y1 = float(detection[1]) / h
-                        x2 = float(detection[2]) / w
-                        y2 = float(detection[3]) / h
+                        xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
 
-                        left = min(x1, x2)
-                        top = min(y1, y2)
-                        width = abs(x1 - x2)
-                        height = abs(y1 - y2)
+                        x1 = float(xyxy[0]) / w
+                        y1 = float(xyxy[1]) / h
+                        x2 = float(xyxy[2]) / w
+                        y2 = float(xyxy[3]) / h
 
-                        conf = detection[4]
-                        cls = detection[5]
-
-                        if conf is None:
-                            # print("detection[6] is None")
-                            empty_conf_count += 1
-                            continue
+                        left = xywh[0]
+                        top = xywh[1]
+                        width = xywh[2]
+                        height = xywh[3]
 
                         info = [frame_id,
                                 left, top,
@@ -224,16 +293,16 @@ class YOLO7:
 
             print(f'frame ({frame_id + 1}/{frames_in_video}) Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, '
                   f'({(1E3 * (t3 - t2)):.1f}ms) NMS, {(1E3 * (t4 - t3)):.1f}ms) '
-                  f'{detections_info} {empty_conf_count_str}')
+                  f'{detections_info} {empty_conf_count_str}, {len(results)}')
 
         input_video.release()
 
-        print(f"total detections = {len(results)}")
+        print(f"Done. total detections = {len(results)}")
 
         return results
 
-    def track(self, source, tracker_type, tracker_config, reid_weights="osnet_x0_25_msmt17.pt", conf=0.3, iou=0.4,
-              classes=None, change_bb=False):
+    def track(self, source, tracker_type, tracker_config, reid_weights="osnet_x0_25_msmt17.pt",
+              conf_threshold=0.3, iou=0.4, classes=None, change_bb=False):
 
         self.reid_weights = Path(WEIGHTS) / reid_weights
         tracker = create_tracker(tracker_type, tracker_config, self.reid_weights, self.device, self.half)
@@ -268,7 +337,7 @@ class YOLO7:
                 t2 = time_synchronized()
 
                 # Apply NMS
-                predict = non_max_suppression(predict, conf, iou, classes=classes)
+                predict = non_max_suppression(predict, conf_threshold, iou, classes=classes)
                 t3 = time_synchronized()
 
                 curr_frame = frame

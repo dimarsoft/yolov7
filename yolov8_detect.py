@@ -45,7 +45,7 @@ def detect_single_video_yolo8v2(model, source, output_folder, classes=None, conf
 
     detections = model.detect(
         source=source,
-        conf=conf,
+        conf_threshold=conf,
         classes=classes
     )
 

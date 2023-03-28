@@ -10,7 +10,7 @@ from utils.general import non_max_suppression, scale_coords, xyxy2xywh, set_logg
 from utils.torch_utils import time_synchronized
 
 
-def get_detect(opt, source, model, save_dir, save_txt):
+def get_detect(opt, source, model, save_dir, save_txt, conf=0.25, iou=0.45, classes=None):
     # source, save_txt = opt.source, opt.save_txt
 
     print("detect: version 1.9")
@@ -21,11 +21,17 @@ def get_detect(opt, source, model, save_dir, save_txt):
 
     # print(f"conf_thres = {conf}, iou_thres = {iou}")
 
-    print(f"opt.augment = {opt.augment}, agnostic_nms = {opt.agnostic_nms}, "
-          f"conf_thres = {opt.conf_thres}, iou_thres = {opt.iou_thres}, classes = {opt.classes}")
+    augment = model.augment
+    agnostic_nms = model.agnostic_nms
+
+    print(f"opt.augment = {augment}, agnostic_nms = {agnostic_nms}, "
+          f"conf_thres = {conf}, iou_thres = {iou}, classes = {classes}")
 
     # Initialize
     set_logging()
+
+    conf_th = conf
+    iou_th = iou
 
     device = model.device # select_device(opt.device)
     half = model.half # device.type != 'cpu'  # half precision only supported on CUDA
@@ -93,7 +99,12 @@ def get_detect(opt, source, model, save_dir, save_txt):
         t2 = time_synchronized()
 
         # Apply NMS
-        pred = non_max_suppression(pred, opt.conf_thres, opt.iou_thres, classes=opt.classes, agnostic=opt.agnostic_nms)
+        # conf = opt.conf_thres
+        # iou = opt.iou_thres
+
+        print(f"conf = {conf} ({conf_th}), iou = {iou} ({iou_th})")
+
+        pred = non_max_suppression(pred, conf_th, iou_th, classes=classes, agnostic=agnostic_nms)
 
         t3 = time_synchronized()
 

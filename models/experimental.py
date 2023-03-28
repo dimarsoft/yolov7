@@ -241,11 +241,10 @@ class End2End(nn.Module):
         return x
 
 
-
-
-
 def attempt_load(weights, map_location=None):
     # Loads an ensemble of models weights=[a,b,c] or a single model weights=[a] or weights=a
+    print(f"weights = {weights}")
+
     model = Ensemble()
     for w in weights if isinstance(weights, list) else [weights]:
         attempt_download(w)
