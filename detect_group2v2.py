@@ -18,8 +18,7 @@ from utils.torch_utils import select_device, load_classifier, time_synchronized,
 def detect(opt, save_img=False):
     source, weights, view_img, save_txt, imgsz, trace = opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size, not opt.no_trace
     save_img = not opt.nosave and not source.endswith('.txt')  # save inference images
-    webcam = source.isnumeric() or source.endswith('.txt') or source.lower().startswith(
-        ('rtsp://', 'rtmp://', 'http://', 'https://'))
+    # webcam = source.isnumeric() or source.endswith('.txt') or source.lower().startswith(('rtsp://', 'rtmp://', 'http://', 'https://'))
 
     # Directories
     save_dir = Path(opt.project)  # increment run
@@ -56,13 +55,7 @@ def detect(opt, save_img=False):
     # Set Dataloader
     vid_path, vid_writer = None, None
 
-    if webcam:
-        view_img = check_imshow()
-        # cudnn.benchmark = True  # set True to speed up constant image size inference
-        # dataset = LoadStreams(source, img_size=imgsz, stride=stride)
-    else:
-        dataset = LoadImages(source, img_size=imgsz, stride=stride)
-
+    dataset = LoadImages(source, img_size=imgsz, stride=stride)
 
     # Get names and colors
     names = model.module.names if hasattr(model, 'module') else model.names
