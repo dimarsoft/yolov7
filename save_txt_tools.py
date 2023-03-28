@@ -7,6 +7,25 @@ bbox - в относительный величинах
 """
 
 
+def convert_txt_toy7(results, save_none_id=False):
+    results_y7 = []
+
+    for track in results:
+        frame_index = track[0]
+        xywhn = track
+
+        bbox_w = xywhn[5]
+        bbox_h = xywhn[6]
+        bbox_left = xywhn[3]
+        bbox_top = xywhn[4]
+
+        track_id = int(track[1])
+        cls = int(track[2])
+
+        results_y7.append([frame_index, bbox_left, bbox_top, bbox_w, bbox_h, track_id, cls])
+
+    return results_y7
+
 def convert_toy7(results, save_none_id=False):
     results_y7 = []
 
@@ -138,5 +157,7 @@ def yolo_load_detections_from_txt(txt_path):
     # df = pd.DataFrame(df, columns=['frame', 'id', 'class', 'bb_left', 'bb_top', 'bb_width', 'bb_height', 'conf'])
 
     return df
+
+
 
     # return np.genfromtxt(txt_path, delimiter=" ", dtype=float)

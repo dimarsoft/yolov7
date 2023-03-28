@@ -167,7 +167,7 @@ def draw_track_on_frame(frame, draw_rect, frame_w,
     if draw_rect:
         if lab.label is Labels.human:
 
-            if draw_class:
+            if draw_class or frame_info.track_id < 0:
                 caption = frame_info.get_caption()
             else:
                 caption = f"{frame_info.track_id}"
@@ -565,7 +565,7 @@ class TrackWorker:
             self.draw_turnic_on_frame(results[i], w, h)
 
         for label in self.track_labels:
-            draw_track_on_frame(results[label.frame], True, w, h, label, draw_class=draw_class)
+            draw_track_on_frame(results[int(label.frame)], True, w, h, label, draw_class=draw_class)
 
         output_video_path = str(Path(output_folder) / Path(source_video).name)
         output_video = cv2.VideoWriter(
