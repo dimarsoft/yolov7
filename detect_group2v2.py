@@ -18,8 +18,8 @@ from utils.torch_utils import select_device, load_classifier, time_synchronized,
 def detect(opt, save_img=False):
     source, weights, view_img, save_txt, imgsz, trace = opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size, not opt.no_trace
     save_img = not opt.nosave and not source.endswith('.txt')  # save inference images
-    # webcam = source.isnumeric() or source.endswith('.txt') or source.lower().startswith(('rtsp://', 'rtmp://', 'http://', 'https://'))
 
+    print("detect: version 1.3")
     # Directories
     save_dir = Path(opt.project)  # increment run
 
@@ -28,7 +28,7 @@ def detect(opt, save_img=False):
     # print(f"conf_thres = {conf}, iou_thres = {iou}")
 
     print(f"opt.augment = {opt.augment}, agnostic_nms = {opt.agnostic_nms}, "
-          f"conf_thres = {opt.conf_thres}, iou_thres = {opt.iou_thres}")
+          f"conf_thres = {opt.conf_thres}, iou_thres = {opt.iou_thres}, classes = {opt.classes}")
 
     # Initialize
     set_logging()
