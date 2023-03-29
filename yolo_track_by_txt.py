@@ -31,7 +31,7 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
 
     model = YoloTrackBbox()
 
-    track = model.track(
+    track = model.track_all(
         source=source,
         txt_source=txt_source,
         conf_threshold=conf,
@@ -247,7 +247,8 @@ def run_example():
 
     txt_source_folder = "D:\\AI\\2023\\Detect\\y8_27.03.2023"
     run_track_yolo(txt_source_folder, video_source, "norfair", tracker_config,
-                   output_folder, reid_weights, test_file, files=['1'], save_vid=True, change_bb=False)
+                   output_folder, reid_weights, test_file, test_func="popov_alex",
+                   files=['1'], save_vid=True, change_bb=False)
 
 
 if __name__ == '__main__':

@@ -39,10 +39,9 @@ class YoloTrackBbox:
 
         return torch.tensor(res, device=self.device)
 
-    def track(self, source, txt_source, tracker_type, tracker_config, reid_weights="osnet_x0_25_msmt17.pt",
-              conf_threshold=0.3,
-              iou=0.4,
-              classes=None, change_bb=False):
+    # на удаление, т.к. нужно все кадры в трекер подать
+    def _track_old(self, source, txt_source, tracker_type, tracker_config, reid_weights="osnet_x0_25_msmt17.pt",
+                   conf_threshold=0.3, iou=0.4, classes=None, change_bb=False):
 
         tracks_t1 = time_synchronized()
 
@@ -194,7 +193,7 @@ class YoloTrackBbox:
 
         return results
 
-    def track_all(self, source, txt_source, tracker_type, tracker_config, reid_weights="osnet_x0_25_msmt17.pt",
+    def track(self, source, txt_source, tracker_type, tracker_config, reid_weights="osnet_x0_25_msmt17.pt",
               conf_threshold=0.3,
               iou=0.4,
               classes=None, change_bb=False):
