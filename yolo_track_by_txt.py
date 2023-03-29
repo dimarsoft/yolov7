@@ -31,7 +31,7 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
 
     model = YoloTrackBbox()
 
-    track = model.track_all(
+    track = model.track(
         source=source,
         txt_source=txt_source,
         conf_threshold=conf,
