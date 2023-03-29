@@ -56,7 +56,7 @@ class YoloTrackBbox:
 
         file_t2 = time_synchronized()
 
-        print(f"file '{txt_source}' read in  ({(1E3 * (file_t2 - file_t1)):.1f}ms")
+        print(f"file '{txt_source}' read in  ({(1E3 * (file_t2 - file_t1)):.1f}ms)")
 
         img_frames = df_bbox[0].unique()
 
@@ -211,9 +211,7 @@ class YoloTrackBbox:
 
         file_t2 = time_synchronized()
 
-        print(f"file '{txt_source}' read in  ({(1E3 * (file_t2 - file_t1)):.1f}ms")
-
-        img_frames = df_bbox[0].unique()
+        print(f"file '{txt_source}' read in  ({(1E3 * (file_t2 - file_t1)):.1f}ms)")
 
         input_video = cv2.VideoCapture(source)
 

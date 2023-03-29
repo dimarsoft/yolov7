@@ -7,6 +7,7 @@ from pathlib import Path
 import torch
 
 from configs import load_default_bound_line, CAMERAS_PATH, get_all_trackers_full_path
+from exception_tools import save_exception
 from labeltools import TrackWorker
 from post_processing.alex import alex_count_humans
 from post_processing.timur import timur_count_humans, get_camera
@@ -20,15 +21,6 @@ from datetime import datetime
 # настройки камер, считываются при старте сессии
 cameras_info = {}
 
-
-def save_exception(e: Exception, text_ex_path, caption: str):
-    with open(text_ex_path, "w") as write_file:
-        write_file.write(f"Exception in {caption}!!!")
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-        for line in lines:
-            write_file.write(line)
-    print(f"Exception in {caption} {str(e)}! details in {str(text_ex_path)} ")
 
 
 def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, output_folder,

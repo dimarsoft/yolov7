@@ -245,10 +245,10 @@ def run_example():
     reid_weights = "osnet_x0_25_msmt17.pt"
     tracker_config = "trackers/NorFairTracker/configs/norfair_track.yaml"
 
-    txt_source_folder = "D:\\AI\\2023\\Detect\\y8_27.03.2023"
+    txt_source_folder = "D:\\AI\\2023\\Detect\\2023_03_29_10_35_01_YoloVersion.yolo_v7_detect"
     run_track_yolo(txt_source_folder, video_source, "norfair", tracker_config,
-                   output_folder, reid_weights, test_file, test_func="popov_alex",
-                   files=['1'], save_vid=True, change_bb=False)
+                   output_folder, reid_weights, test_file, test_func="timur",
+                   files=['32'], save_vid=True, change_bb=False)
 
 
 if __name__ == '__main__':

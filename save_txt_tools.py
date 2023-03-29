@@ -5,6 +5,7 @@
 
 bbox - в относительный величинах
 """
+from exception_tools import print_exception
 
 
 def convert_txt_toy7(results, save_none_id=False):
@@ -25,6 +26,7 @@ def convert_txt_toy7(results, save_none_id=False):
         results_y7.append([frame_index, bbox_left, bbox_top, bbox_w, bbox_h, track_id, cls])
 
     return results_y7
+
 
 def convert_toy7(results, save_none_id=False):
     results_y7 = []
@@ -151,13 +153,13 @@ def yolo7_save_tracks_to_txt(results, txt_path, conf=0.0):
 
 
 def yolo_load_detections_from_txt(txt_path):
-    import numpy as np
     import pandas as pd
-    df = pd.read_csv(txt_path, delimiter=" ", dtype=float, header=None)
-    # df = pd.DataFrame(df, columns=['frame', 'id', 'class', 'bb_left', 'bb_top', 'bb_width', 'bb_height', 'conf'])
+
+    try:
+        df = pd.read_csv(txt_path, delimiter=" ", dtype=float, header=None)
+        # df = pd.DataFrame(df, columns=['frame', 'id', 'class', 'bb_left', 'bb_top', 'bb_width', 'bb_height', 'conf'])
+    except Exception as ex:
+        print_exception(ex, f"yolo_load_detections_from_txt: '{str(txt_path)}'")
+        df = pd.DataFrame(dtype=float, columns=[0, 1, 2, 3, 4, 5, 6, 7])
 
     return df
-
-
-
-    # return np.genfromtxt(txt_path, delimiter=" ", dtype=float)
