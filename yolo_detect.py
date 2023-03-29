@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 from datetime import datetime
@@ -10,6 +11,8 @@ from utils.general import set_logging
 from utils.torch_utils import time_synchronized
 from yolov7 import YOLO7
 from yolov8 import YOLO8
+
+
 # from yolov8_ultralitics import YOLO8UL
 
 
@@ -144,5 +147,36 @@ def run_example():
     run_detect_yolo(8, model, video_source, output_folder, files=files, conf=0.25, save_txt=True, save_vid=True)
 
 
+# запуск из командной строки: python yolo_detect.py  --yolo 7 --weights "" source ""
+def run_cli(opt_info):
+    yolo, source, weights, output_folder, files, save_txt, save_vid, conf, classes = \
+        opt_info.yolo, opt_info.source, opt_info.weights, opt_info.output_folder, \
+        opt_info.files, opt_info.save_txt, opt_info.save_vid, opt_info.conf, opt_info.classes
+
+    run_detect_yolo(yolo, weights, source, output_folder,
+                    files=files, conf=conf, save_txt=save_txt, save_vid=save_vid, classes=classes)
+
+
 if __name__ == '__main__':
-    run_example()
+    # run_example()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--yolo', nargs='+', type=str, help='7')
+    parser.add_argument('--weights', nargs='+', type=str, default='yolov7.pt', help='model.pt path(s)')
+    parser.add_argument('--source', type=str, help='source')  # file/folder, 0 for webcam
+    parser.add_argument('--files', type=str, default=None, help='files names list')  # files from list
+    parser.add_argument('--output_folder', type=str, help='output_folder')  # output folder
+    parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
+    parser.add_argument('--conf', type=float, default=0.25, help='object confidence threshold')
+    parser.add_argument('--iou', type=float, default=0.45, help='IOU threshold for NMS')
+    parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
+    parser.add_argument('--view-img', action='store_true', help='display results')
+    parser.add_argument('--save-txt', action='store_true', help='save results to *.txt')
+    parser.add_argument('--save-vid', action='store_true', help='save results to *.mp4')
+    parser.add_argument('--classes', nargs='+', type=int, help='filter by class: --class 0, or --class 0 2 3')
+    parser.add_argument('--agnostic-nms', action='store_true', help='class-agnostic NMS')
+    parser.add_argument('--augment', action='store_true', help='augmented inference')
+    opt = parser.parse_args()
+    print(opt)
+
+    run_cli(opt)
