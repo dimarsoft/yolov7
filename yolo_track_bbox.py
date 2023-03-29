@@ -44,7 +44,7 @@ class YoloTrackBbox:
               iou=0.4,
               classes=None, change_bb=False):
 
-        track_t1 = time_synchronized()
+        tracks_t1 = time_synchronized()
 
         self.reid_weights = Path(WEIGHTS) / reid_weights
         tracker = create_tracker(tracker_type, tracker_config, self.reid_weights, self.device, self.half)
@@ -58,6 +58,7 @@ class YoloTrackBbox:
         file_t2 = time_synchronized()
 
         print(f"file '{txt_source}' read in  ({(1E3 * (file_t2 - file_t1)):.1f}ms")
+
         img_frames = df_bbox[0].unique()
 
         input_video = cv2.VideoCapture(source)
@@ -77,7 +78,12 @@ class YoloTrackBbox:
 
         results = []
 
+        d_tracks_sum = 0
+        d_df_sum = 0
+
         for frame_id in img_frames:  # range(frames_in_video):
+
+            frame_id = int(frame_id)
 
             input_video.set(cv2.CAP_PROP_POS_FRAMES, frame_id)
             ret, frame = input_video.read()
@@ -88,52 +94,58 @@ class YoloTrackBbox:
                 if prev_frame is not None and curr_frame is not None:  # camera motion compensation
                     tracker.camera_update(prev_frame, curr_frame)
 
+            t0 = time_synchronized()
+
             df_bbox_det = df_bbox[df_bbox[0] == frame_id]
 
             t1 = time_synchronized()
 
-            with torch.no_grad():  # Calculating gradients would cause a GPU memory leak
+            # with torch.no_grad():  # Calculating gradients would cause a GPU memory leak
 
-                group = df_bbox_det[df_bbox_det[0] == frame_id]
+            group = df_bbox_det[df_bbox_det[0] == frame_id]
 
-                predict = self.det_to_tensor(group, w, h)
+            predict = self.det_to_tensor(group, w, h)
 
-                predict = YOLO7.change_bbox(predict, change_bb)
+            predict = YOLO7.change_bbox(predict, change_bb)
 
-                dets = 0
-                empty_conf_count = 0
+            dets = 0
+            empty_conf_count = 0
 
-                tracker_outputs = tracker.update(predict.cpu(), frame)
-                for det_id, detection in enumerate(tracker_outputs):  # detections per image
+            track_t1 = time_synchronized()
 
-                    dets += 1
+            tracker_outputs = tracker.update(predict, frame)
 
-                    x1 = float(detection[0]) / w
-                    y1 = float(detection[1]) / h
-                    x2 = float(detection[2]) / w
-                    y2 = float(detection[3]) / h
+            track_t2 = time_synchronized()
+            for det_id, detection in enumerate(tracker_outputs):  # detections per image
 
-                    left = min(x1, x2)
-                    top = min(y1, y2)
-                    width = abs(x1 - x2)
-                    height = abs(y1 - y2)
+                dets += 1
 
-                    if detection[6] is None:
-                        # print("detection[6] is None")
-                        empty_conf_count += 1
-                        continue
+                x1 = float(detection[0]) / w
+                y1 = float(detection[1]) / h
+                x2 = float(detection[2]) / w
+                y2 = float(detection[3]) / h
 
-                    info = [frame_id,
-                            left, top,
-                            width, height,
-                            # id
-                            int(detection[4]),
-                            # cls
-                            int(detection[5]),
-                            # conf
-                            float(detection[6])]
+                left = min(x1, x2)
+                top = min(y1, y2)
+                width = abs(x1 - x2)
+                height = abs(y1 - y2)
 
-                    results.append(info)
+                if detection[6] is None:
+                    # print("detection[6] is None")
+                    empty_conf_count += 1
+                    continue
+
+                info = [frame_id,
+                        left, top,
+                        width, height,
+                        # id
+                        int(detection[4]),
+                        # cls
+                        int(detection[5]),
+                        # conf
+                        float(detection[6])]
+
+                results.append(info)
 
             t2 = time_synchronized()
 
@@ -143,13 +155,22 @@ class YoloTrackBbox:
 
             prev_frame = frame
 
-            print(f'frame ({frame_id + 1}/{frames_in_video}) Done. ({(1E3 * (t2 - t1)):.1f}ms) tracking, '
+            d_track = track_t2 - track_t1
+            d_df = t1 - t0
+
+            d_tracks_sum += d_track
+            d_df_sum += d_df
+
+            print(f'frame ({frame_id + 1}/{frames_in_video}) Done. track = ({(1E3 * d_track):.1f}ms), '
+                  f' df = ({(1E3 * d_df):.1f}ms), ({(1E3 * (t2 - t1)):.1f}ms) tracking, '
                   f'{detections_info} {empty_conf_count_str}')
 
         input_video.release()
 
-        track_t2 = time_synchronized()
+        tracks_t2 = time_synchronized()
 
-        print(f'Total tracking ({(1E3 * (track_t2 - track_t1)):.1f}ms)')
+        print(f'Total tracking ({(1E3 * (tracks_t2 - tracks_t1)):.1f}ms), '
+              f'd_tracks_sum = ({(1E3 * d_tracks_sum):.1f}ms),' 
+              f'd_df_sum = ({(1E3 * d_df_sum):.1f}ms)')
 
         return results
