@@ -44,12 +44,20 @@ class YoloTrackBbox:
               iou=0.4,
               classes=None, change_bb=False):
 
+        track_t1 = time_synchronized()
+
         self.reid_weights = Path(WEIGHTS) / reid_weights
         tracker = create_tracker(tracker_type, tracker_config, self.reid_weights, self.device, self.half)
 
         need_camera_update = hasattr(tracker, 'camera_update')
 
+        file_t1 = time_synchronized()
+
         df_bbox = yolo_load_detections_from_txt(txt_source)
+
+        file_t2 = time_synchronized()
+
+        print(f"file '{txt_source}' read in  ({(1E3 * (file_t2 - file_t1)):.1f}ms")
         img_frames = df_bbox[0].unique()
 
         input_video = cv2.VideoCapture(source)
@@ -139,5 +147,9 @@ class YoloTrackBbox:
                   f'{detections_info} {empty_conf_count_str}')
 
         input_video.release()
+
+        track_t2 = time_synchronized()
+
+        print(f'Total tracking ({(1E3 * (track_t2 - track_t1)):.1f}ms)')
 
         return results
