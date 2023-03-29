@@ -12,6 +12,7 @@ from trackers.multi_tracker_zoo import create_tracker
 from utils.datasets import letterbox, LoadImages
 from utils.general import non_max_suppression, scale_coords
 from utils.torch_utils import select_device, time_synchronized, TracedModel
+from yolo_tools import xyxy2ltwh
 
 
 class YOLO7:
@@ -234,16 +235,7 @@ class YOLO7:
                 if len(det) > 0:
 
                     # Rescale boxes from img_size to im0 size
-                    # det[:, :4] = scale_coords(new_frame.shape[2:], det[:, :4], frame.shape).round()
                     det[:, :4] = scale_coords(new_frame.shape[2:], det[:, :4], frame.shape).round()
-
-                    # conf_ = predict_track[:, [4]]
-                    # cls = predict_track[:, [5]]
-
-                    # print(f"cls = {cls}")
-                    # print(f"conf_ = {conf_}")
-
-                    # Rescale boxes from img_size to im0 size
 
                     # Print results
                     for c in det[:, -1].unique():
@@ -251,24 +243,15 @@ class YOLO7:
                         s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "  # add to string
 
                     for *xyxy, conf, cls in det:
-                        # for det_id, detection in enumerate(det):
                         dets += 1
-                        # detections per image
-                        # print(f"{det_id}: detection = {detection}")
-                        # print(f"{det_id}: bb = {detection[:4]}, id = {detection[4]}, cls = {detection[5]}, "
-                        #      f"conf = {detection[6]}")
 
-                        xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
+                        # normalized ltwh
+                        ltwh = (xyxy2ltwh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()
 
-                        x1 = float(xyxy[0]) / w
-                        y1 = float(xyxy[1]) / h
-                        x2 = float(xyxy[2]) / w
-                        y2 = float(xyxy[3]) / h
-
-                        left = xywh[0]
-                        top = xywh[1]
-                        width = xywh[2]
-                        height = xywh[3]
+                        left = ltwh[0]
+                        top = ltwh[1]
+                        width = ltwh[2]
+                        height = ltwh[3]
 
                         info = [frame_id,
                                 left, top,
@@ -280,7 +263,6 @@ class YOLO7:
                                 # conf
                                 float(conf)]
 
-                        # print(info)
                         results.append(info)
 
             t4 = time_synchronized()

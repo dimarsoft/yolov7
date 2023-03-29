@@ -19,6 +19,7 @@ from save_txt_tools import yolo8_save_tracks_to_txt, convert_toy7, yolo_load_det
 from trackers.multi_tracker_zoo import create_tracker
 from utils.general import scale_coords, xyxy2xywh
 from utils.torch_utils import time_synchronized, select_device
+from yolo_tools import xyxy2ltwh
 from yolo_track_bbox import YoloTrackBbox
 from yolov7 import YOLO7
 from yolov8_ultralitics import YOLO8UL
@@ -243,13 +244,6 @@ class YOLO8:
                         det[:, :4] = scale_coords(new_frame.shape[2:], det[:, :4], frame.shape).round()
 
                         dets += 1
-                        # bbox = predict_track[:, :4]
-                        # conf_ = predict_track[:, [4]]
-                        # cls = predict_track[:, [5]]
-
-                        # print(f"cls = {cls}")
-                        # print(f"conf_ = {conf_}")
-                        # print(f"bbox = {bbox}")
 
                         # Print results
                         for c in det[:, 5].unique():
@@ -257,14 +251,13 @@ class YOLO8:
                             s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "  # add to string
 
                         for *xyxy, conf, cls in det:
-                        #for det_id, detection in enumerate(det):  # detections per image
 
-                            xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
+                            ltwh = (xyxy2ltwh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()
 
-                            left = xywh[0]
-                            top = xywh[1]
-                            width = xywh[2]
-                            height = xywh[3]
+                            left = ltwh[0]
+                            top = ltwh[1]
+                            width = ltwh[2]
+                            height = ltwh[3]
 
                             if conf is None:
                                 # print("detection[6] is None")
