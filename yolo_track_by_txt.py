@@ -72,7 +72,7 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
                 humans_result = None
 
                 if test_func == "popov_alex":
-                    humans_result = alex_count_humans(tracks_new)
+                    humans_result = alex_count_humans(tracks_new, num, w, h, bound_line)
                     pass
                 if test_func == "timur":
                     humans_result = timur_count_humans(tracks_new, source)
