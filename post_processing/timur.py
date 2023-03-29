@@ -45,7 +45,7 @@ def tracks_to_dic(tracks, w, h):
         if cls != 0:
             continue
 
-        x1, y1, x2, y2 = int(track[3]), int(track[4]), int(track[3] + track[5]), int(track[4] + track[6])
+        x1, y1, x2, y2 = track[3], track[4], track[3] + track[5], track[4] + track[6]
 
         x1 *= w
         x2 *= w
