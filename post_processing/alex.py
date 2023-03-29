@@ -1,6 +1,9 @@
+# Новый вариант
 import numpy as np
 import pandas as pd
+import json
 
+from configs import CAMERAS_PATH
 from count_results import Result, Deviation
 
 
@@ -30,7 +33,18 @@ bbox_h(0-1.0), box.conf(0-1.0)] здесь можно написать свой 
 а не 640/640"""
 
 
-def alex_count_humans(tracks):
+# bound_line =  [[490, 662], [907, 613]]
+# [[x1, y1], [x2, y2]]
+# num(str) - строка = имя файл
+# w(int) - ширина
+# h(int) - высота
+
+# пример от Александра
+def alex_count_humans(tracks, num, w, h, bound_line):
+    print(f"Alex post processing v2.1 (29.03.2023)")
+    #    print(f"num = {num}, w = {w}, h = {h}, bound_line = {bound_line}")
+    fn = num
+    #    print(fn)
     deviations = []
     if len(tracks) == 0:
         count_all = 0
@@ -41,35 +55,106 @@ def alex_count_humans(tracks):
     class_helm = 1
     class_uniform = 2
     df = pd.DataFrame(tracks, columns=['frame', 'id', 'class', 'bb_left', 'bb_top', 'bb_width', 'bb_height', 'conf'])
+    # Сбрасываем index
+    # df.reset_index(drop= True , inplace= True )   # Проверить отключение этой строки
+    # Создание датафрейма с траекториями (x,y)
+    arr = np.full((df.shape[0], 2), 0.)
+    df_tr = pd.DataFrame(arr)
+    for i in range(df.shape[0]):
+        df_tr[0][i] = int(df.bb_left[i] * 640 + df.bb_width[i] * 320)
+        df_tr[1][i] = int(df.bb_top[i] * 640 + df.bb_height[i] * 320)
+    df_tr.columns = ['x', 'y']
+    # Получение траекторий людей
+    mask = df['class'] == class_hum
+    temp = df[mask]
+    list_0 = pd.Series(temp.id.unique()).to_list()  # Список всех id класса "человек" на видео
+    list = []
+    for n in list_0:  # цикл по всем людям id [1, 6, 20, 24, 31, 40, 49]
+        ind_n = df.index[
+            df.id == n].tolist()  # получаем списки индексов где появляется каждый человек [0, 1, 2, 3, 4, 93, 95, 198, 204]
+        l = df_tr.values[ind_n].tolist()  # записываем координаты в переменную
+        list.append(l)  # добавляем координвиы в список координатных пар точки где появляется человек
+    people_tracks = {n: list[list_0.index(n)] for n in list_0}
 
-    # Функция определения индекса первого и последнего индекса появления объекта в видео
-    # n - индекс объекта
-    def first_last_time(n_id):
-        list_n = df.index[df.id == n_id].tolist()
-        first = list_n[0]
-        last = list_n[len(list_n) - 1]
-        return first, last
+    # Подсчет вошедших и вышедших (код Тимура)
+    def get_proj(p1, p2, m):
+        k = (p2[0] - p1[0]) / (p2[1] - p1[1])
+        f1 = m[1] + k * m[0]
+        f2 = p1[1] - (1 / k) * p1[0]
+        x_proj = (f1 - f2) / (k + 1 / k)
+        y_proj = f1 - k * x_proj
+        return [x_proj, y_proj]
 
-    # Рассчет количества объектов, пересекших середину кадра по вертикали. '+1' - сверху вниз, '-1' - снизу вверх.
+    def get_norm(p1, p2):
+        pc = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2]
+        xmin, xmax = pc[0] - 10, pc[0] + 10
+        a = (p2[1] - p1[1]) / (p2[0] - p1[0])
+        fnorm = lambda x: pc[1] - (1 / a) * (x - pc[0])
+        line_norm = [[xmin, fnorm(xmin)], [xmax, fnorm(xmax)]]
+        return line_norm
+
+    # Функция определения пересечения линии турникета
+    def crossing_bound(people_path, bound_line):
+        def ccw(A, B, C):
+            return (C[1] - A[1]) * (B[0] - A[0]) > (B[1] - A[1]) * (C[0] - A[0])
+
+        def intersect(A, B, C, D):
+            return ccw(A, C, D) != ccw(B, C, D) and ccw(A, B, C) != ccw(A, B, D)
+
+        if len(people_path) >= 4:
+            p1 = [(people_path[0][0] + people_path[1][0]) / 2, (people_path[0][1] + people_path[1][1]) / 2]
+            p2 = [(people_path[-2][0] + people_path[-1][0]) / 2, (people_path[-2][1] + people_path[-1][1]) / 2]
+        else:
+            p1 = [people_path[0][0], people_path[0][1]]
+            p2 = [people_path[-1][0], people_path[-1][1]]
+        direction = "up" if p2[1] - p1[1] < 0 else "down"
+        line_norm = get_norm(*bound_line)
+        p1_proj = get_proj(*line_norm, p1)
+        p2_proj = get_proj(*line_norm, p2)
+        #      a = 20    # Сдвигаем линию турникета на 'a' вниз
+        #      bound_line[0][1] = bound_line[0][1] + a
+        #      bound_line[1][1] = bound_line[1][1] + a
+        intersect = intersect(p1_proj, p2_proj, bound_line[0], bound_line[1])
+        return {"direction": direction, "intersect": intersect}
+
+    # Функция подсчета вошедших и вышедших
+    def calc_inp_outp_people(tracks_info):
+        input_p = 0
+        output_p = 0
+        for track_i in tracks_info:
+            if track_i["intersect"]:
+                if track_i["direction"] == 'down':
+                    input_p += 1
+                elif track_i["direction"] == 'up':
+                    output_p += 1
+        return {"input": input_p, "output": output_p}
+
+    with open(CAMERAS_PATH, 'r') as f:
+        camera_config = json.load(f)
+
     list_in = []
-    count_in = 0
     list_out = []
-    count_out = 0
-    for n in df.id.unique():  # Проход по всем ид детектированных объектов
-        i = first_last_time(n)[0]  # Кадр первого появления объекта с индексом n
-        j = first_last_time(n)[1]  # Кадр последнего появления объекта с индексом n
-        if df['class'][i] == class_hum:
-            if df.bb_top[i] * 640 + df.bb_height[i] * 640 // 2 < 320 and df.bb_top[j] * 640 + df.bb_height[
-                j] * 640 // 2 > 320:
-                count_in += 1
-                list_in.append(n)
-            elif df.bb_top[i] * 640 + df.bb_height[i] * 640 // 2 > 320 and df.bb_top[j] * 640 + df.bb_height[
-                j] * 640 // 2 < 320:
-                count_out += 1
-                list_out.append(n)
-    # print('Всего вошло человек:', count_in - count_out)
-    # print('Список вошедших на территорию', list_in)
-    # print('Список вышедших с территории', list_out)
+    res_inpotp = {}
+    bound_line = camera_config.get(fn)
+
+    tracks_info = []
+    for p_id in people_tracks.keys():
+        people_path = people_tracks[p_id]
+        tr_info = crossing_bound(people_path, bound_line)
+        if tr_info["intersect"]:
+            if tr_info["direction"] == "down":
+                list_in.append(p_id)
+            else:
+                list_out.append(p_id)
+        tracks_info.append(tr_info)
+    #    print(f"{p_id}: {tr_info}")
+    result = calc_inp_outp_people(tracks_info)
+    res_inpotp.update({fn: result})
+    #    print('Вошли:', list_in, 'Вышли:', list_out)
+    #    print(fn, result)
+
+    count_in = result["input"]
+    count_out = result["output"]
     count_all = count_in + count_out
     # 1-чел без каски и жилета, 2-чел с каской без жилета, 3-чел с жилетом без каски.
     # Получение списка всех ид класса "человек" на видео
@@ -90,7 +175,6 @@ def alex_count_humans(tracks):
     #  print(list_1)
 
     # Функция расчета IoU
-
     def IoU(i, j):
         x1 = df.bb_left[i] * 640
         y1 = df.bb_top[i] * 640
@@ -122,7 +206,7 @@ def alex_count_humans(tracks):
         arr_0_2 = np.full((df.shape[0], len(list_2)), 0.)
         df_0_2 = pd.DataFrame(arr_0_2, columns=list_2)  # Датафрейм с IoU жилетов и людей
         for i in range(df.shape[0]):  # df.shape[0]
-            if df.id[i] == hum and df['class'][i] == class_hum:
+            if df.id[i] == int(hum) and df['class'][i] == class_hum:
                 frame = df.frame[i]  # Определить кадр
                 mask = df.frame == frame
                 temp = df[mask]
@@ -145,7 +229,7 @@ def alex_count_humans(tracks):
         arr_0_1 = np.full((df.shape[0], len(list_1)), 0.)
         df_0_1 = pd.DataFrame(arr_0_1, columns=list_1)  # Датафрейм с IoU касок и людей
         for i in range(df.shape[0]):  # df.shape[0]
-            if df.id[i] == hum and df['class'][i] == class_hum:
+            if df.id[i] == int(hum) and df['class'][i] == class_hum:
                 frame = df.frame[i]  # Определить кадр
                 mask = df.frame == frame
                 temp1 = df[mask]
@@ -183,6 +267,6 @@ def alex_count_humans(tracks):
             #        last = list[len(list_hum)-1]
             end_frame = df.frame[list_hum[len(list_hum) - 1]]
 
-            deviations.append(Deviation(start_frame, end_frame, status_id))
+            deviations.append(Deviation(int(start_frame), int(end_frame), int(status_id)))
 
-    return Result(count_all, count_in, count_out, deviations)
+    return Result(int(count_all), int(count_in), int(count_out), deviations)
