@@ -100,20 +100,20 @@ class YoloTrackBbox:
 
             t1 = time_synchronized()
 
-            # with torch.no_grad():  # Calculating gradients would cause a GPU memory leak
+            with torch.no_grad():  # Calculating gradients would cause a GPU memory leak
 
-            group = df_bbox_det[df_bbox_det[0] == frame_id]
+                group = df_bbox_det[df_bbox_det[0] == frame_id]
 
-            predict = self.det_to_tensor(group, w, h)
+                predict = self.det_to_tensor(group, w, h)
 
-            predict = YOLO7.change_bbox(predict, change_bb)
+                predict = YOLO7.change_bbox(predict, change_bb)
 
-            dets = 0
-            empty_conf_count = 0
+                dets = 0
+                empty_conf_count = 0
 
-            track_t1 = time_synchronized()
+                track_t1 = time_synchronized()
 
-            tracker_outputs = tracker.update(predict, frame)
+                tracker_outputs = tracker.update(predict, frame)
 
             track_t2 = time_synchronized()
             for det_id, detection in enumerate(tracker_outputs):  # detections per image
