@@ -14,6 +14,7 @@ from ultralytics.yolo.utils.ops import scale_boxes, non_max_suppression
 
 from configs import WEIGHTS
 from labeltools import TrackWorker
+from post_processing.timur import get_camera
 from resultools import TestResults
 from save_txt_tools import yolo8_save_tracks_to_txt, convert_toy7, yolo_load_detections_from_txt
 from trackers.multi_tracker_zoo import create_tracker
@@ -21,6 +22,7 @@ from utils.general import scale_coords, xyxy2xywh
 from utils.torch_utils import time_synchronized, select_device
 from yolo_tools import xyxy2ltwh
 from yolo_track_bbox import YoloTrackBbox
+from yolo_track_by_txt import cameras_info
 from yolov7 import YOLO7
 from yolov8_ultralitics import YOLO8UL
 
@@ -343,6 +345,11 @@ def run_single_video_yolo8(model, source, tracker, output_folder, test_file, tes
     tracks_y7 = convert_toy7(track)
     track_worker = TrackWorker(tracks_y7)
 
+    num, w, h = get_camera(source)
+    bound_line = cameras_info.get(num)
+
+    print(f"num = {num}, w = {w}, h = {h}, bound_line = {bound_line}")
+
     if save_vid2:
         t1 = time_synchronized()
         track_worker.create_video(source, output_folder)
@@ -363,7 +370,7 @@ def run_single_video_yolo8(model, source, tracker, output_folder, test_file, tes
         for item in tracks_y7:
             tracks_new.append([item[0], item[5], item[6], item[1], item[2], item[3], item[4], item[7]])
 
-        humans_result = test_func(tracks_new)
+        humans_result = test_func(tracks_new, num, w, h, bound_line)
 
     humans_result.file = source_path.name
 
@@ -525,4 +532,4 @@ if __name__ == '__main__':
 
     # print(inf[0].unique())
     # for item in inf.values:
-      #   print(item)
+    #   print(item)
