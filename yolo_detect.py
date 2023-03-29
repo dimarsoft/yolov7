@@ -161,8 +161,8 @@ if __name__ == '__main__':
     # run_example()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--yolo', nargs='+', type=str, help='7')
-    parser.add_argument('--weights', nargs='+', type=str, default='yolov7.pt', help='model.pt path(s)')
+    parser.add_argument('--yolo', type=int, help='7')
+    parser.add_argument('--weights', type=str, default='yolov7.pt', help='model.pt path(s)')
     parser.add_argument('--source', type=str, help='source')  # file/folder, 0 for webcam
     parser.add_argument('--files', type=str, default=None, help='files names list')  # files from list
     parser.add_argument('--output_folder', type=str, help='output_folder')  # output folder
@@ -171,8 +171,8 @@ if __name__ == '__main__':
     parser.add_argument('--iou', type=float, default=0.45, help='IOU threshold for NMS')
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--view-img', action='store_true', help='display results')
-    parser.add_argument('--save-txt', action='store_true', help='save results to *.txt')
-    parser.add_argument('--save-vid', action='store_true', help='save results to *.mp4')
+    parser.add_argument('--save_txt', action='store_true', help='save results to *.txt')
+    parser.add_argument('--save_vid', action='store_true', help='save results to *.mp4')
     parser.add_argument('--classes', nargs='+', type=int, help='filter by class: --class 0, or --class 0 2 3')
     parser.add_argument('--agnostic-nms', action='store_true', help='class-agnostic NMS')
     parser.add_argument('--augment', action='store_true', help='augmented inference')
