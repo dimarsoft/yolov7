@@ -5,12 +5,13 @@ import traceback
 from datetime import datetime
 from pathlib import Path
 
-from configs import load_default_bound_line, CAMERAS_PATH
+from configs import load_default_bound_line, CAMERAS_PATH, get_all_trackers_full_path
 from labeltools import TrackWorker
 from post_processing.alex import alex_count_humans
 from post_processing.timur import timur_count_humans, get_camera
 from resultools import TestResults, test_tracks_file
 from save_txt_tools import yolo7_save_tracks_to_txt
+from utils.general import set_logging
 from utils.torch_utils import time_synchronized
 from yolo_track_bbox import YoloTrackBbox
 from yolov7_track import save_exception
@@ -107,13 +108,15 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
 
 def run_track_yolo(txt_source_folder: str, source: str, tracker_type: str, tracker_config, output_folder, reid_weights,
                    test_result_file, test_func=None, files=None,
-                   classes=None, change_bb=False, conf=0.3, save_vid=False):
+                   classes=None, change_bb=None, conf=0.3, save_vid=False):
     """
 
     Args:
         txt_source_folder: папка с Labels: 1.txt....
         change_bb: менять bbox после детекции для трекера,
                    bbox будет меньше и по центру человека
+                   если тип float, масштабируем по центру
+                   если функция, то функция меняет ббокс
         files: если указана папка, но можно указать имена фай1лов,
                 которые будут обрабатываться. ['1', '2' ...]
         classes: список классов, None все, [0, 1, 2....]
@@ -127,6 +130,8 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type: str, track
         tracker_config: путь к своему файлу с настройками
         source: путь к видео, если папка, то для каждого видео файла запустит
     """
+
+    set_logging()
 
     # при старте сессии считываем настройки камер
     global cameras_info
@@ -252,7 +257,7 @@ def change_bbox(bbox, file_id: str):
     return bbox
 
 
-# пример реалиции бокса по центру 20/20
+# пример реализации бокса по центру 20/20
 def change_bbox_to_center(bbox, file_id):
     x1 = (bbox[:, [0]] + bbox[:, [2]]) / 2
     y1 = (bbox[:, [1]] + bbox[:, [3]]) / 2
@@ -269,7 +274,7 @@ def change_bbox_to_center(bbox, file_id):
     return bbox
 
 
-# пример реалиции от Павла (группа №1)
+# пример реализации от Павла (группа №1)
 def pavel_change_bbox(bbox, file_id):
     y2 = bbox[:, [1]] + 150
 
@@ -283,15 +288,22 @@ def run_example():
     test_file = "D:\\AI\\2023\\TestInfo\\all_track_results.json"
     output_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\"
     reid_weights = "osnet_x0_25_msmt17.pt"
-    tracker_config = "trackers/NorFairTracker/configs/norfair_track.yaml"
+    reid_weights = "D:\\AI\\2023\\Github\\dimar_yolov7\\weights\\mars-small128.pb"
+
+    # tracker_config = "trackers/NorFairTracker/configs/norfair_track.yaml"
+
+    all_trackers = get_all_trackers_full_path()
+
+    tracker_name = "deepsort"
+    tracker_config = all_trackers.get(tracker_name)
 
     files = None
     files = ['30']
 
-    change_bb = change_bbox
+    change_bb = False # change_bbox
 
     txt_source_folder = "D:\\AI\\2023\\Detect\\2023_03_29_10_35_01_YoloVersion.yolo_v7_detect"
-    run_track_yolo(txt_source_folder, video_source, "norfair", tracker_config,
+    run_track_yolo(txt_source_folder, video_source, tracker_name, tracker_config,
                    output_folder, reid_weights, test_file, test_func="timur",
                    files=files, save_vid=True, change_bb=change_bb)
 
