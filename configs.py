@@ -20,7 +20,6 @@ class YoloVersion(Enum):
 
 
 def parse_yolo_version(yolo_version):
-
     if isinstance(yolo_version, YoloVersion):
         return yolo_version
 
@@ -36,8 +35,6 @@ def parse_yolo_version(yolo_version):
             return YoloVersion.yolo_v8
 
     return None
-
-
 
 
 def load_default_bound_line():
@@ -64,6 +61,7 @@ def get_all_trackers():
             'bytetrack': 'trackers/bytetrack/configs/bytetrack.yaml',
 
             'ocsort': 'trackers/ocsort/configs/ocsort.yaml',
+            'deepsort': 'trackers/deep_sort/configs/deepsort.yaml',
             'strongsort': 'trackers/strongsort/configs/strongsort.yaml',
             'fastdeepsort': 'trackers/fast_deep_sort/configs/fastdeepsort.yaml',
             'norfair': 'trackers/NorFairTracker/configs/norfair_track.yaml',
@@ -81,4 +79,3 @@ def get_all_trackers_full_path():
         all_trackers[key] = str(path)
 
     return all_trackers
-
