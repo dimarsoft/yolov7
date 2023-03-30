@@ -172,7 +172,7 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type: str, track
     session_info['save_vid'] = save_vid
     session_info['files'] = files
     session_info['classes'] = classes
-    session_info['change_bb'] = change_bb
+    session_info['change_bb'] = str(change_bb)
     session_info['cameras_path'] = str(CAMERAS_PATH)
 
     test_tracks_file(test_result_file)
@@ -238,6 +238,12 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type: str, track
         save_exception(e, text_ex_path, "compare_to_file_v2")
 
 
+def change_bbox(bbox, file_id):
+
+    print(f"file = {file_id}")
+    return bbox
+
+
 def run_example():
     video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\"
     test_file = "D:\\AI\\2023\\TestInfo\\all_track_results.json"
@@ -248,10 +254,12 @@ def run_example():
     files = None
     files = ['30']
 
+    change_bb = change_bbox
+
     txt_source_folder = "D:\\AI\\2023\\Detect\\2023_03_29_10_35_01_YoloVersion.yolo_v7_detect"
     run_track_yolo(txt_source_folder, video_source, "norfair", tracker_config,
                    output_folder, reid_weights, test_file, test_func="timur",
-                   files=files, save_vid=True, change_bb=False)
+                   files=files, save_vid=True, change_bb=change_bb)
 
 
 if __name__ == '__main__':

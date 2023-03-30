@@ -4,6 +4,8 @@ from pathlib import Path
 import cv2
 import numpy as np
 import torch
+
+from exception_tools import print_exception
 from utils.general import check_img_size, xyxy2xywh
 
 from configs import WEIGHTS
@@ -74,10 +76,17 @@ class YOLO7:
         return im
 
     @staticmethod
-    def change_bbox(bbox, change_bb):
+    def change_bbox(bbox, change_bb, file_id=None):
 
         if change_bb is None:
             return bbox
+
+        if callable(change_bb):
+            try:
+                return change_bb(bbox, file_id)
+            except Exception as ex:
+                print_exception(ex, "external change bbox")
+                return bbox
 
         if isinstance(change_bb, float):
             return YOLO7.change_bbox_v2(bbox, change_bb)
@@ -289,6 +298,8 @@ class YOLO7:
         self.reid_weights = Path(WEIGHTS) / reid_weights
         tracker = create_tracker(tracker_type, tracker_config, self.reid_weights, self.device, self.half)
 
+        file_id = Path(source).stem
+
         input_video = cv2.VideoCapture(source)
 
         fps = int(input_video.get(cv2.CAP_PROP_FPS))
@@ -334,7 +345,7 @@ class YOLO7:
                 for tr_id, predict_track in enumerate(predict):
                     if predict_track is not None and len(predict_track) > 0:
                         dets += 1
-                        predict_track = self.change_bbox(predict_track, change_bb)
+                        predict_track = self.change_bbox(predict_track, change_bb, file_id)
 
                         # conf_ = predict_track[:, [4]]
                         # cls = predict_track[:, [5]]

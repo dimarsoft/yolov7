@@ -169,7 +169,7 @@ def run_yolo8v2(model: str, source: str, tracker_type: str, tracker_config, outp
     session_info['save_vid'] = save_vid
     session_info['files'] = files
     session_info['classes'] = classes
-    session_info['change_bb'] = change_bb
+    session_info['change_bb'] = str(change_bb)
     session_info['cameras_path'] = str(CAMERAS_PATH)
 
     test_tracks_file(test_result_file)

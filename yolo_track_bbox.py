@@ -44,6 +44,8 @@ class YoloTrackBbox:
               iou=0.4,
               classes=None, change_bb=False):
 
+        file_id = Path(source).stem
+
         tracks_t1 = time_synchronized()
 
         self.reid_weights = Path(WEIGHTS) / reid_weights
@@ -115,7 +117,7 @@ class YoloTrackBbox:
                 if len(group) > 0:
 
                     predict = self.det_to_tensor(group, w, h)
-                    predict = YOLO7.change_bbox(predict, change_bb)
+                    predict = YOLO7.change_bbox(predict, change_bb, file_id)
                 else:
                     predict = empty_tensor
                 group_t1 = time_synchronized()
