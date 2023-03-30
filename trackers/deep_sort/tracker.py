@@ -4,7 +4,7 @@ import numpy as np
 from . import kalman_filter
 from . import linear_assignment
 from . import iou_matching
-from . import detection
+from .detection import Detection
 from .track import Track
 
 
@@ -34,9 +34,10 @@ class Tracker:
     tracks : List[Track]
         The list of active tracks at the current time step.
     """
-    GATING_THRESHOLD = np.sqrt(kalman_filter.chi2inv95[4])
+    # GATING_THRESHOLD = np.sqrt(kalman_filter.chi2inv95[4])
 
-    def __init__(self, metric, max_iou_dist=0.9, max_age=30, max_unmatched_preds=7, n_init=3, _lambda=0, ema_alpha=0.9, mc_lambda=0.995):
+    def __init__(self, metric, max_iou_dist=0.9, max_age=30, max_unmatched_preds=7,
+                 n_init=3, _lambda=0, ema_alpha=0.9, mc_lambda=0.995):
         self.metric = metric
         self.max_iou_dist = max_iou_dist
         self.max_age = max_age
@@ -58,25 +59,10 @@ class Tracker:
         for track in self.tracks:
             track.predict(self.kf)
 
-    def increment_ages(self):
-        for track in self.tracks:
-            track.increment_age()
-            track.mark_missed()
-
     def camera_update(self, previous_img, current_img):
         for track in self.tracks:
             track.camera_update(previous_img, current_img)
             
-    def pred_n_update_all_tracks(self):
-        """Perform predictions and updates for all tracks by its own predicted state.
-
-        """
-        self.predict()
-        for t in self.tracks:
-            if self.max_unmatched_preds != 0 and t.updates_wo_assignment < t.max_num_updates_wo_assignment:
-                bbox = t.to_tlwh()
-                t.update_kf(detection.to_xyah_ext(bbox))
-
     def update(self, detections, classes, confidences):
         """Perform measurement update and track management.
 
@@ -98,11 +84,14 @@ class Tracker:
                 detections[detection_idx], classes[detection_idx], confidences[detection_idx])
         for track_idx in unmatched_tracks:
             self.tracks[track_idx].mark_missed()
-            if self.max_unmatched_preds != 0 and self.tracks[track_idx].updates_wo_assignment < self.tracks[track_idx].max_num_updates_wo_assignment:
+            if self.max_unmatched_preds != 0 and \
+                    self.tracks[track_idx].updates_wo_assignment < self.tracks[track_idx].max_num_updates_wo_assignment:
                 bbox = self.tracks[track_idx].to_tlwh()
-                self.tracks[track_idx].update_kf(detection.to_xyah_ext(bbox))
+                self.tracks[track_idx].update_kf(Detection.to_xyah_ext(bbox))
+
         for detection_idx in unmatched_detections:
-            self._initiate_track(detections[detection_idx], classes[detection_idx].item(), confidences[detection_idx].item())
+            self._initiate_track(detections[detection_idx], classes[detection_idx].item(),
+                                 confidences[detection_idx].item())
         self.tracks = [t for t in self.tracks if not t.is_deleted()]
 
         # Update distance metric.
@@ -115,47 +104,14 @@ class Tracker:
             targets += [track.track_id for _ in track.features]
         self.metric.partial_fit(np.asarray(features), np.asarray(targets), active_targets)
 
-    def _full_cost_metric(self, tracks, dets, track_indices, detection_indices):
-        """
-        This implements the full lambda-based cost-metric. However, in doing so, it disregards
-        the possibility to gate the position only which is provided by
-        linear_assignment.gate_cost_matrix(). Instead, I gate by everything.
-        Note that the Mahalanobis distance is itself an unnormalised metric. Given the cosine
-        distance being normalised, we employ a quick and dirty normalisation based on the
-        threshold: that is, we divide the positional-cost by the gating threshold, thus ensuring
-        that the valid values range 0-1.
-        Note also that the authors work with the squared distance. I also sqrt this, so that it
-        is more intuitive in terms of values.
-        """
-        # Compute First the Position-based Cost Matrix
-        pos_cost = np.empty([len(track_indices), len(detection_indices)])
-        msrs = np.asarray([dets[i].to_xyah() for i in detection_indices])
-        for row, track_idx in enumerate(track_indices):
-            pos_cost[row, :] = np.sqrt(
-                self.kf.gating_distance(
-                    tracks[track_idx].mean, tracks[track_idx].covariance, msrs, False
-                )
-            ) / self.GATING_THRESHOLD
-        pos_gate = pos_cost > 1.0
-        # Now Compute the Appearance-based Cost Matrix
-        app_cost = self.metric.distance(
-            np.array([dets[i].feature for i in detection_indices]),
-            np.array([tracks[i].track_id for i in track_indices]),
-        )
-        app_gate = app_cost > self.metric.matching_threshold
-        # Now combine and threshold
-        cost_matrix = self._lambda * pos_cost + (1 - self._lambda) * app_cost
-        cost_matrix[np.logical_or(pos_gate, app_gate)] = linear_assignment.INFTY_COST
-        # Return Matrix
-        return cost_matrix
-
     def _match(self, detections):
 
         def gated_metric(tracks, dets, track_indices, detection_indices):
             features = np.array([dets[i].feature for i in detection_indices])
             targets = np.array([tracks[i].track_id for i in track_indices])
             cost_matrix = self.metric.distance(features, targets)
-            cost_matrix = linear_assignment.gate_cost_matrix(cost_matrix, tracks, dets, track_indices, detection_indices, self.mc_lambda)
+            cost_matrix = linear_assignment.gate_cost_matrix(self.kf, cost_matrix, tracks, dets, track_indices,
+                                                             detection_indices, self.mc_lambda)
 
             return cost_matrix
 

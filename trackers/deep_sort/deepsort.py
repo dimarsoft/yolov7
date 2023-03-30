@@ -1,9 +1,23 @@
+import torch
+
 from trackers.deep_sort.tracker import Tracker as DeepSortTracker
 from trackers.deep_sort.tools import generate_detections as gdet
 from trackers.deep_sort.detection import Detection
 from trackers.deep_sort import nn_matching
 
 import numpy as np
+
+from utils.general import xyxy2xywh
+
+
+def _xyxy_to_tlwh(bbox_xyxy):
+    x1, y1, x2, y2 = bbox_xyxy
+
+    top = x1
+    left = y1
+    w = int(x2 - x1)
+    h = int(y2 - y1)
+    return top, left, w, h
 
 
 class DeepSort:
@@ -19,34 +33,24 @@ class DeepSort:
 
     def update(self, detections, frame):
 
-        if len(detections) == 0:
-            return []
-        # тут нужна конвертация
-
-        my_detection = []
-
         confs = detections[:, 4]
         clss = detections[:, 5]
+        xyxys = detections[:, 0:4]
 
-        for obj_i in detections:
-            x1, y1, x2, y2 = int(obj_i[0]), int(obj_i[1]), int(obj_i[2]), int(obj_i[3])
-            score, class_id = obj_i[4], int(obj_i[5])
-            my_detection.append([x1, y1, x2, y2, score])
+        xyxys_numpy = xyxys.numpy()
 
-        detections = my_detection
+        xywhs = xyxy2xywh(xyxys_numpy)
 
-        bboxes = np.asarray([d[:-1] for d in detections])
-        bboxes[:, 2:] = bboxes[:, 2:] - bboxes[:, 0:2]
-        scores = [d[-1] for d in detections]
+        bbox_tlwh = self._xywh_to_tlwh(xywhs)
+
+        bboxes = np.array([d for d in bbox_tlwh])
 
         features = self.encoder(frame, bboxes)
 
-        dets = []
-        for bbox_id, bbox in enumerate(bboxes):
-            dets.append(Detection(bbox, scores[bbox_id], features[bbox_id]))
+        detections = [Detection(bbox_tlwh[i], conf, features[i]) for i, conf in enumerate(confs)]
 
         self.tracker.predict()
-        self.tracker.update(dets, clss, confs)
+        self.tracker.update(detections, clss, confs)
         self.update_tracks()
 
         # сразу вернем результат
@@ -59,6 +63,16 @@ class DeepSort:
             result.append([x1, y1, x2, y2, track_id, track.class_id, track.conf])
         return result
 
+    @staticmethod
+    def _xywh_to_tlwh(bbox_xywh):
+        if isinstance(bbox_xywh, np.ndarray):
+            bbox_tlwh = bbox_xywh.copy()
+        elif isinstance(bbox_xywh, torch.Tensor):
+            bbox_tlwh = bbox_xywh.clone()
+        bbox_tlwh[:, 0] = bbox_xywh[:, 0] - bbox_xywh[:, 2] / 2.
+        bbox_tlwh[:, 1] = bbox_xywh[:, 1] - bbox_xywh[:, 3] / 2.
+        return bbox_tlwh
+
     def update_tracks(self):
         tracks = []
         for track in self.tracker.tracks:
@@ -66,9 +80,9 @@ class DeepSort:
                 continue
             bbox = track.to_tlbr()
 
-            id = track.track_id
+            track_id = track.track_id
 
-            tracks.append(Track(id, bbox, track.class_id, track.conf))
+            tracks.append(Track(track_id, bbox, track.class_id, track.conf))
 
         self.tracks = tracks
 
@@ -77,61 +91,8 @@ class Track:
     track_id = None
     bbox = None
 
-    def __init__(self, id, bbox, class_id, conf):
-        self.track_id = id
+    def __init__(self, track_id, bbox, class_id, conf):
+        self.track_id = track_id
         self.bbox = bbox
         self.class_id = class_id
         self.conf = conf
-
-# from deep_sort.deep_sort.tracker import Tracker as DeepSortTracker
-# from deep_sort.tools import generate_detections as gdet
-# from deep_sort.deep_sort import nn_matching
-# from deep_sort.deep_sort.detection import Detection
-# import numpy as np
-#
-# class Tracker:
-#     tracker = None
-#     encoder = None
-#     tracks = None
-#
-#     def __init__(self):
-#         max_cosine_distance = 0.4
-#         nn_budget = None
-#
-#         encoder_model_filename = ""
-#
-#         metric = nn_matching.NearestNeighborDistanceMetric("cosine", max_cosine_distance, nn_budget)
-#         self.tracker = DeepSortTracker(metric)
-#         self.encoder = gdet.create_box_encoder(encoder_model_filename, batch_size=1)
-#
-#     def update(self, frame, detections):
-#         bboxes = np.asarray([d[:-1] for d in detections])
-#         bboxes[:, 2:] = bboxes[:, 2:] - bboxes[:, 0:2]
-#         scores = [d[-1] for d in detections]
-#
-#         features = self.encoder(frame, bboxes)
-#
-#         dats = []
-#         for bbox_id, bbox in enumerate(bboxes):
-#             dats.append(Detection(bbox, scores[bbox_id], features[bbox_id]))
-#
-#         self.tracker.predict()
-#         self.tracker.update(dats)
-#         self.update_tracks()
-#
-#     def update_tracks(self):
-#         tracks = []
-#         for track in self.tracker.tracks:
-#             if not track.is_confirmed() or track.time_since_update > 1:
-#                 continue
-#             bbox = track.to_tlbr()
-#             id = track.track_id
-#             tracks.append(Track(id, bbox))
-#         self.tracks = tracks
-#
-# class Track:
-#     track_id = None
-#     bbox = None
-#     def __init__(self, id, bbox):
-#         self.track_id = id
-#         self.bbox = bbox

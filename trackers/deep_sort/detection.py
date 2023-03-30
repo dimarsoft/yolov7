@@ -47,3 +47,10 @@ class Detection(object):
         ret[:2] += ret[2:] / 2
         ret[2] /= ret[3]
         return ret
+
+    @staticmethod
+    def to_xyah_ext(bbox):
+        ret = bbox.copy()
+        ret[:2] += ret[2:] / 2
+        ret[2] /= ret[3]
+        return ret
