@@ -125,7 +125,7 @@ class YoloTrackBbox:
 
                 track_t1 = time_synchronized()
 
-                tracker_outputs = tracker.update(predict, frame)
+                tracker_outputs = tracker.update(predict.cpu(), frame)
 
             track_t2 = time_synchronized()
             for det_id, detection in enumerate(tracker_outputs):  # detections per image
