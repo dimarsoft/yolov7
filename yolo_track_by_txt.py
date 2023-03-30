@@ -238,9 +238,43 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type: str, track
         save_exception(e, text_ex_path, "compare_to_file_v2")
 
 
-def change_bbox(bbox, file_id):
+def change_bbox(bbox, file_id: str):
+    """
 
+    Args:
+        file_id(str): имя файла
+        bbox (tensor): первые 4ре столбца x1 y1 x2 y2
+        в абсолютных значениях картинки.
+        Пока это ббоксы всех классов,
+        сам класс находится в последнем столбце (-1, или индекс 5)
+    """
     print(f"file = {file_id}")
+    return bbox
+
+
+# пример реалиции бокса по центру 20/20
+def change_bbox_to_center(bbox, file_id):
+    x1 = (bbox[:, [0]] + bbox[:, [2]]) / 2
+    y1 = (bbox[:, [1]] + bbox[:, [3]]) / 2
+
+    w = 10
+    h = 10
+
+    bbox[:, [0]] = x1 - w
+    bbox[:, [2]] = x1 + w
+
+    bbox[:, [1]] = y1 - h
+    bbox[:, [3]] = y1 + h
+
+    return bbox
+
+
+# пример реалиции от Павла (группа №1)
+def pavel_change_bbox(bbox, file_id):
+    y2 = bbox[:, [1]] + 150
+
+    bbox[:, [3]] = y2
+
     return bbox
 
 
