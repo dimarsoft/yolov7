@@ -59,13 +59,13 @@ def get_all_trackers():
             'sort': 'trackers/sort/configs/sort.yaml',
             'botsort': 'trackers/botsort/configs/botsort.yaml',
             'bytetrack': 'trackers/bytetrack/configs/bytetrack.yaml',
+            'deepsort': 'trackers/deep_sort/configs/deepsort.yaml',
 
             'ocsort': 'trackers/ocsort/configs/ocsort.yaml',
             'strongsort': 'trackers/strongsort/configs/strongsort.yaml',
             'fastdeepsort': 'trackers/fast_deep_sort/configs/fastdeepsort.yaml',
             'norfair': 'trackers/NorFairTracker/configs/norfair_track.yaml',
         }
-    # 'deepsort': 'trackers/deep_sort/configs/deepsort.yaml', отладить на GPU
 
     return all_trackers
 
