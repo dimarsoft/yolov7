@@ -1,5 +1,6 @@
+from pathlib import Path
 
-
+from configs import WEIGHTS
 from trackers.strongsort.utils.parser import get_config
 
 
@@ -71,6 +72,8 @@ def create_tracker(tracker_type, tracker_config, reid_weights, device, half):
         return sort
     elif tracker_type == 'deepsort':
         from trackers.deep_sort.deepsort import DeepSort as DeepSort
+        reid_weights = Path(WEIGHTS) / "mars-small128.pb"
+        print(f"deepsort reid_weights ' {reid_weights}'")
         tracker = DeepSort(encoder_model_filename=reid_weights,
                            max_dist=cfg.deepsort.max_dist,
                            max_age=cfg.deepsort.max_age,
