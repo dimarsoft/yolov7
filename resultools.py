@@ -1,9 +1,35 @@
 import json
+import sys
+import traceback
 from pathlib import Path
 from types import SimpleNamespace
 
 from configs import TEST_TRACKS_PATH
 from count_results import Result
+from exception_tools import save_exception
+
+
+def save_test_result(test_results, session_folder, source_path):
+    try:
+        test_results.save_results(session_folder)
+    except Exception as e:
+        text_ex_path = Path(session_folder) / f"{source_path.stem}_ex_result.log"
+        with open(text_ex_path, "w") as write_file:
+            write_file.write("Exception in save_results!!!")
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+            for line in lines:
+                write_file.write(line)
+            for item in test_results.result_items:
+                write_file.write(f"{str(item)}\n")
+
+        print(f"Exception in save_results {str(e)}! details in {str(text_ex_path)} ")
+
+    try:
+        test_results.compare_to_file_v2(session_folder)
+    except Exception as e:
+        text_ex_path = Path(session_folder) / f"{source_path.stem}_ex_compare.log"
+        save_exception(e, text_ex_path, "compare_to_file_v2")
 
 
 class TestResults:
@@ -263,16 +289,6 @@ def test_tracks_file(test_file):
             f"deviations = {len(item.deviations)} ")
         for i, div in enumerate(item.deviations):
             print(f"\t{i + 1}, status = {div.status_id}, [{div.start_frame} - {div.end_frame}]")
-
-    # result_json_file = "testinfo/tmp_track_results.json"
-    # print(f"Save compare results info '{str(result_json_file)}'")
-
-    # with open(result_json_file, "w") as write_file:
-    #     write_file.write(json.dumps(test, indent=4, sort_keys=True, default=lambda o: o.__dict__))
-
-    # result.result_items = TestResults.read_info(test_file)
-
-    # result.compare_to_file("testinfo")
 
 
 if __name__ == '__main__':

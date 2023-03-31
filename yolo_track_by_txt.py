@@ -1,7 +1,5 @@
 import json
 import os
-import sys
-import traceback
 from datetime import datetime
 from pathlib import Path
 
@@ -9,7 +7,7 @@ from configs import load_default_bound_line, CAMERAS_PATH, get_all_trackers_full
 from labeltools import TrackWorker
 from post_processing.alex import alex_count_humans
 from post_processing.timur import timur_count_humans, get_camera
-from resultools import TestResults, test_tracks_file
+from resultools import TestResults, test_tracks_file, save_test_result
 from save_txt_tools import yolo7_save_tracks_to_txt, yolo7_save_tracks_to_json
 from utils.general import set_logging
 from utils.torch_utils import time_synchronized
@@ -146,8 +144,12 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type: str, track
 
     now = datetime.now()
 
-    session_folder_name = f"{now.year:04d}_{now.month:02d}_{now.day:02d}_{now.hour:02d}_{now.minute:02d}_" \
-                          f"{now.second:02d}_yolo_tracks_by_txt_{tracker_type}"
+    if isinstance(tracker_type, dict):
+        session_folder_name = f"{now.year:04d}_{now.month:02d}_{now.day:02d}_{now.hour:02d}_{now.minute:02d}_" \
+                              f"{now.second:02d}_yolo_tracks_by_txt"
+    else:
+        session_folder_name = f"{now.year:04d}_{now.month:02d}_{now.day:02d}_{now.hour:02d}_{now.minute:02d}_" \
+                              f"{now.second:02d}_yolo_tracks_by_txt_{tracker_type}"
 
     session_folder = str(Path(output_folder) / session_folder_name)
 
@@ -159,11 +161,13 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type: str, track
 
     import shutil
 
-    save_tracker_config = str(Path(session_folder) / Path(tracker_config).name)
+    if not isinstance(tracker_type, dict):
 
-    print(f"Copy '{tracker_config}' to '{save_tracker_config}")
+        save_tracker_config = str(Path(session_folder) / Path(tracker_config).name)
 
-    shutil.copy(tracker_config, save_tracker_config)
+        print(f"Copy '{tracker_config}' to '{save_tracker_config}")
+
+        shutil.copy(tracker_config, save_tracker_config)
 
     save_test_result_file = str(Path(session_folder) / Path(test_result_file).name)
 
@@ -183,7 +187,7 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type: str, track
     session_info['change_bb'] = str(change_bb)
     session_info['cameras_path'] = str(CAMERAS_PATH)
 
-    test_tracks_file(test_result_file)
+    # test_tracks_file(test_result_file)
 
     if isinstance(test_func, str):
         session_info['test_func'] = test_func
@@ -195,6 +199,9 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type: str, track
 
     test_results = TestResults(test_result_file)
 
+    # список файлов с видео для обработки
+    list_of_videos = []
+
     if source_path.is_dir():
         print(f"process folder: {source_path}")
 
@@ -202,48 +209,68 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type: str, track
             # check if it is a file
             if entry.is_file() and entry.suffix == ".mp4":
                 if files is None:
-                    run_single_video_yolo(txt_source_folder, str(entry), tracker_type, tracker_config,
-                                          session_folder,
-                                          reid_weights, test_results, test_func,
-                                          classes, change_bb, conf, save_vid)
+                    list_of_videos.append(str(entry))
                 else:
                     if entry.stem in files:
-                        run_single_video_yolo(txt_source_folder, str(entry), tracker_type, tracker_config,
-                                              session_folder,
-                                              reid_weights, test_results, test_func,
-                                              classes, change_bb, conf, save_vid)
+                        list_of_videos.append(str(entry))
 
     else:
-        print(f"process file: {source_path}")
-        run_single_video_yolo(txt_source_folder, source, tracker_type, tracker_config,
-                              session_folder,
-                              reid_weights, test_results, test_func, classes,
-                              change_bb=change_bb,
-                              conf=conf,
-                              save_vid=save_vid)
+        # print(f"process file: {source_path}")
+        list_of_videos.append(str(source))
 
-    # save results
+    total_videos = len(list_of_videos)
 
-    try:
-        test_results.save_results(session_folder)
-    except Exception as e:
-        text_ex_path = Path(session_folder) / f"{source_path.stem}_ex_result.log"
-        with open(text_ex_path, "w") as write_file:
-            write_file.write("Exception in save_results!!!")
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-            for line in lines:
-                write_file.write(line)
-            for item in test_results.result_items:
-                write_file.write(f"{str(item)}\n")
+    if isinstance(tracker_type, dict):
+        for tracker in tracker_type.keys():
+            tracker_config = tracker_type.get(tracker)
+            tracker_session_folder = Path(session_folder) / str(tracker)
 
-        print(f"Exception in save_results {str(e)}! details in {str(text_ex_path)} ")
+            try:
+                os.makedirs(tracker_session_folder, exist_ok=True)
+                print(f"Directory '{tracker_session_folder}' created successfully")
 
-    try:
-        test_results.compare_to_file_v2(session_folder)
-    except Exception as e:
-        text_ex_path = Path(session_folder) / f"{source_path.stem}_ex_compare.log"
-        save_exception(e, text_ex_path, "compare_to_file_v2")
+                save_tracker_config = str(Path(tracker_session_folder) / Path(tracker_config).name)
+
+                print(f"Copy '{tracker_config}' to '{save_tracker_config}")
+
+                shutil.copy(tracker_config, save_tracker_config)
+
+            except OSError as error:
+                print(f"Directory '{tracker_session_folder}' can not be created. {error}")
+
+            test_results = TestResults(test_result_file)
+
+            for i, item in enumerate(list_of_videos):
+                print(f"process file: {i + 1}/{total_videos} {item}")
+
+                run_single_video_yolo(txt_source_folder, item, tracker, tracker_config,
+                                      tracker_session_folder,
+                                      reid_weights, test_results, test_func, classes,
+                                      change_bb=change_bb,
+                                      conf=conf,
+                                      save_vid=save_vid)
+
+            save_test_result(test_results, tracker_session_folder, source_path)
+
+            save_test_result_file = str(Path(tracker_session_folder) / Path(test_result_file).name)
+
+            print(f"Copy '{test_result_file}' to '{save_test_result_file}")
+
+            shutil.copy(test_result_file, save_test_result_file)
+
+    else:
+        for i, item in enumerate(list_of_videos):
+            print(f"process file: {i + 1}/{total_videos} {item}")
+
+            run_single_video_yolo(txt_source_folder, item, tracker_type, tracker_config,
+                                  session_folder,
+                                  reid_weights, test_results, test_func, classes,
+                                  change_bb=change_bb,
+                                  conf=conf,
+                                  save_vid=save_vid)
+            # save results
+
+            save_test_result(test_results, session_folder, source_path)
 
 
 def change_bbox(bbox, file_id: str):
@@ -291,7 +318,7 @@ def run_example():
     test_file = "D:\\AI\\2023\\TestInfo\\all_track_results.json"
     output_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\"
     reid_weights = "osnet_x0_25_msmt17.pt"
-    reid_weights = "D:\\AI\\2023\\Github\\dimar_yolov7\\weights\\mars-small128.pb"
+    # reid_weights = "D:\\AI\\2023\\Github\\dimar_yolov7\\weights\\mars-small128.pb"
 
     # tracker_config = "trackers/NorFairTracker/configs/norfair_track.yaml"
 
@@ -303,10 +330,10 @@ def run_example():
     files = None
     files = ['1']
 
-    change_bb = False # change_bbox
+    change_bb = False  # change_bbox
 
     txt_source_folder = "D:\\AI\\2023\\Detect\\2023_03_29_10_35_01_YoloVersion.yolo_v7_detect"
-    run_track_yolo(txt_source_folder, video_source, tracker_name, tracker_config,
+    run_track_yolo(txt_source_folder, video_source, all_trackers, tracker_config,
                    output_folder, reid_weights, test_file, test_func="timur",
                    files=files, save_vid=True, change_bb=change_bb)
 
