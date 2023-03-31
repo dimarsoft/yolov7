@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 from datetime import datetime
@@ -7,7 +8,7 @@ from configs import load_default_bound_line, CAMERAS_PATH, get_all_trackers_full
 from labeltools import TrackWorker
 from post_processing.alex import alex_count_humans
 from post_processing.timur import timur_count_humans, get_camera
-from resultools import TestResults, test_tracks_file, save_test_result
+from resultools import TestResults, save_test_result
 from save_txt_tools import yolo7_save_tracks_to_txt, yolo7_save_tracks_to_json
 from utils.general import set_logging
 from utils.torch_utils import time_synchronized
@@ -162,7 +163,6 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type: str, track
     import shutil
 
     if not isinstance(tracker_type, dict):
-
         save_tracker_config = str(Path(session_folder) / Path(tracker_config).name)
 
         print(f"Copy '{tracker_config}' to '{save_tracker_config}")
@@ -338,5 +338,38 @@ def run_example():
                    files=files, save_vid=True, change_bb=change_bb)
 
 
+# запуск из командной строки: python yolo_detect.py  --yolo 7 --weights "" source ""
+def run_cli(opt_info):
+    txt_source_folder, source, output_folder, files = \
+        opt_info.txt_source_folder, opt_info.source, opt_info.output_folder, opt_info.files
+
+    tracker_name, tracker_config = opt_info.tracker_name, opt_info.tracker_config
+    test_file, test_func = opt_info.test_file, opt_info.test_func
+
+    run_track_yolo(txt_source_folder, source, tracker_name, tracker_config, output_folder,
+                   opt_info.reid_weights,
+                   test_file, test_func=test_func, files=files,
+                   conf=opt_info.conf, save_vid=opt_info.save_vid, classes=opt_info.classes)
+
+
 if __name__ == '__main__':
-    run_example()
+    # run_example()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--txt_source_folder', type=str, help='txt_source_folder')  # file/folder, 0 for webcam
+    parser.add_argument('--source', type=str, help='source')  # file/folder, 0 for webcam
+    parser.add_argument('--tracker_name', type=str, help='tracker_name')  # file/folder, 0 for webcam
+    parser.add_argument('--tracker_config', type=str, help='tracker_config')  # file/folder, 0 for webcam
+    parser.add_argument('--output_folder', type=str, help='output_folder')  # output folder
+    parser.add_argument('--reid_weights', type=str, help='reid_weights')
+    parser.add_argument('--test_file', type=str, help='test_file')
+    parser.add_argument('--test_func', type=str, help='test_func')
+    parser.add_argument('--files', type=str, default=None, help='files names list')  # files from list
+    parser.add_argument('--classes', type=list, help='classes')
+    parser.add_argument('--save_vid', type=bool, help='save results to *.mp4')
+    parser.add_argument('--change_bb', default=None, help='change bbox')
+    parser.add_argument('--conf', type=float, default=0.3, help='object confidence threshold')
+    opt = parser.parse_args()
+    print(opt)
+
+    run_cli(opt)
