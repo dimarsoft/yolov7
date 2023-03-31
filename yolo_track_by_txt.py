@@ -10,7 +10,7 @@ from labeltools import TrackWorker
 from post_processing.alex import alex_count_humans
 from post_processing.timur import timur_count_humans, get_camera
 from resultools import TestResults, test_tracks_file
-from save_txt_tools import yolo7_save_tracks_to_txt
+from save_txt_tools import yolo7_save_tracks_to_txt, yolo7_save_tracks_to_json
 from utils.general import set_logging
 from utils.torch_utils import time_synchronized
 from yolo_track_bbox import YoloTrackBbox
@@ -27,6 +27,7 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
 
     source_path = Path(source)
     text_path = Path(output_folder) / f"{source_path.stem}.txt"
+    json_file = Path(output_folder) / f"{source_path.stem}.json"
 
     txt_source = Path(txt_source_folder) / f"{source_path.stem}.txt"
 
@@ -46,6 +47,8 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
     print(f"save tracks to: {text_path}")
 
     yolo7_save_tracks_to_txt(results=track, txt_path=text_path, conf=conf)
+
+    yolo7_save_tracks_to_json(results=track, json_file=json_file, conf=conf)
 
     track_worker = TrackWorker(track)
 
@@ -294,7 +297,7 @@ def run_example():
 
     all_trackers = get_all_trackers_full_path()
 
-    tracker_name = "deepsort"
+    tracker_name = "norfair"
     tracker_config = all_trackers.get(tracker_name)
 
     files = None

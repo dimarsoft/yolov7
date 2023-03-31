@@ -6,7 +6,7 @@ from pathlib import Path
 
 from configs import parse_yolo_version, YoloVersion
 from labeltools import TrackWorker
-from save_txt_tools import yolo7_save_tracks_to_txt
+from save_txt_tools import yolo7_save_tracks_to_txt, yolo7_save_tracks_to_json
 from utils.general import set_logging
 from utils.torch_utils import time_synchronized
 from yolov7 import YOLO7
@@ -30,7 +30,6 @@ def detect_single_video_yolo(yolo_version, model, source, output_folder, classes
     print(f"start detect_single_video_yolo: {yolo_version}, source = {source}")
 
     source_path = Path(source)
-    text_path = Path(output_folder) / f"{source_path.stem}.txt"
 
     model = create_yolo_model(yolo_version, model)
 
@@ -41,9 +40,17 @@ def detect_single_video_yolo(yolo_version, model, source, output_folder, classes
     )
 
     if save_txt:
+        text_path = Path(output_folder) / f"{source_path.stem}.txt"
+
         print(f"save detections to: {text_path}")
 
         yolo7_save_tracks_to_txt(results=detections, txt_path=text_path, conf=conf)
+
+        json_file = Path(output_folder) / f"{source_path.stem}.json"
+
+        print(f"save detections to: {json_file}")
+
+        yolo7_save_tracks_to_json(results=detections, json_file=json_file, conf=conf)
 
     if save_vid:
         track_worker = TrackWorker(detections)

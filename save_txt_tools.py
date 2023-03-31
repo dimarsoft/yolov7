@@ -1,11 +1,14 @@
 """
-Сохраняет реззультаты детекции YOLO8 и трекинга в текстовый файл
+Сохраняет результаты детекции YOLO8 и трекинга в текстовый файл
 
 Формат: frame_index track_id class bbox_left bbox_top bbox_w bbox_h conf
 
 bbox - в относительный величинах
 """
+import json
+
 from exception_tools import print_exception
+from track_objects import Track
 
 
 def convert_txt_toy7(results, save_none_id=False):
@@ -150,6 +153,34 @@ def yolo7_save_tracks_to_txt(results, txt_path, conf=0.0):
             cls = int(track[6])
             text_file.write(('%g ' * 8 + '\n') % (track[0], track_id, cls, bbox_left,
                                                   bbox_top, bbox_w, bbox_h, track[7]))
+
+
+def yolo7_save_tracks_to_json(results, json_file, conf=0.0):
+    """
+
+    Args:
+        conf: элементы с conf менее указанной не сохраняются
+        json_file: json файл для сохранения
+        results: результат работы модели
+    """
+
+    results_json = []
+
+    for track in results:
+        object_conf = track[7]
+        if object_conf < conf:
+            continue
+        ltwhn = track[1:5]
+        track_id = int(track[5])
+        cls = int(track[6])
+        frame_index = track[0]
+
+        track = Track(ltwhn, cls, object_conf, frame_index, track_id)
+
+        results_json.append(track)
+
+    with open(json_file, "w") as write_file:
+        write_file.write(json.dumps(results_json, indent=4, sort_keys=True, default=lambda o: o.__dict__))
 
 
 def yolo_load_detections_from_txt(txt_path):
