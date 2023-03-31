@@ -298,7 +298,7 @@ def run_example():
     tracker_config = all_trackers.get(tracker_name)
 
     files = None
-    files = ['30']
+    files = ['1']
 
     change_bb = False # change_bbox
 
