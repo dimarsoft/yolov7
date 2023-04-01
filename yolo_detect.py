@@ -11,9 +11,7 @@ from utils.general import set_logging
 from utils.torch_utils import time_synchronized
 from yolov7 import YOLO7
 from yolov8 import YOLO8
-
-
-# from yolov8_ultralitics import YOLO8UL
+from yolov8_ultralitics import YOLO8UL
 
 
 def create_yolo_model(yolo_version, model):
@@ -22,7 +20,9 @@ def create_yolo_model(yolo_version, model):
 
     if yolo_version == YoloVersion.yolo_v8:
         return YOLO8(model)
-        # return YOLO8UL(model)
+
+    if yolo_version == YoloVersion.yolo_v8ul:
+        return YOLO8UL(model)
 
 
 def detect_single_video_yolo(yolo_version, model, source, output_folder, classes=None, conf=0.1, save_txt=True,
@@ -168,7 +168,7 @@ if __name__ == '__main__':
     # run_example()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--yolo', type=int, help='7')
+    parser.add_argument('--yolo', type=int, help='7, 8, 8ul')
     parser.add_argument('--weights', type=str, default='yolov7.pt', help='model.pt path(s)')
     parser.add_argument('--source', type=str, help='source')  # file/folder, 0 for webcam
     parser.add_argument('--files', type=str, default=None, help='files names list')  # files from list

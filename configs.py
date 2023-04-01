@@ -16,7 +16,8 @@ WEIGHTS = ROOT / 'weights'
 
 class YoloVersion(Enum):
     yolo_v7 = 7,
-    yolo_v8 = 8
+    yolo_v8 = 8,    # код из yolo8_tracking
+    yolo_v8ul = 81  # из пакета ultralytics
 
 
 def parse_yolo_version(yolo_version):
@@ -33,6 +34,8 @@ def parse_yolo_version(yolo_version):
             return YoloVersion.yolo_v7
         if str == '8' or str == 'y8' or str == 'yolov8' or str == 'yolo8':
             return YoloVersion.yolo_v8
+        if str == '8ul' or str == 'y8ul' or str == 'yolov8ul' or str == 'yolo8ul':
+            return YoloVersion.yolo_v8ul
 
     return None
 
