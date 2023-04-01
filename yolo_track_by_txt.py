@@ -330,12 +330,14 @@ def run_example():
     files = None
     files = ['1']
 
-    change_bb = False  # change_bbox
+    classes = [0]
+
+    change_bb = pavel_change_bbox  # change_bbox
 
     txt_source_folder = "D:\\AI\\2023\\Detect\\2023_03_29_10_35_01_YoloVersion.yolo_v7_detect"
-    run_track_yolo(txt_source_folder, video_source, all_trackers, tracker_config,
+    run_track_yolo(txt_source_folder, video_source, tracker_name, tracker_config,
                    output_folder, reid_weights, test_file, test_func="timur",
-                   files=files, save_vid=True, change_bb=change_bb)
+                   files=files, save_vid=True, change_bb=change_bb, classes=classes)
 
 
 # запуск из командной строки: python yolo_detect.py  --yolo 7 --weights "" source ""
@@ -356,18 +358,18 @@ if __name__ == '__main__':
     # run_example()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--txt_source_folder', type=str, help='txt_source_folder')  # file/folder, 0 for webcam
+    parser.add_argument('--txt_source_folder', type=str, help='txt_source_folder')
     parser.add_argument('--source', type=str, help='source')  # file/folder, 0 for webcam
-    parser.add_argument('--tracker_name', type=str, help='tracker_name')  # file/folder, 0 for webcam
-    parser.add_argument('--tracker_config', type=str, help='tracker_config')  # file/folder, 0 for webcam
+    parser.add_argument('--tracker_name', type=str, help='tracker_name')
+    parser.add_argument('--tracker_config', type=str, help='tracker_config')
     parser.add_argument('--output_folder', type=str, help='output_folder')  # output folder
     parser.add_argument('--reid_weights', type=str, help='reid_weights')
     parser.add_argument('--test_file', type=str, help='test_file')
     parser.add_argument('--test_func', type=str, help='test_func')
-    parser.add_argument('--files', type=str, default=None, help='files names list')  # files from list
+    parser.add_argument('--files', type=list, default=None, help='files names list')  # files from list
     parser.add_argument('--classes', type=list, help='classes')
     parser.add_argument('--save_vid', type=bool, help='save results to *.mp4')
-    parser.add_argument('--change_bb', default=None, help='change bbox')
+    parser.add_argument('--change_bb', default=None, help='change bbox, True, False, scale, function')
     parser.add_argument('--conf', type=float, default=0.3, help='object confidence threshold')
     opt = parser.parse_args()
     print(opt)

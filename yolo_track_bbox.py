@@ -59,7 +59,21 @@ class YoloTrackBbox:
 
         file_t2 = time_synchronized()
 
-        print(f"file '{txt_source}' read in  ({(1E3 * (file_t2 - file_t1)):.1f}ms)")
+        # боксы нужно фильтровать по классам
+
+        if classes is not None and len(classes) > 0:
+            # 2 индекс класс
+            mask = df_bbox[2].isin(classes)
+
+            # bbox, которые попадают в трек
+            bbox_track = df_bbox[mask]
+            # не попадают
+            bbox_no_track = df_bbox[~mask]
+        else:
+            bbox_track = df_bbox
+            bbox_no_track = None
+
+        print(f"file '{txt_source}' read in ({(1E3 * (file_t2 - file_t1)):.1f}ms)")
 
         input_video = cv2.VideoCapture(source)
 
@@ -84,7 +98,7 @@ class YoloTrackBbox:
         d_df_sum = 0
         d_group_sum = 0
         d_video_sum = 0
-
+        # пустой тензор, передается трекеру, когда нет детекций
         empty_tensor = torch.zeros(0, 6)
 
         for frame_id in range(frames_in_video):
@@ -105,7 +119,7 @@ class YoloTrackBbox:
 
             t0 = time_synchronized()
 
-            df_bbox_det = df_bbox[df_bbox[0] == frame_id]
+            df_bbox_det = bbox_track[bbox_track[0] == frame_id]
 
             t1 = time_synchronized()
 
@@ -195,4 +209,17 @@ class YoloTrackBbox:
               f'd_video_sum = ({(1E3 * d_video_sum):.1f}ms),'
               f'd_df_sum = ({(1E3 * d_df_sum):.1f}ms)')
 
+        # которых не трекали, запишем тоже, но с id -1
+        if bbox_no_track is not None:
+            for detection in bbox_no_track.values:
+                info = [detection[0],
+                        detection[3], detection[4],  # l t
+                        detection[5], detection[5],  # w h
+                        # id
+                        -1,
+                        # cls
+                        int(detection[2]),
+                        # conf
+                        float(detection[7])]
+                results.append(info)
         return results
