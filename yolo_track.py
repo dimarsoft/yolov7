@@ -2,13 +2,13 @@ import argparse
 import json
 import os
 import shutil
-from datetime import datetime
 from pathlib import Path
 
 from change_bboxes import pavel_change_bbox
 from configs import parse_yolo_version, get_all_trackers_full_path, get_select_trackers, TEST_TRACKS_PATH
 from exception_tools import save_exception
 from labeltools import TrackWorker
+from path_tools import create_session_folder, get_video_files
 from post_processing.alex import alex_count_humans
 from post_processing.timur import get_camera, timur_count_humans
 from resultools import TestResults, save_test_result, save_results_to_csv
@@ -145,18 +145,7 @@ def run_track_yolo(yolo_info, model: str, source: str,
 
     # в выходной папке создаем папку с сессией: дата_трекер туда уже сохраняем все файлы
 
-    now = datetime.now()
-
-    session_folder_name = f"{now.year:04d}_{now.month:02d}_{now.day:02d}_{now.hour:02d}_{now.minute:02d}_" \
-                          f"{now.second:02d}_{yolo_version}_track"
-
-    session_folder = str(Path(output_folder) / session_folder_name)
-
-    try:
-        os.makedirs(session_folder, exist_ok=True)
-        print(f"Directory '{session_folder}' created successfully")
-    except OSError as error:
-        print(f"Directory '{session_folder}' can not be created. {error}")
+    session_folder = create_session_folder(yolo_version, output_folder, "track")
 
     session_info = dict()
 
@@ -177,23 +166,7 @@ def run_track_yolo(yolo_info, model: str, source: str,
     test_results = TestResults(test_result_file)
 
     # список файлов с видео для обработки
-    list_of_videos = []
-
-    if source_path.is_dir():
-        print(f"process folder: {source_path}")
-
-        for entry in source_path.iterdir():
-            # check if it is a file
-            if entry.is_file() and entry.suffix == ".mp4":
-                if files is None:
-                    list_of_videos.append(str(entry))
-                else:
-                    if entry.stem in files:
-                        list_of_videos.append(str(entry))
-
-    else:
-        # print(f"process file: {source_path}")
-        list_of_videos.append(str(source))
+    list_of_videos = get_video_files(source_path, files)
 
     total_videos = len(list_of_videos)
 

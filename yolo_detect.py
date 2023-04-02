@@ -1,11 +1,10 @@
 import argparse
 import json
-import os
-from datetime import datetime
 from pathlib import Path
 
 from configs import parse_yolo_version, YoloVersion
 from labeltools import TrackWorker
+from path_tools import get_video_files, create_session_folder
 from save_txt_tools import yolo7_save_tracks_to_txt, yolo7_save_tracks_to_json
 from utils.general import set_logging
 from utils.torch_utils import time_synchronized
@@ -89,22 +88,9 @@ def run_detect_yolo(yolo_info, model: str, source: str, output_folder,
     if yolo_version is None:
         raise Exception(f"unsupported yolo version {yolo_info}")
 
-    source_path = Path(source)
-
     # в выходной папке создаем папку с сессией: дата_трекер туда уже сохраняем все файлы
 
-    now = datetime.now()
-
-    session_folder_name = f"{now.year:04d}_{now.month:02d}_{now.day:02d}_{now.hour:02d}_{now.minute:02d}_" \
-                          f"{now.second:02d}_{yolo_version}_detect"
-
-    session_folder = str(Path(output_folder) / session_folder_name)
-
-    try:
-        os.makedirs(session_folder, exist_ok=True)
-        print(f"Directory '{session_folder}' created successfully")
-    except OSError as error:
-        print(f"Directory '{session_folder}' can not be created. {error}")
+    session_folder = create_session_folder(yolo_version, output_folder, "detect")
 
     session_info = dict()
 
@@ -122,25 +108,16 @@ def run_detect_yolo(yolo_info, model: str, source: str, output_folder,
     with open(session_info_path, "w") as session_info_file:
         json.dump(session_info, fp=session_info_file, indent=4)
 
-    # test_results = TestResults(test_result_file)
+    # список файлов с видео для обработки
+    list_of_videos = get_video_files(source, files)
+    total_videos = len(list_of_videos)
 
-    if source_path.is_dir():
-        print(f"process folder: {source_path}")
+    for i, item in enumerate(list_of_videos):
+        print(f"process file: {i + 1}/{total_videos} {item}")
 
-        for entry in source_path.iterdir():
-            # check if it is a file
-            if entry.is_file() and entry.suffix == ".mp4":
-                if files is None:
-                    detect_single_video_yolo(yolo_version, model, str(entry), session_folder,
-                                             classes, conf, save_txt, save_vid)
-                else:
-                    if entry.stem in files:
-                        detect_single_video_yolo(yolo_version, model, str(entry), session_folder,
-                                                 classes, conf, save_txt, save_vid)
-    else:
-        print(f"process file: {source_path}")
-        detect_single_video_yolo(yolo_version, model, str(source_path), session_folder,
-                                 classes, conf, save_txt, save_vid)
+        detect_single_video_yolo(yolo_version, model, str(item), session_folder,
+                                 classes=classes, conf=conf, iou=iou,
+                                 save_txt=save_txt, save_vid=save_vid)
 
 
 def run_example():
@@ -155,7 +132,7 @@ def run_example():
 
     model = "D:\\AI\\2023\\models\\Yolo8s_batch32_epoch100.pt"
 
-    run_detect_yolo(8, model, video_source, output_folder, files=files, conf=0.25, save_txt=True, save_vid=True)
+    run_detect_yolo("8ul", model, video_source, output_folder, files=files, conf=0.25, save_txt=True, save_vid=True)
 
 
 # запуск из командной строки: python yolo_detect.py  --yolo 7 --weights "" source ""

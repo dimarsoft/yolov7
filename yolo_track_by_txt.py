@@ -7,6 +7,7 @@ from pathlib import Path
 from configs import load_default_bound_line, CAMERAS_PATH, get_all_trackers_full_path, get_select_trackers, \
     TEST_TRACKS_PATH
 from labeltools import TrackWorker
+from path_tools import get_video_files
 from post_processing.alex import alex_count_humans
 from post_processing.timur import timur_count_humans, get_camera
 from resultools import TestResults, save_test_result, save_results_to_csv
@@ -201,23 +202,7 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_co
     test_results = TestResults(test_result_file)
 
     # список файлов с видео для обработки
-    list_of_videos = []
-
-    if source_path.is_dir():
-        print(f"process folder: {source_path}")
-
-        for entry in source_path.iterdir():
-            # check if it is a file
-            if entry.is_file() and entry.suffix == ".mp4":
-                if files is None:
-                    list_of_videos.append(str(entry))
-                else:
-                    if entry.stem in files:
-                        list_of_videos.append(str(entry))
-
-    else:
-        # print(f"process file: {source_path}")
-        list_of_videos.append(str(source))
+    list_of_videos = get_video_files(source, files)
 
     total_videos = len(list_of_videos)
 
