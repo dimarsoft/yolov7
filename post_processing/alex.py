@@ -61,8 +61,8 @@ def alex_count_humans(tracks, num, w, h, bound_line):
     arr = np.full((df.shape[0], 2), 0.)
     df_tr = pd.DataFrame(arr)
     for i in range(df.shape[0]):
-        df_tr[0][i] = int(df.bb_left[i] * 640 + df.bb_width[i] * 320)
-        df_tr[1][i] = int(df.bb_top[i] * 640 + df.bb_height[i] * 320)
+        df_tr[0][i] = int(df.bb_left[i] * 640 + df.bb_width[i] * 640 * 0.3)
+        df_tr[1][i] = int(df.bb_top[i] * 640 + df.bb_height[i] * 640 * 0.6)
     df_tr.columns = ['x', 'y']
     # Получение траекторий людей
     mask = df['class'] == class_hum
