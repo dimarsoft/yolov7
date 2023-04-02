@@ -21,7 +21,7 @@ from yolo_track_by_txt import cameras_info
 
 def run_single_video_yolo(yolo_version, model, source, tracker_type, tracker_config, output_folder,
                           reid_weights, test_file, test_func,
-                          classes=None, change_bb=False, conf=0.3, save_txt=False, save_vid=False):
+                          classes=None, change_bb=False, conf=0.3, iou=0.45, save_txt=False, save_vid=False):
     print(f"start detect_single_video_yolo: {yolo_version}, source = {source}")
 
     source_path = Path(source)
@@ -33,6 +33,7 @@ def run_single_video_yolo(yolo_version, model, source, tracker_type, tracker_con
     track = model.track(
         source=source,
         conf_threshold=conf,
+        iou=iou,
         tracker_type=tracker_type,
         tracker_config=tracker_config,
         reid_weights=reid_weights,
@@ -108,7 +109,8 @@ def run_track_yolo(yolo_info, model: str, source: str,
                    tracker_type: str, tracker_config,
                    output_folder, reid_weights,
                    test_result_file, test_func=None,
-                   files=None, classes=None, change_bb=None, conf=0.3, save_vid=False, save_txt=False):
+                   files=None, classes=None, change_bb=None,
+                   conf=0.3, iou=0.45, save_vid=False, save_txt=False):
     """
 
     Args:
@@ -126,6 +128,7 @@ def run_track_yolo(yolo_info, model: str, source: str,
         classes: список классов для детекции, None все, [0, 1, 2....]
         change_bb: Функция изменения бб
         conf: порог conf для детекции
+        iou:
         save_txt: сохранять бб в файл
         save_vid: Создаем видео c bb
     """
@@ -145,7 +148,7 @@ def run_track_yolo(yolo_info, model: str, source: str,
     now = datetime.now()
 
     session_folder_name = f"{now.year:04d}_{now.month:02d}_{now.day:02d}_{now.hour:02d}_{now.minute:02d}_" \
-                          f"{now.second:02d}_{yolo_version}_detect"
+                          f"{now.second:02d}_{yolo_version}_track"
 
     session_folder = str(Path(output_folder) / session_folder_name)
 
@@ -159,6 +162,7 @@ def run_track_yolo(yolo_info, model: str, source: str,
 
     session_info['model'] = str(Path(model).name)
     session_info['conf'] = conf
+    session_info['iou'] = iou
     session_info['save_vid'] = save_vid
     session_info['files'] = files
     session_info['classes'] = classes
@@ -224,7 +228,8 @@ def run_track_yolo(yolo_info, model: str, source: str,
                                       reid_weights=reid_weights,
                                       classes=classes,
                                       change_bb=change_bb,
-                                      conf=conf, save_txt=save_txt, save_vid=save_vid)
+                                      conf=conf, iou=iou,
+                                      save_txt=save_txt, save_vid=save_vid)
 
             file_result = save_test_result(test_results, tracker_session_folder, source_path)
 
@@ -262,7 +267,8 @@ def run_track_yolo(yolo_info, model: str, source: str,
                                   reid_weights=reid_weights,
                                   classes=classes,
                                   change_bb=change_bb,
-                                  conf=conf, save_txt=save_txt, save_vid=save_vid)
+                                  conf=conf, iou=iou,
+                                  save_txt=save_txt, save_vid=save_vid)
         # save results
 
         save_test_result(test_results, session_folder, source_path)
@@ -334,8 +340,9 @@ def run_cli(opt_info):
                    reid_weights=opt_info.reid_weights,
                    test_result_file=test_file,
                    test_func=test_func,
-                   change_bb=opt.change_bb,
-                   files=files, conf=conf, save_txt=save_txt, save_vid=save_vid, classes=classes)
+                   change_bb=opt_info.change_bb,
+                   files=files, conf=conf, iou=opt_info.iou,
+                   save_txt=save_txt, save_vid=save_vid, classes=classes)
 
 
 if __name__ == '__main__':
