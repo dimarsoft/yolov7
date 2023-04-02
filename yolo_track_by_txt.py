@@ -8,7 +8,7 @@ from configs import load_default_bound_line, CAMERAS_PATH, get_all_trackers_full
 from labeltools import TrackWorker
 from post_processing.alex import alex_count_humans
 from post_processing.timur import timur_count_humans, get_camera
-from resultools import TestResults, save_test_result
+from resultools import TestResults, save_test_result, save_results_to_csv
 from save_txt_tools import yolo7_save_tracks_to_txt, yolo7_save_tracks_to_json
 from utils.general import set_logging
 from utils.torch_utils import time_synchronized
@@ -271,6 +271,11 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_co
                 write_file.write(json.dumps(test_result_by_traker,
                                             indent=4, sort_keys=True, default=lambda o: o.__dict__))
 
+            save_results_csv_file = str(Path(session_folder) / 'all_compare_track_results.csv')
+
+            print(f"Save total to csv '{str(save_results_csv_file)}'")
+
+            save_results_to_csv(test_result_by_traker, save_results_csv_file)
     else:
         for i, item in enumerate(list_of_videos):
             print(f"process file: {i + 1}/{total_videos} {item}")
@@ -345,7 +350,7 @@ def run_example():
     tracker_config = None  # all_trackers.get(tracker_name)
 
     files = None
-    # files = ['1']
+    files = ['1']
 
     classes = [0]
 
@@ -372,7 +377,7 @@ def run_cli(opt_info):
 
 
 if __name__ == '__main__':
-    run_example()
+    # run_example()
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--txt_source_folder', type=str, help='txt_source_folder')
@@ -389,6 +394,6 @@ if __name__ == '__main__':
     parser.add_argument('--change_bb', default=None, help='change bbox, True, False, scale, function')
     parser.add_argument('--conf', type=float, default=0.3, help='object confidence threshold')
     opt = parser.parse_args()
-    # print(opt)
+    print(opt)
 
-    # run_cli(opt)
+    run_cli(opt)

@@ -4,6 +4,8 @@ import traceback
 from pathlib import Path
 from types import SimpleNamespace
 
+from pandas import DataFrame
+
 from configs import TEST_TRACKS_PATH
 from count_results import Result
 from exception_tools import save_exception
@@ -263,8 +265,11 @@ class TestResults:
 def test_tracks_file(test_file):
     """
 Тест содержимого тестового файла.
-1. читаем показываем. если что-то не так, то будет ошибка
-2. создаем словарь по file, оно должно быть уникально, иначе ошибка по ключу
+
+1. Читаем показываем. Если, что-то не так, то будет ошибка
+
+2. Создаем словарь по file, оно должно быть уникально, иначе ошибка по ключу
+
     """
     print(f"test_tracks_file: {test_file}")
     result = TestResults(test_file)
@@ -296,5 +301,65 @@ def test_tracks_file(test_file):
             print(f"\t{i + 1}, status = {div.status_id}, [{div.start_frame} - {div.end_frame}]")
 
 
+def save_results_to_csv(results: dict, file_path, sep=";") -> None:
+    """
+    Сохранение результатов сравнение в csv файл.
+    Данные в таблично виде и упорядоченны по total_equal_percent
+
+    Args:
+        results (dict): Словарь с результатами сравнения
+        file_path: Путь к файлу, для сохранения данных
+        sep: Разделитель в csv файле
+    """
+    table = []
+    for key in results.keys():
+        total_equal_percent = results[key]["total_equal_percent"]
+        total_equal = results[key]["total_equal"]
+        total_records = results[key]["total_records"]
+
+        print(f"{key} = {total_equal_percent}")
+
+        table.append([key, total_equal_percent, total_equal, total_records])
+
+    df = DataFrame(table, columns=["trackername", "total_equal_percent", "total_equal", "total_records"])
+    df.sort_values(by=['total_equal_percent'], inplace=True, ascending=False)
+
+    df.to_csv(file_path, sep=sep, index=False)
+
+
+def results_to_table():
+    file_path = "D:\\AI\\2023\\corridors\\dataset-v1.1\\2023_04_02_07_43_54_yolo_tracks_by_txt" \
+                "\\all_compare_track_results.json"
+
+    file_path_tbl = "D:\\AI\\2023\\corridors\\dataset-v1.1\\2023_04_02_07_43_54_yolo_tracks_by_txt" \
+                    "\\all_compare_track_results.csv"
+
+    with open(file_path, "r") as read_file:
+        results = json.loads(read_file.read())
+
+    save_results_to_csv(results, file_path_tbl)
+
+    table = []
+    for key in results.keys():
+        total_equal_percent = results[key]["total_equal_percent"]
+        total_equal = results[key]["total_equal"]
+        total_records = results[key]["total_records"]
+
+        print(f"{key} = {total_equal_percent}")
+
+        table.append([key, total_equal_percent, total_equal, total_records])
+
+    df = DataFrame(table, columns=["trackername", "total_equal_percent", "total_equal", "total_records"])
+    df.sort_values(by=['total_equal_percent'], inplace=True, ascending=False)
+    print(df)
+
+    df = DataFrame.from_dict(results, orient="index")
+    print(df)
+
+    # print(results)
+
+
 if __name__ == '__main__':
     test_tracks_file(test_file=TEST_TRACKS_PATH)
+
+    results_to_table()
