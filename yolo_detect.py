@@ -25,7 +25,8 @@ def create_yolo_model(yolo_version, model):
         return YOLO8UL(model)
 
 
-def detect_single_video_yolo(yolo_version, model, source, output_folder, classes=None, conf=0.1, save_txt=True,
+def detect_single_video_yolo(yolo_version, model, source, output_folder, classes=None,
+                             conf=0.1, iou=0.45, save_txt=True,
                              save_vid=False):
     print(f"start detect_single_video_yolo: {yolo_version}, source = {source}")
 
@@ -36,6 +37,7 @@ def detect_single_video_yolo(yolo_version, model, source, output_folder, classes
     detections = model.detect(
         source=source,
         conf_threshold=conf,
+        iou=iou,
         classes=classes
     )
 
@@ -62,10 +64,11 @@ def detect_single_video_yolo(yolo_version, model, source, output_folder, classes
 
 
 def run_detect_yolo(yolo_info, model: str, source: str, output_folder,
-                    files=None, classes=None, conf=0.3, save_txt=True, save_vid=False):
+                    files=None, classes=None, conf=0.3, iou=0.45, save_txt=True, save_vid=False):
     """
 
     Args:
+        iou:
         yolo_info: версия Yolo: 7 ил 8
         save_txt: сохранять бб в файл
         files: если указана папка, но можно указать имена фай1лов,
@@ -107,6 +110,7 @@ def run_detect_yolo(yolo_info, model: str, source: str, output_folder,
 
     session_info['model'] = str(Path(model).name)
     session_info['conf'] = conf
+    session_info['iou'] = iou
     session_info['save_vid'] = save_vid
     session_info['files'] = files
     session_info['classes'] = classes
@@ -161,7 +165,8 @@ def run_cli(opt_info):
         opt_info.files, opt_info.save_txt, opt_info.save_vid, opt_info.conf, opt_info.classes
 
     run_detect_yolo(yolo, weights, source, output_folder,
-                    files=files, conf=conf, save_txt=save_txt, save_vid=save_vid, classes=classes)
+                    files=files, conf=conf, iou=opt_info.iou,
+                    save_txt=save_txt, save_vid=save_vid, classes=classes)
 
 
 if __name__ == '__main__':
