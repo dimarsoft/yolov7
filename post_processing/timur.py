@@ -109,7 +109,7 @@ def convert_and_save(folder_path):
 
 
 def timur_count_humans(tracks, source):
-    print(f"Timur postprocessing v1.2_01.04.2023")
+    print(f"Timur postprocessing v1.3_02.04.2023")
 
     camera_num, w, h = get_camera(source)
 
@@ -128,7 +128,7 @@ def timur_count_humans(tracks, source):
     tracks_info = []
     for p_id in people_tracks.keys():
         people_path = people_tracks[p_id]
-        tr_info = crossing_bound(people_path, bound_line)
+        tr_info = crossing_bound(people_path['path'], bound_line)
         tracks_info.append(tr_info)
         print(f"{p_id}: {tr_info}")
 
