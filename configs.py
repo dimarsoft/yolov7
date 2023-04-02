@@ -31,11 +31,11 @@ def parse_yolo_version(yolo_version):
         if yolo_version == 8:
             return YoloVersion.yolo_v8
     if isinstance(yolo_version, str):
-        if str == '7' or str == 'y7' or str == 'yolov7' or str == 'yolo7':
+        if yolo_version == '7' or yolo_version == 'y7' or yolo_version == 'yolov7' or yolo_version == 'yolo7':
             return YoloVersion.yolo_v7
-        if str == '8' or str == 'y8' or str == 'yolov8' or str == 'yolo8':
+        if yolo_version == '8' or yolo_version == 'y8' or yolo_version == 'yolov8' or yolo_version == 'yolo8':
             return YoloVersion.yolo_v8
-        if str == '8ul' or str == 'y8ul' or str == 'yolov8ul' or str == 'yolo8ul':
+        if yolo_version == '8ul' or yolo_version == 'y8ul' or yolo_version == 'yolov8ul' or yolo_version == 'yolo8ul':
             return YoloVersion.yolo_v8ul
 
     return None
