@@ -287,9 +287,9 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_co
                                   change_bb=change_bb,
                                   conf=conf,
                                   save_vid=save_vid)
-            # save results
+        # save results
 
-            save_test_result(test_results, session_folder, source_path)
+        save_test_result(test_results, session_folder, source_path)
 
 
 def run_example():

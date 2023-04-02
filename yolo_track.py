@@ -263,9 +263,9 @@ def run_track_yolo(yolo_info, model: str, source: str,
                                   classes=classes,
                                   change_bb=change_bb,
                                   conf=conf, save_txt=save_txt, save_vid=save_vid)
-            # save results
+        # save results
 
-            save_test_result(test_results, session_folder, source_path)
+        save_test_result(test_results, session_folder, source_path)
 
 
 def run_example():
