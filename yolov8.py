@@ -12,6 +12,7 @@ from ultralytics.nn.autobackend import AutoBackend
 from ultralytics.yolo.data.augment import LetterBox
 from ultralytics.yolo.utils.ops import scale_boxes, non_max_suppression
 
+from change_bboxes import change_bbox
 from configs import WEIGHTS
 from labeltools import TrackWorker
 from post_processing.timur import get_camera
@@ -21,10 +22,7 @@ from trackers.multi_tracker_zoo import create_tracker
 from utils.general import scale_coords, xyxy2xywh
 from utils.torch_utils import time_synchronized, select_device
 from yolo_tools import xyxy2ltwh
-from yolo_track_bbox import YoloTrackBbox
 from yolo_track_by_txt import cameras_info
-from yolov7 import YOLO7
-from yolov8_ultralitics import YOLO8UL
 
 
 class YOLO8:
@@ -121,7 +119,7 @@ class YOLO8:
                 for tr_id, predict_track in enumerate(predict):
                     if len(predict_track) > 0:
 
-                        predict_track = YOLO7.change_bbox(predict_track, change_bb)
+                        predict_track = change_bbox(predict_track, change_bb)
 
                         dets += 1
                         # bbox = predict_track[:, :4]

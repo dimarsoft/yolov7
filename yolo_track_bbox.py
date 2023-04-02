@@ -4,11 +4,11 @@ import cv2
 import torch
 from ultralytics.yolo.data.augment import LetterBox
 
+from change_bboxes import change_bbox
 from configs import WEIGHTS
 from save_txt_tools import yolo_load_detections_from_txt
 from trackers.multi_tracker_zoo import create_tracker
 from utils.torch_utils import select_device, time_synchronized
-from yolov7 import YOLO7
 
 
 class YoloTrackBbox:
@@ -131,7 +131,7 @@ class YoloTrackBbox:
                 if len(group) > 0:
 
                     predict = self.det_to_tensor(group, w, h)
-                    predict = YOLO7.change_bbox(predict, change_bb, file_id)
+                    predict = change_bbox(predict, change_bb, file_id)
                 else:
                     predict = empty_tensor
                 group_t1 = time_synchronized()

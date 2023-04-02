@@ -342,7 +342,8 @@ def save_results_to_csv(results: dict, file_path, sep=";") -> None:
 
         table.append([key, total_equal_percent, total_equal, total_records, str(files_str)])
 
-    df = DataFrame(table, columns=["trackername", "total_equal_percent", "total_equal", "total_records", "not_equal_items"])
+    df = DataFrame(table, columns=["tracker_name", "total_equal_percent",
+                                   "total_equal", "total_records", "not_equal_items"])
     df.sort_values(by=['total_equal_percent'], inplace=True, ascending=False)
 
     # print(df)
@@ -371,7 +372,7 @@ def results_to_table():
 
         table.append([key, total_equal_percent, total_equal, total_records])
 
-    df = DataFrame(table, columns=["trackername", "total_equal_percent", "total_equal", "total_records"])
+    df = DataFrame(table, columns=["tracker_name", "total_equal_percent", "total_equal", "total_records"])
     df.sort_values(by=['total_equal_percent'], inplace=True, ascending=False)
     print(df)
 

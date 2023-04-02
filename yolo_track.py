@@ -1,41 +1,37 @@
 import argparse
 import json
 import os
+import shutil
 from datetime import datetime
 from pathlib import Path
 
-from configs import load_default_bound_line, CAMERAS_PATH, get_all_trackers_full_path, get_select_trackers, \
-    TEST_TRACKS_PATH
+from change_bboxes import pavel_change_bbox
+from configs import parse_yolo_version, get_all_trackers_full_path, get_select_trackers, TEST_TRACKS_PATH
+from exception_tools import save_exception
 from labeltools import TrackWorker
 from post_processing.alex import alex_count_humans
-from post_processing.timur import timur_count_humans, get_camera
+from post_processing.timur import get_camera, timur_count_humans
 from resultools import TestResults, save_test_result, save_results_to_csv
-from save_txt_tools import yolo7_save_tracks_to_txt, yolo7_save_tracks_to_json
+from save_txt_tools import yolo7_save_tracks_to_txt
 from utils.general import set_logging
 from utils.torch_utils import time_synchronized
-from yolo_track_bbox import YoloTrackBbox
-from yolov7_track import save_exception
-
-# настройки камер, считываются при старте сессии
-cameras_info = {}
+from yolo_detect import create_yolo_model
+from yolo_track_by_txt import cameras_info
 
 
-def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_config, output_folder,
+def run_single_video_yolo(yolo_version, model, source, tracker_type, tracker_config, output_folder,
                           reid_weights, test_file, test_func,
-                          classes=None, change_bb=False, conf=0.3, save_vid=False):
-    print(f"start {source}, {txt_source_folder}")
+                          classes=None, change_bb=False, conf=0.3, save_txt=False, save_vid=False):
+    print(f"start detect_single_video_yolo: {yolo_version}, source = {source}")
 
     source_path = Path(source)
+
     text_path = Path(output_folder) / f"{source_path.stem}.txt"
-    json_file = Path(output_folder) / f"{source_path.stem}.json"
 
-    txt_source = Path(txt_source_folder) / f"{source_path.stem}.txt"
-
-    model = YoloTrackBbox()
+    model = create_yolo_model(yolo_version, model)
 
     track = model.track(
         source=source,
-        txt_source=txt_source,
         conf_threshold=conf,
         tracker_type=tracker_type,
         tracker_config=tracker_config,
@@ -46,9 +42,8 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
 
     print(f"save tracks to: {text_path}")
 
-    yolo7_save_tracks_to_txt(results=track, txt_path=text_path, conf=conf)
-
-    yolo7_save_tracks_to_json(results=track, json_file=json_file, conf=conf)
+    if save_txt:
+        yolo7_save_tracks_to_txt(results=track, txt_path=text_path, conf=conf)
 
     track_worker = TrackWorker(track)
 
@@ -109,36 +104,39 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
             save_exception(e, text_ex_path, "post processing")
 
 
-def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_config, output_folder, reid_weights,
-                   test_result_file, test_func=None, files=None,
-                   classes=None, change_bb=None, conf=0.3, save_vid=False):
+def run_track_yolo(yolo_info, model: str, source: str,
+                   tracker_type: str, tracker_config,
+                   output_folder, reid_weights,
+                   test_result_file, test_func=None,
+                   files=None, classes=None, change_bb=None, conf=0.3, save_vid=False, save_txt=False):
     """
 
     Args:
-        txt_source_folder: папка с Labels: 1.txt....
-        change_bb: менять bbox после детекции для трекера,
-                   bbox будет меньше и по центру человека
-                   если тип float, масштабируем по центру
-                   если функция, то функция меняет ббокс
+        yolo_info: версия Yolo: 7, 8 или 8ul
+        model (str): модель для YOLO детекции
+        source: путь к видео, если папка, то для каждого видео файла запустит
+        tracker_type: Название трекера или словарь, если их несколько
+        tracker_config: путь к файлу настройки трекера
+        output_folder: путь к папке для результатов работы, txt
+        reid_weights: все модели трекера
+        test_result_file: файл для проверки результатов постобработки
+        test_func: функция постобработки
         files: если указана папка, но можно указать имена фай1лов,
                 которые будут обрабатываться. ['1', '2' ...]
-        classes: список классов, None все, [0, 1, 2....]
-        test_func: внешняя функция пользователя для постобработки
-        test_result_file: эталонный файл разметки проходов людей
-        reid_weights: веса для трекера, некоторым нужны
-        conf: conf для трекера
-        save_vid: Создаем наше видео с центром человека
-        output_folder: путь к папке для результатов работы, txt
-        tracker_type: трекер (botsort, bytetrack)
-        tracker_config: путь к своему файлу с настройками
-        source: путь к видео, если папка, то для каждого видео файла запустит
+        classes: список классов для детекции, None все, [0, 1, 2....]
+        change_bb: Функция изменения бб
+        conf: порог conf для детекции
+        save_txt: сохранять бб в файл
+        save_vid: Создаем видео c bb
     """
 
     set_logging()
 
-    # при старте сессии считываем настройки камер
-    global cameras_info
-    cameras_info = load_default_bound_line()
+    print(f"yolo version = {yolo_info}")
+    yolo_version = parse_yolo_version(yolo_info)
+
+    if yolo_version is None:
+        raise Exception(f"unsupported yolo version {yolo_info}")
 
     source_path = Path(source)
 
@@ -146,12 +144,8 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_co
 
     now = datetime.now()
 
-    if isinstance(tracker_type, dict):
-        session_folder_name = f"{now.year:04d}_{now.month:02d}_{now.day:02d}_{now.hour:02d}_{now.minute:02d}_" \
-                              f"{now.second:02d}_yolo_tracks_by_txt"
-    else:
-        session_folder_name = f"{now.year:04d}_{now.month:02d}_{now.day:02d}_{now.hour:02d}_{now.minute:02d}_" \
-                              f"{now.second:02d}_yolo_tracks_by_txt_{tracker_type}"
+    session_folder_name = f"{now.year:04d}_{now.month:02d}_{now.day:02d}_{now.hour:02d}_{now.minute:02d}_" \
+                          f"{now.second:02d}_{yolo_version}_detect"
 
     session_folder = str(Path(output_folder) / session_folder_name)
 
@@ -161,37 +155,15 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_co
     except OSError as error:
         print(f"Directory '{session_folder}' can not be created. {error}")
 
-    import shutil
-
-    if not isinstance(tracker_type, dict):
-        save_tracker_config = str(Path(session_folder) / Path(tracker_config).name)
-
-        print(f"Copy '{tracker_config}' to '{save_tracker_config}")
-
-        shutil.copy(tracker_config, save_tracker_config)
-
-    save_test_result_file = str(Path(session_folder) / Path(test_result_file).name)
-
-    print(f"Copy '{test_result_file}' to '{save_test_result_file}")
-
-    shutil.copy(test_result_file, save_test_result_file)
-
     session_info = dict()
 
-    session_info['txt_source_folder'] = str(txt_source_folder)
-    session_info['reid_weights'] = str(Path(reid_weights).name)
-    # session_info['conf'] = conf
-    session_info['test_result_file'] = test_result_file
+    session_info['model'] = str(Path(model).name)
+    session_info['conf'] = conf
     session_info['save_vid'] = save_vid
     session_info['files'] = files
     session_info['classes'] = classes
-    session_info['change_bb'] = str(change_bb)
-    session_info['cameras_path'] = str(CAMERAS_PATH)
-
-    # test_tracks_file(test_result_file)
-
-    if isinstance(test_func, str):
-        session_info['test_func'] = test_func
+    session_info['save_txt'] = save_txt
+    session_info['yolo_version'] = str(yolo_version)
 
     session_info_path = str(Path(session_folder) / 'session_info.json')
 
@@ -245,12 +217,14 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_co
             for i, item in enumerate(list_of_videos):
                 print(f"process file: {i + 1}/{total_videos} {item}")
 
-                run_single_video_yolo(txt_source_folder, item, tracker, tracker_config,
-                                      tracker_session_folder,
-                                      reid_weights, test_results, test_func, classes,
+                run_single_video_yolo(yolo_version, model, str(item),
+                                      tracker_type=tracker, tracker_config=tracker_config,
+                                      output_folder=tracker_session_folder,
+                                      test_file=test_result_file, test_func=test_func,
+                                      reid_weights=reid_weights,
+                                      classes=classes,
                                       change_bb=change_bb,
-                                      conf=conf,
-                                      save_vid=save_vid)
+                                      conf=conf, save_txt=save_txt, save_vid=save_vid)
 
             file_result = save_test_result(test_results, tracker_session_folder, source_path)
 
@@ -281,12 +255,14 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_co
         for i, item in enumerate(list_of_videos):
             print(f"process file: {i + 1}/{total_videos} {item}")
 
-            run_single_video_yolo(txt_source_folder, item, tracker_type, tracker_config,
-                                  session_folder,
-                                  reid_weights, test_results, test_func, classes,
+            run_single_video_yolo(yolo_version, model, str(item),
+                                  tracker_type=tracker_type, tracker_config=tracker_config,
+                                  output_folder=session_folder,
+                                  test_file=test_result_file, test_func=test_func,
+                                  reid_weights=reid_weights,
+                                  classes=classes,
                                   change_bb=change_bb,
-                                  conf=conf,
-                                  save_vid=save_vid)
+                                  conf=conf, save_txt=save_txt, save_vid=save_vid)
             # save results
 
             save_test_result(test_results, session_folder, source_path)
@@ -294,9 +270,15 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_co
 
 def run_example():
     video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\"
+    output_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\"
+
+    files = ['1']
+
+    video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\"
     test_file = TEST_TRACKS_PATH
     output_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\"
     reid_weights = "osnet_x0_25_msmt17.pt"
+
     # reid_weights = "D:\\AI\\2023\\Github\\dimar_yolov7\\weights\\mars-small128.pb"
 
     # tracker_config = "trackers/NorFairTracker/configs/norfair_track.yaml"
@@ -312,50 +294,70 @@ def run_example():
     tracker_config = None  # all_trackers.get(tracker_name)
 
     files = None
-    # files = ['4']
+    files = ['1']
 
     classes = [0]
     classes = None
 
-    change_bb = None  # pavel_change_bbox  # change_bbox
+    change_bb = pavel_change_bbox  # change_bbox
 
-    txt_source_folder = "D:\\AI\\2023\\Detect\\2023_03_29_10_35_01_YoloVersion.yolo_v7_detect"
-    run_track_yolo(txt_source_folder, video_source, tracker_name, tracker_config,
-                   output_folder, reid_weights, test_file, test_func="timur",
-                   files=files, save_vid=True, change_bb=change_bb, classes=classes)
+    yolo7_w = "D:\\AI\\2023\\models\\Yolov7\\25.02.2023_dataset_1.1_yolov7_best.pt"
+    yolo8_w = "D:\\AI\\2023\\models\\Yolo8s_batch32_epoch100.pt"
+
+    test_func = None
+
+    run_track_yolo("8ul",
+                   yolo8_w, video_source,
+                   tracker_type=tracker_name,
+                   tracker_config=tracker_config,
+                   output_folder=output_folder,
+                   reid_weights=reid_weights,
+                   test_result_file=test_file,
+                   test_func=test_func,
+                   change_bb=change_bb,
+                   files=files, conf=0.4, save_txt=True, save_vid=True, classes=classes)
 
 
 # запуск из командной строки: python yolo_detect.py  --yolo 7 --weights "" source ""
 def run_cli(opt_info):
-    txt_source_folder, source, output_folder, files = \
-        opt_info.txt_source_folder, opt_info.source, opt_info.output_folder, opt_info.files
+    yolo, source, weights, output_folder, files, save_txt, save_vid, conf, classes = \
+        opt_info.yolo, opt_info.source, opt_info.weights, opt_info.output_folder, \
+        opt_info.files, opt_info.save_txt, opt_info.save_vid, opt_info.conf, opt_info.classes
 
     tracker_name, tracker_config = opt_info.tracker_name, opt_info.tracker_config
     test_file, test_func = opt_info.test_file, opt_info.test_func
 
-    run_track_yolo(txt_source_folder, source, tracker_name, tracker_config, output_folder,
-                   opt_info.reid_weights,
-                   test_file, test_func=test_func, files=files,
-                   conf=opt_info.conf, save_vid=opt_info.save_vid, classes=opt_info.classes)
+    run_track_yolo(yolo, weights, source,
+                   tracker_type=tracker_name,
+                   tracker_config=tracker_config,
+                   output_folder=output_folder,
+                   reid_weights=opt_info.reid_weights,
+                   test_result_file=test_file,
+                   test_func=test_func,
+                   change_bb=opt.change_bb,
+                   files=files, conf=conf, save_txt=save_txt, save_vid=save_vid, classes=classes)
 
 
 if __name__ == '__main__':
     # run_example()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--txt_source_folder', type=str, help='txt_source_folder')
-    parser.add_argument('--source', type=str, help='source')  # file/folder, 0 for webcam
-    parser.add_argument('--tracker_name', type=str, help='tracker_name')
-    parser.add_argument('--tracker_config', type=str, help='tracker_config')
-    parser.add_argument('--output_folder', type=str, help='output_folder')  # output folder
+    parser.add_argument('--yolo', type=int, help='7, 8, 8ul')
+    parser.add_argument('--weights', type=str, default='yolov7.pt', help='model.pt path(s)')
     parser.add_argument('--reid_weights', type=str, help='reid_weights')
-    parser.add_argument('--test_file', type=str, help='test_file')
-    parser.add_argument('--test_func', type=str, help='test_func')
-    parser.add_argument('--files', type=list, default=None, help='files names list')  # files from list
-    parser.add_argument('--classes', type=list, help='classes')
-    parser.add_argument('--save_vid', type=bool, help='save results to *.mp4')
-    parser.add_argument('--change_bb', default=None, help='change bbox, True, False, scale, function')
-    parser.add_argument('--conf', type=float, default=0.3, help='object confidence threshold')
+    parser.add_argument('--source', type=str, help='source')  # file/folder, 0 for webcam
+    parser.add_argument('--files', type=str, default=None, help='files names list')  # files from list
+    parser.add_argument('--output_folder', type=str, help='output_folder')  # output folder
+    parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
+    parser.add_argument('--conf', type=float, default=0.25, help='object confidence threshold')
+    parser.add_argument('--iou', type=float, default=0.45, help='IOU threshold for NMS')
+    parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
+    parser.add_argument('--view-img', action='store_true', help='display results')
+    parser.add_argument('--save_txt', action='store_true', help='save results to *.txt')
+    parser.add_argument('--save_vid', action='store_true', help='save results to *.mp4')
+    parser.add_argument('--classes', nargs='+', type=int, help='filter by class: --class 0, or --class 0 2 3')
+    parser.add_argument('--agnostic-nms', action='store_true', help='class-agnostic NMS')
+    parser.add_argument('--augment', action='store_true', help='augmented inference')
     opt = parser.parse_args()
     print(opt)
 

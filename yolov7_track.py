@@ -6,6 +6,7 @@ from pathlib import Path
 
 import torch
 
+from change_bboxes import change_bbox
 from configs import load_default_bound_line, CAMERAS_PATH, get_all_trackers_full_path
 from exception_tools import save_exception
 from labeltools import TrackWorker
@@ -16,11 +17,11 @@ from save_txt_tools import yolo7_save_tracks_to_txt
 from utils.torch_utils import time_synchronized
 from yolov7 import YOLO7
 from datetime import datetime
+
 # from tqdm import tqdm
 
 # настройки камер, считываются при старте сессии
 cameras_info = {}
-
 
 
 def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, output_folder,
@@ -109,7 +110,7 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
 
 
 def run_yolo7(model: str, source: str, tracker_type: str, tracker_config, output_folder, reid_weights,
-              test_result_file, test_func=None, files=None,  classes=None, change_bb=False, conf=0.3, save_vid=False):
+              test_result_file, test_func=None, files=None, classes=None, change_bb=False, conf=0.3, save_vid=False):
     """
 
     Args:
@@ -304,7 +305,7 @@ def test_tensor():
     tensor[:, [5]] = 60
     print(tensor)
 
-    tensor2 = YOLO7.change_bbox(tensor, 0.5)
+    tensor2 = change_bbox(tensor, 0.5)
 
     print(tensor2)
 
