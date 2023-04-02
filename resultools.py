@@ -4,6 +4,7 @@ import traceback
 from pathlib import Path
 from types import SimpleNamespace
 
+import numpy as np
 from pandas import DataFrame
 
 from configs import TEST_TRACKS_PATH
@@ -301,6 +302,11 @@ def test_tracks_file(test_file):
             print(f"\t{i + 1}, status = {div.status_id}, [{div.start_frame} - {div.end_frame}]")
 
 
+def unique(list1):
+    x = np.array(list1)
+    return np.unique(x)
+
+
 def save_results_to_csv(results: dict, file_path, sep=";") -> None:
     """
     Сохранение результатов сравнение в csv файл.
@@ -317,13 +323,29 @@ def save_results_to_csv(results: dict, file_path, sep=";") -> None:
         total_equal = results[key]["total_equal"]
         total_records = results[key]["total_records"]
 
-        print(f"{key} = {total_equal_percent}")
+        not_equal_items = results[key]["not_equal_items"]
 
-        table.append([key, total_equal_percent, total_equal, total_records])
+        files = []
 
-    df = DataFrame(table, columns=["trackername", "total_equal_percent", "total_equal", "total_records"])
+        for nc in not_equal_items:
+            f = str(Path(nc['file']).stem)
+            files.append(f)
+
+        files = unique(files)
+
+        files_str = ""
+        for item in files:
+            f = str(item)
+            files_str += f"{f},"
+
+        print(f"{key} = {total_equal_percent}, {files_str}")
+
+        table.append([key, total_equal_percent, total_equal, total_records, str(files_str)])
+
+    df = DataFrame(table, columns=["trackername", "total_equal_percent", "total_equal", "total_records", "not_equal_items"])
     df.sort_values(by=['total_equal_percent'], inplace=True, ascending=False)
 
+    # print(df)
     df.to_csv(file_path, sep=sep, index=False)
 
 
@@ -362,4 +384,4 @@ def results_to_table():
 if __name__ == '__main__':
     test_tracks_file(test_file=TEST_TRACKS_PATH)
 
-    results_to_table()
+    # results_to_table()

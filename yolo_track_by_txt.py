@@ -342,15 +342,16 @@ def run_example():
 
     all_trackers = get_all_trackers_full_path()
 
-    selected_trackers_names = ["sort", "ocsort"]
+    selected_trackers_names = ["ocsort"] # "sort",
 
     selected_trackers = get_select_trackers(selected_trackers_names, all_trackers)
 
     tracker_name = all_trackers  # selected_trackers  # "norfair"
+    tracker_name = selected_trackers  # "norfair"
     tracker_config = None  # all_trackers.get(tracker_name)
 
     files = None
-    files = ['1']
+    files = ['4']
 
     classes = [0]
 
