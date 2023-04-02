@@ -1,5 +1,6 @@
 from enum import Enum
 from pathlib import Path
+from typing import Dict
 
 from post_processing.timur import load_bound_line
 
@@ -82,3 +83,19 @@ def get_all_trackers_full_path():
         all_trackers[key] = str(path)
 
     return all_trackers
+
+
+def get_select_trackers(trackers_names, trackers) -> dict:
+    """
+
+    Args:
+        trackers (Dict): Словарь трекеров из которых выбираем
+        trackers_names (List): Список строк с именами трекеров
+
+    Returns: Словарь выбранных трекеров
+    """
+    selected = {}
+    for key in trackers_names:
+        selected[key] = trackers[key]
+
+    return selected

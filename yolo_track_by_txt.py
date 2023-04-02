@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-from configs import load_default_bound_line, CAMERAS_PATH, get_all_trackers_full_path
+from configs import load_default_bound_line, CAMERAS_PATH, get_all_trackers_full_path, get_select_trackers
 from labeltools import TrackWorker
 from post_processing.alex import alex_count_humans
 from post_processing.timur import timur_count_humans, get_camera
@@ -108,7 +108,7 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
             save_exception(e, text_ex_path, "post processing")
 
 
-def run_track_yolo(txt_source_folder: str, source: str, tracker_type: str, tracker_config, output_folder, reid_weights,
+def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_config, output_folder, reid_weights,
                    test_result_file, test_func=None, files=None,
                    classes=None, change_bb=None, conf=0.3, save_vid=False):
     """
@@ -179,7 +179,7 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type: str, track
 
     session_info['txt_source_folder'] = str(txt_source_folder)
     session_info['reid_weights'] = str(Path(reid_weights).name)
-    session_info['conf'] = conf
+    # session_info['conf'] = conf
     session_info['test_result_file'] = test_result_file
     session_info['save_vid'] = save_vid
     session_info['files'] = files
@@ -221,6 +221,7 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type: str, track
     total_videos = len(list_of_videos)
 
     if isinstance(tracker_type, dict):
+        test_result_by_traker = {}
         for tracker in tracker_type.keys():
             tracker_config = tracker_type.get(tracker)
             tracker_session_folder = Path(session_folder) / str(tracker)
@@ -250,13 +251,25 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type: str, track
                                       conf=conf,
                                       save_vid=save_vid)
 
-            save_test_result(test_results, tracker_session_folder, source_path)
+            file_result = save_test_result(test_results, tracker_session_folder, source_path)
+
+            test_result_by_traker[str(tracker)] = file_result
 
             save_test_result_file = str(Path(tracker_session_folder) / Path(test_result_file).name)
 
             print(f"Copy '{test_result_file}' to '{save_test_result_file}")
 
             shutil.copy(test_result_file, save_test_result_file)
+
+            # сохраняем результаты и в общий файл
+            # и в каждой итерации файл обновляется новыми данными
+
+            save_test_result_file = str(Path(session_folder) / 'all_compare_track_results.json')
+
+            print(f"Save total result_items '{str(save_test_result_file)}'")
+            with open(save_test_result_file, "w") as write_file:
+                write_file.write(json.dumps(test_result_by_traker,
+                                            indent=4, sort_keys=True, default=lambda o: o.__dict__))
 
     else:
         for i, item in enumerate(list_of_videos):
@@ -324,11 +337,15 @@ def run_example():
 
     all_trackers = get_all_trackers_full_path()
 
-    tracker_name = "norfair"
-    tracker_config = all_trackers.get(tracker_name)
+    selected_trackers_names = ["sort", "ocsort"]
+
+    selected_trackers = get_select_trackers(selected_trackers_names, all_trackers)
+
+    tracker_name = all_trackers  # selected_trackers  # "norfair"
+    tracker_config = None  # all_trackers.get(tracker_name)
 
     files = None
-    files = ['1']
+    # files = ['1']
 
     classes = [0]
 
@@ -355,7 +372,7 @@ def run_cli(opt_info):
 
 
 if __name__ == '__main__':
-    # run_example()
+    run_example()
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--txt_source_folder', type=str, help='txt_source_folder')
@@ -372,6 +389,6 @@ if __name__ == '__main__':
     parser.add_argument('--change_bb', default=None, help='change bbox, True, False, scale, function')
     parser.add_argument('--conf', type=float, default=0.3, help='object confidence threshold')
     opt = parser.parse_args()
-    print(opt)
+    # print(opt)
 
-    run_cli(opt)
+    # run_cli(opt)

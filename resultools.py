@@ -25,11 +25,14 @@ def save_test_result(test_results, session_folder, source_path):
 
         print(f"Exception in save_results {str(e)}! details in {str(text_ex_path)} ")
 
+    compare_result = None
     try:
-        test_results.compare_to_file_v2(session_folder)
+        compare_result = test_results.compare_to_file_v2(session_folder)
     except Exception as e:
         text_ex_path = Path(session_folder) / f"{source_path.stem}_ex_compare.log"
         save_exception(e, text_ex_path, "compare_to_file_v2")
+
+    return compare_result
 
 
 class TestResults:
@@ -164,10 +167,11 @@ class TestResults:
         with open(result_json_file, "w") as write_file:
             write_file.write(json.dumps(results_info, indent=4, sort_keys=True, default=lambda o: o.__dict__))
 
+        return results_info
         # 2 версия считаем дополнительно совпадения инцидентов
 
     def compare_to_file_v2(self, output_folder):
-        self.compare_list_to_file_v2(output_folder, self.test_items)
+        return self.compare_list_to_file_v2(output_folder, self.test_items)
 
     def compare_list_to_file_v2(self, output_folder, test_items):
 
@@ -252,6 +256,7 @@ class TestResults:
         with open(result_json_file, "w") as write_file:
             write_file.write(json.dumps(results_info, indent=4, sort_keys=True, default=lambda o: o.__dict__))
 
+        return results_info
         # 2 версия считаем дополнительно совпадения инцидентов
 
 
