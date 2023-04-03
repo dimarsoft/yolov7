@@ -90,11 +90,13 @@ def get_camera(source):
     # высота
     h = int(input_video.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
+    fps = int(input_video.get(cv2.CAP_PROP_FPS))
+
     input_video.release()
 
     num = Path(source).stem
 
-    return num, w, h
+    return num, w, h, fps
 
 
 def convert_and_save(folder_path):
@@ -103,7 +105,7 @@ def convert_and_save(folder_path):
     for i in bound_line_cameras.keys():
         video_source = folder_path / f"{i}.mp4"
 
-        camera_num, w, h = get_camera(str(video_source))
+        camera_num, w, h, fps = get_camera(str(video_source))
 
         item = bound_line_cameras[i]
         p1 = item[0]
@@ -123,7 +125,7 @@ def convert_and_save(folder_path):
 def timur_count_humans(tracks, source):
     print(f"Timur postprocessing v1.4_03.04.2023")
 
-    camera_num, w, h = get_camera(source)
+    camera_num, w, h, fps = get_camera(source)
 
     print(f"camera_num =  {camera_num}, ({w} {h})")
 

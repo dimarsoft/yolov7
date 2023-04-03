@@ -53,7 +53,7 @@ def run_single_video_yolo8v2(model, source, tracker_type: str, tracker_config, o
 
         print(f"Processed '{source}' to {output_folder}: ({(1E3 * (t2 - t1)):.1f} ms)")
 
-    num, w, h = get_camera(source)
+    num, w, h, fps = get_camera(source)
     bound_line = cameras_info.get(num)
 
     print(f"num = {num}, w = {w}, h = {h}, bound_line = {bound_line}")

@@ -60,7 +60,7 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
 
         print(f"Processed '{source}' to {output_folder}: ({(1E3 * (t2 - t1)):.1f} ms)")
 
-    num, w, h = get_camera(source)
+    num, w, h, fps = get_camera(source)
 
     bound_line = cameras_info.get(num)
 
@@ -282,7 +282,7 @@ def run_example():
 def run_test():
     video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\20.mp4"
 
-    camera_num, w, h = get_camera(video_source)
+    camera_num, w, h, fps = get_camera(video_source)
 
     print(f"{camera_num}, {w}, {h}")
 

@@ -343,7 +343,7 @@ def run_single_video_yolo8(model, source, tracker, output_folder, test_file, tes
     tracks_y7 = convert_toy7(track)
     track_worker = TrackWorker(tracks_y7)
 
-    num, w, h = get_camera(source)
+    num, w, h, fps = get_camera(source)
     bound_line = cameras_info.get(num)
 
     print(f"num = {num}, w = {w}, h = {h}, bound_line = {bound_line}")
