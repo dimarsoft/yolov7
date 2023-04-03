@@ -9,6 +9,7 @@ from configs import load_default_bound_line, CAMERAS_PATH, get_all_trackers_full
 from labeltools import TrackWorker
 from path_tools import get_video_files
 from post_processing.alex import alex_count_humans
+from post_processing.group_3 import group_3_count
 from post_processing.timur import timur_count_humans, get_camera
 from resultools import TestResults, save_test_result, save_results_to_csv
 from save_txt_tools import yolo7_save_tracks_to_txt, yolo7_save_tracks_to_json
@@ -45,11 +46,11 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
         change_bb=change_bb
     )
 
-    print(f"save tracks to: {text_path}")
+    if save_vid:
+        print(f"save tracks to: {text_path}")
+        yolo7_save_tracks_to_txt(results=track, txt_path=text_path, conf=conf)
 
-    yolo7_save_tracks_to_txt(results=track, txt_path=text_path, conf=conf)
-
-    yolo7_save_tracks_to_json(results=track, json_file=json_file, conf=conf)
+        yolo7_save_tracks_to_json(results=track, json_file=json_file, conf=conf)
 
     track_worker = TrackWorker(track)
 
@@ -60,7 +61,7 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
 
         print(f"Processed '{source}' to {output_folder}: ({(1E3 * (t2 - t1)):.1f} ms)")
 
-    num, w, h = get_camera(source)
+    num, w, h, fps = get_camera(source)
     bound_line = cameras_info.get(num)
 
     print(f"num = {num}, w = {w}, h = {h}, bound_line = {bound_line}")
@@ -81,6 +82,9 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
                     pass
                 if test_func == "timur":
                     humans_result = timur_count_humans(tracks_new, source)
+                    pass
+                if test_func == "group_3":
+                    humans_result = group_3_count(tracks_new, num, w, h, fps)
                     pass
                 if test_func == "dimar":
                     humans_result = track_worker.test_humans()
@@ -182,7 +186,7 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_co
     session_info['txt_source_folder'] = str(txt_source_folder)
     session_info['reid_weights'] = str(Path(reid_weights).name)
     # session_info['conf'] = conf
-    session_info['test_result_file'] = test_result_file
+    session_info['test_result_file'] = str(test_result_file)
     session_info['save_vid'] = save_vid
     session_info['files'] = files
     session_info['classes'] = classes
@@ -288,16 +292,17 @@ def run_example():
 
     all_trackers = get_all_trackers_full_path()
 
+    selected_trackers_names = ["fastdeepsort"]  # "sort",
     selected_trackers_names = ["ocsort"]  # "sort",
 
     selected_trackers = get_select_trackers(selected_trackers_names, all_trackers)
 
-    tracker_name = all_trackers  # selected_trackers  # "norfair"
+    tracker_name = selected_trackers  # "norfair"
     # tracker_name = selected_trackers  # "norfair"
     tracker_config = None  # all_trackers.get(tracker_name)
 
     files = None
-    # files = ['4']
+    # files = ['1', '6']
 
     classes = [0]
     classes = None
@@ -306,8 +311,8 @@ def run_example():
 
     txt_source_folder = "D:\\AI\\2023\\Detect\\2023_03_29_10_35_01_YoloVersion.yolo_v7_detect"
     run_track_yolo(txt_source_folder, video_source, tracker_name, tracker_config,
-                   output_folder, reid_weights, test_file, test_func="timur",
-                   files=files, save_vid=True, change_bb=change_bb, classes=classes)
+                   output_folder, reid_weights, test_file, test_func="group_3",
+                   files=files, save_vid=False,  change_bb=change_bb, classes=classes)
 
 
 # запуск из командной строки: python yolo_detect.py  --yolo 7 --weights "" source ""
@@ -325,7 +330,7 @@ def run_cli(opt_info):
 
 
 if __name__ == '__main__':
-    # run_example()
+    run_example()
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--txt_source_folder', type=str, help='txt_source_folder')
@@ -342,6 +347,6 @@ if __name__ == '__main__':
     parser.add_argument('--change_bb', default=None, help='change bbox, True, False, scale, function')
     parser.add_argument('--conf', type=float, default=0.3, help='object confidence threshold')
     opt = parser.parse_args()
-    print(opt)
+    # print(opt)
 
-    run_cli(opt)
+    # run_cli(opt)
