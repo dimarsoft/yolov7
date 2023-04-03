@@ -150,3 +150,6 @@ class YOLO8UL:
         input_video.release()
 
         return results
+
+    def train(self, **kwargs):
+        self.model.train(**kwargs)

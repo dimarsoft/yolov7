@@ -393,3 +393,6 @@ class YOLO7:
         input_video.release()
 
         return results, results_det
+
+    def train(self, **kwargs):
+        pass
