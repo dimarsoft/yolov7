@@ -4,8 +4,9 @@ from pathlib import Path
 
 import cv2
 
-from count_results import Result
-from post_processing.functions import crossing_bound, calc_inp_outp_people, process_filt, get_centrmass
+from count_results import Result, Deviation
+from labeltools import get_status
+from post_processing.functions import crossing_bound, calc_inp_outp_people, process_filt, get_centrmass, get_deviations
 
 
 def load_bound_line(cameras_path):
@@ -29,6 +30,7 @@ config = {
 }
 bound_line_cameras = load_bound_line(config["cameras_path"])
 
+
 # print(bound_line_cameras)
 
 
@@ -37,14 +39,33 @@ def _get_centrmass(p1, p2):
     return res
 
 
+def update_dict(dict_tracks, track_id, x1, y1, x2, y2, itt):
+    if track_id in dict_tracks.keys():
+        dict_tracks[track_id]["path"].append(get_centrmass((x1, y1), (x2, y2)))
+        dict_tracks[track_id]["frid"].append(itt)
+        dict_tracks[track_id]["bbox"].append([(x1, y1), (x2, y2)])
+    else:
+        dict_tracks.update({track_id: {
+            "path": [get_centrmass((x1, y1), (x2, y2))],
+            "bbox": [[(x1, y1), (x2, y2)]],
+            "frid": [itt]
+        }})
+
+
 def tracks_to_dic(tracks, w, h):
     people_tracks = {}
+    helmet_tracks = {}
+    vest_tracks = {}
+
+    by_class = {0: people_tracks, 1: helmet_tracks, 2: vest_tracks}
+
     # [frame_index, track_id, cls, bbox_left, bbox_top, bbox_w, bbox_h, box.conf]
 
     for track in tracks:
-        cls = track[2]
-        if cls != 0:
-            continue
+        cls = int(track[2])
+        # if cls != 0:             continue
+
+        dict_track = by_class[cls]
 
         x1, y1, x2, y2 = track[3], track[4], track[3] + track[5], track[4] + track[6]
 
@@ -56,18 +77,9 @@ def tracks_to_dic(tracks, w, h):
         track_id = track[1]
         itt = track[0]
 
-        if track_id in people_tracks.keys():
-            people_tracks[track_id]["path"].append(get_centrmass((x1, y1), (x2, y2)))
-            people_tracks[track_id]["frid"].append(itt)
-            people_tracks[track_id]["bbox"].append([(x1, y1), (x2, y2)])
-        else:
-            people_tracks.update({track_id: {
-                "path": [get_centrmass((x1, y1), (x2, y2))],
-                "bbox": [[(x1, y1), (x2, y2)]],
-                "frid": [itt]
-            }})
+        update_dict(dict_track, track_id, x1, y1, x2, y2, itt)
 
-    return people_tracks
+    return people_tracks, helmet_tracks, vest_tracks
 
 
 def get_camera(source):
@@ -109,18 +121,22 @@ def convert_and_save(folder_path):
 
 
 def timur_count_humans(tracks, source):
-    print(f"Timur postprocessing v1.3_02.04.2023")
+    print(f"Timur postprocessing v1.4_03.04.2023")
 
     camera_num, w, h = get_camera(source)
 
     print(f"camera_num =  {camera_num}, ({w} {h})")
 
-    people_tracks = tracks_to_dic(tracks, w, h)
+    people_tracks, helmet_tracks, vest_tracks = tracks_to_dic(tracks, w, h)
 
     if len(people_tracks) == 0:
         return Result(0, 0, 0, [])
 
     people_tracks = process_filt(people_tracks)
+
+    if len(people_tracks) == 0:
+        return Result(0, 0, 0, [])
+
     bound_line = bound_line_cameras.get(camera_num)
 
     print(f"bound_line =  {bound_line}")
@@ -138,6 +154,16 @@ def timur_count_humans(tracks, source):
     count_out = result["output"]
 
     deviations = []
+
+    deviations_info = get_deviations(people_tracks, helmet_tracks, vest_tracks, bound_line)
+
+    print(deviations_info)
+
+    for item in deviations_info:
+        frame_id = item["frame_id"]
+
+        status = get_status(item["has_helmet"],item["has_uniform"])
+        deviations.append(Deviation(frame_id, frame_id, status))
 
     print(f"count_in = {count_in}, count_out = {count_out}")
 
