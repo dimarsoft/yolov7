@@ -28,7 +28,7 @@ class YOLO7:
 
         self.imgsz = check_img_size(imgsz, s=self.stride)  # check img_size
 
-        self.model = TracedModel(self.model, self.device, img_size=640)
+        self.model = TracedModel(self.model, self.device, img_size=self.imgsz)
 
         self.names = self.model.module.names if hasattr(self.model, 'module') else self.model.names
 
