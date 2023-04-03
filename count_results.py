@@ -9,7 +9,7 @@ class Deviation(object):
 
 
 class Result:
-    def __init__(self, humans, c_in, c_out, deviations):
+    def __init__(self, humans, c_in, c_out, deviations: list):
         self.file = ""
         self.humans = int(humans)
         self.counter_in = int(c_in)
