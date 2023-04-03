@@ -17,14 +17,14 @@ class Labels(IntEnum):
     uniform = 2
 
 
-# положение человека отсительно турникета
+# положение человека относительно турникета
 class HumanPos(Enum):
     below = 0  # ниже
     above = 1  # выше
     near = 2  # в пределах турникета
 
 
-# цвета обектов
+# цвета объектов
 
 label_colors = {
     Labels.human: (255, 255, 0),
@@ -215,6 +215,19 @@ class NearItem:
         self.end_frame = end_frame
         self.start_i = start_i
         self.end_i = end_i
+
+
+def get_status(has_helmet, has_uniform):
+    status = 0
+    if not has_helmet and not has_uniform:
+        status = 1
+    else:
+        if has_helmet and not has_uniform:
+            status = 2
+        else:
+            if not has_helmet and has_uniform:
+                status = 3
+    return status
 
 
 class TrackWorker:
@@ -432,27 +445,18 @@ class TrackWorker:
                 if helmet_found_id is not None:
                     # нашли каску
                     has_helmet = True
-                    # удалем трек с каской
+                    # удаляем трек с каской
                     del tracks_helmet_by_id[helmet_found_id]
 
                 uniform_found_id = self.find_near(tracks, tracks_uniform_by_id, near_info)
 
                 if uniform_found_id is not None:
                     # нашли каску
-                    has_iniform = True
-                    # удалем трек с каской
+                    has_uniform = True
+                    # удаляем трек с каской
                     del tracks_uniform_by_id[uniform_found_id]
 
-                status = 0
-
-                if not has_helmet and not has_uniform:
-                    status = 1
-                else:
-                    if has_helmet and not has_uniform:
-                        status = 2
-                    else:
-                        if not has_helmet and has_uniform:
-                            status = 3
+                status = get_status(has_helmet=has_helmet, has_uniform=has_uniform)
 
                 if status > 0:
                     violations.append(Deviation(near_info[0], near_info[1], status))
@@ -480,7 +484,7 @@ class TrackWorker:
             else:
                 label.human_pos = HumanPos.below
 
-    # заделить трек по id
+    # разделить трек по id
     # получаем словарь: ключ = id, значение список треков по это id
     # также указываем класс
     @staticmethod
