@@ -8,7 +8,7 @@ import numpy as np
 from pandas import DataFrame
 
 from configs import TEST_TRACKS_PATH
-from count_results import Result
+from count_results import Result, Deviation
 from exception_tools import save_exception
 
 
@@ -176,6 +176,28 @@ class TestResults:
     def compare_to_file_v2(self, output_folder):
         return self.compare_list_to_file_v2(output_folder, self.test_items)
 
+    @staticmethod
+    def intersect_deviation(dev_1: Deviation, dev_2: Deviation) -> bool:
+        if (dev_1.start_frame >= dev_2.start_frame) and (dev_1.start_frame <= dev_2.end_frame):
+            return True
+
+        if (dev_1.end_frame >= dev_2.start_frame) and (dev_1.end_frame <= dev_2.end_frame):
+            return True
+        return False
+
+    def compare_deviations(self, actual_deviations: list, expected_deviations: list) -> int:
+
+        count_equal = 0
+
+        for a_div in actual_deviations:
+
+            for e_div in expected_deviations:
+                if self.intersect_deviation(a_div, e_div):
+                    count_equal += 1
+                    break
+
+        return count_equal
+
     def compare_list_to_file_v2(self, output_folder, test_items):
 
         # 1 версия считаем вход/выход
@@ -187,9 +209,14 @@ class TestResults:
         sum_delta_out = 0
 
         by_item_info = []
+        by_item_dev_info = []
 
         total = len(self.result_items)
         total_equal = 0
+
+        total_count_dev = 0
+        total_actual_devs = 0
+        total_expected_devs = 0
 
         for result_item in self.result_items:
             item = TestResults.get_for(test_items, result_item.file)
@@ -197,12 +224,17 @@ class TestResults:
             actual_counter_in = result_item.counter_in
             actual_counter_out = result_item.counter_out
 
+            actual_deviations = result_item.deviations
+
             if item is not None:
                 expected_counter_in = item.counter_in
                 expected_counter_out = item.counter_out
+
+                expected_deviations = item.deviations
             else:
                 expected_counter_in = 0
                 expected_counter_out = 0
+                expected_deviations = []
 
             delta_in = expected_counter_in - actual_counter_in
             delta_out = expected_counter_out - actual_counter_out
@@ -232,10 +264,28 @@ class TestResults:
 
                 by_item_info.append(item_info)
 
+            count_dev = self.compare_deviations(actual_deviations, expected_deviations)
+
+            dev_info = dict()
+            dev_info["file_dev"] = result_item.file
+            dev_info["count_dev"] = count_dev
+            dev_info["actual_devs"] = len(actual_deviations)
+            dev_info["expected_devs"] = len(expected_deviations)
+
+            by_item_dev_info.append(dev_info)
+
+            total_count_dev += count_dev
+            total_actual_devs += len(actual_deviations)
+            total_expected_devs += len(expected_deviations)
+
             sum_delta_in += abs(delta_in)
             sum_delta_out += abs(delta_out)
 
         results_info = dict()
+
+        results_info['total_count_dev'] = total_count_dev
+        results_info['total_actual_devs'] = total_actual_devs
+        results_info['total_expected_devs'] = total_expected_devs
 
         results_info['equals_in'] = in_equals
         results_info['equals_out'] = out_equals
@@ -244,9 +294,13 @@ class TestResults:
         results_info['delta_out_sum'] = sum_delta_out
 
         results_info['not_equal_items'] = by_item_info
+        results_info['dev_items'] = by_item_dev_info
+
+
 
         results_info['total_records'] = total
         results_info['total_equal'] = total_equal
+
         if total > 0:
             results_info['total_equal_percent'] = (100.0 * total_equal) / total
         else:
