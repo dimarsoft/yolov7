@@ -211,10 +211,10 @@ class TestResults:
         by_item_info = []
         by_item_dev_info = []
 
-        total = len(self.result_items)
+        total_records = len(self.result_items)
         total_equal = 0
 
-        total_count_dev = 0
+        total_count_correct = 0
         total_actual_devs = 0
         total_expected_devs = 0
 
@@ -264,17 +264,18 @@ class TestResults:
 
                 by_item_info.append(item_info)
 
-            count_dev = self.compare_deviations(actual_deviations, expected_deviations)
+            count_correct = self.compare_deviations(actual_deviations, expected_deviations)
 
-            dev_info = dict()
-            dev_info["file_dev"] = result_item.file
-            dev_info["count_dev"] = count_dev
-            dev_info["actual_devs"] = len(actual_deviations)
-            dev_info["expected_devs"] = len(expected_deviations)
+            if count_correct != len(expected_deviations):
+                dev_info = dict()
+                dev_info["file"] = result_item.file
+                dev_info["count_correct"] = count_correct
+                dev_info["actual_devs"] = len(actual_deviations)
+                dev_info["expected_devs"] = len(expected_deviations)
 
-            by_item_dev_info.append(dev_info)
+                by_item_dev_info.append(dev_info)
 
-            total_count_dev += count_dev
+            total_count_correct += count_correct
             total_actual_devs += len(actual_deviations)
             total_expected_devs += len(expected_deviations)
 
@@ -283,7 +284,7 @@ class TestResults:
 
         results_info = dict()
 
-        results_info['total_count_dev'] = total_count_dev
+        results_info['total_count_correct'] = total_count_correct
         results_info['total_actual_devs'] = total_actual_devs
         results_info['total_expected_devs'] = total_expected_devs
 
@@ -296,15 +297,20 @@ class TestResults:
         results_info['not_equal_items'] = by_item_info
         results_info['dev_items'] = by_item_dev_info
 
-
-
-        results_info['total_records'] = total
+        results_info['total_records'] = total_records
         results_info['total_equal'] = total_equal
 
-        if total > 0:
-            results_info['total_equal_percent'] = (100.0 * total_equal) / total
+        if total_records > 0:
+            results_info['total_equal_percent'] = (100.0 * total_equal) / total_records
         else:
             results_info['total_equal_percent'] = 0
+
+        if total_expected_devs > 0:
+            results_info['total_dev_correct_percent'] = (100.0 * total_count_correct) / total_expected_devs
+            results_info['total_dev_actual_percent'] = (100.0 * total_actual_devs) / total_expected_devs
+        else:
+            results_info['total_dev_correct_percent'] = 0
+            results_info['total_dev_actual_percent'] = 0
 
         result_json_file = Path(output_folder) / "compare_track_results.json"
 
@@ -314,7 +320,6 @@ class TestResults:
             write_file.write(json.dumps(results_info, indent=4, sort_keys=True, default=lambda o: o.__dict__))
 
         return results_info
-        # 2 версия считаем дополнительно совпадения инцидентов
 
 
 def test_tracks_file(test_file):
@@ -361,6 +366,22 @@ def unique(list1):
     return np.unique(x)
 
 
+def get_files_str(items: dict) -> str:
+    files = []
+    for nc in items:
+        f = str(Path(nc['file']).stem)
+        files.append(f)
+
+    files = unique(files)
+
+    files_str = ""
+    for item in files:
+        f = str(item)
+        files_str += f"{f},"
+
+    return files_str
+
+
 def save_results_to_csv(results: dict, file_path, sep=";") -> None:
     """
     Сохранение результатов сравнение в csv файл.
@@ -373,31 +394,37 @@ def save_results_to_csv(results: dict, file_path, sep=";") -> None:
     """
     table = []
     for key in results.keys():
+        results_info = results[key]
+
         total_equal_percent = results[key]["total_equal_percent"]
         total_equal = results[key]["total_equal"]
         total_records = results[key]["total_records"]
 
         not_equal_items = results[key]["not_equal_items"]
 
-        files = []
+        total_count_correct = results_info['total_count_correct']
+        total_actual_devs = results_info['total_actual_devs']
+        total_expected_devs = results_info['total_expected_devs']
 
-        for nc in not_equal_items:
-            f = str(Path(nc['file']).stem)
-            files.append(f)
+        total_dev_correct_percent = results_info['total_dev_correct_percent']
+        total_dev_actual_percent = results_info['total_dev_actual_percent']
 
-        files = unique(files)
+        by_item_dev_info = results_info['dev_items']
 
-        files_str = ""
-        for item in files:
-            f = str(item)
-            files_str += f"{f},"
+        files_str = get_files_str(not_equal_items)
+        files_dev_str = get_files_str(by_item_dev_info)
 
         print(f"{key} = {total_equal_percent}, {files_str}")
 
-        table.append([key, total_equal_percent, total_equal, total_records, str(files_str)])
+        table.append([key, total_equal_percent, total_equal, total_records, str(files_str),
+                      total_count_correct, total_actual_devs, total_expected_devs,
+                      total_dev_correct_percent, total_dev_actual_percent, files_dev_str])
 
     df = DataFrame(table, columns=["tracker_name", "total_equal_percent",
-                                   "total_equal", "total_records", "not_equal_items"])
+                                   "total_equal", "total_records", "not_equal_items",
+                                   "total_count_correct", "total_actual_devs", "total_expected_devs",
+                                   "total_dev_correct_percent", "total_dev_actual_percent",
+                                   "no_correct_dev"])
     df.sort_values(by=['total_equal_percent'], inplace=True, ascending=False)
 
     # print(df)
