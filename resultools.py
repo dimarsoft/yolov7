@@ -387,10 +387,10 @@ def unique(list1):
 def get_files_str(items: dict) -> str:
     files = []
     for nc in items:
-        f = str(Path(nc['file']).stem)
+        f = int(Path(nc['file']).stem)
         files.append(f)
 
-    files = unique(files)
+    files = sorted(unique(files))
 
     files_str = ""
     for item in files:
