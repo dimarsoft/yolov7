@@ -250,7 +250,7 @@ def iou_prop(people, helmet, vest):
 
 def get_deviations(people_tracks, helmet_tracks, vest_tracks, bound_line):
     people_info = get_people_info(people_tracks, helmet_tracks, vest_tracks)
-    return find_deviations(people_info, bound_line)
+    return find_deviations(people_info, bound_line, False)
 
 
 def get_people_info(people_tracks, helmet_tracks, vest_tracks):
@@ -292,7 +292,7 @@ def search_frame(people_info, bound_line):
     return res
 
 
-def find_deviations(people_tracks, bound_line):
+def find_deviations(people_tracks, bound_line, only_down: bool = True):
     tracks_info = []
     intrs_pid = []
 
@@ -302,10 +302,17 @@ def find_deviations(people_tracks, bound_line):
         people_path = people_tracks[p_id]['path']
         tr_info = crossing_bound(people_path, bound_line)
         tracks_info.append(tr_info)
+
         if tr_info["intersect"]:
             intrs_pid.append(p_id)
+            if only_down:
+                process = tr_info["direction"] == 'down'
+            else:
+                process = True
+        else:
+            process = False
 
-        if tr_info["intersect"] and tr_info["direction"] == 'down':
+        if process:
             helmet = np.array(people_tracks[p_id]["helmet"], dtype=bool)
             vest = np.array(people_tracks[p_id]["vest"], dtype=bool)
             in_helm = len(helmet[helmet]) / len(helmet) >= 0.5
