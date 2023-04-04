@@ -310,7 +310,7 @@ def run_example():
     change_bb = None  # pavel_change_bbox  # change_bbox
 
     test_func = "group_3"
-    test_func = "popov_alex"
+    # test_func = "popov_alex"
 
     txt_source_folder = "D:\\AI\\2023\\Detect\\2023_03_29_10_35_01_YoloVersion.yolo_v7_detect"
     run_track_yolo(txt_source_folder, video_source, tracker_name, tracker_config,

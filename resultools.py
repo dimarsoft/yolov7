@@ -266,18 +266,31 @@ class TestResults:
 
             count_correct = self.compare_deviations(actual_deviations, expected_deviations)
 
-            if count_correct != len(expected_deviations):
+            actual_devs = len(actual_deviations)
+            expected_devs = len(expected_deviations)
+
+            if count_correct != expected_devs:
                 dev_info = dict()
                 dev_info["file"] = result_item.file
                 dev_info["count_correct"] = count_correct
-                dev_info["actual_devs"] = len(actual_deviations)
-                dev_info["expected_devs"] = len(expected_deviations)
+                dev_info["actual_devs"] = actual_devs
+                dev_info["expected_devs"] = expected_devs
+
+                if actual_devs > 0:
+                    dev_info["dev_precision"] = count_correct / actual_devs
+                else:
+                    dev_info["dev_precision"] = 0
+
+                if expected_devs > 0:
+                    dev_info["dev_recall"] = count_correct / expected_devs
+                else:
+                    dev_info["dev_recall"] = 0
 
                 by_item_dev_info.append(dev_info)
 
             total_count_correct += count_correct
-            total_actual_devs += len(actual_deviations)
-            total_expected_devs += len(expected_deviations)
+            total_actual_devs += actual_devs
+            total_expected_devs += expected_devs
 
             sum_delta_in += abs(delta_in)
             sum_delta_out += abs(delta_out)
@@ -306,11 +319,16 @@ class TestResults:
             results_info['total_equal_percent'] = 0
 
         if total_expected_devs > 0:
-            results_info['total_dev_correct_percent'] = (100.0 * total_count_correct) / total_expected_devs
+            results_info['total_dev_recall'] = (100.0 * total_count_correct) / total_expected_devs
             results_info['total_dev_actual_percent'] = (100.0 * total_actual_devs) / total_expected_devs
         else:
-            results_info['total_dev_correct_percent'] = 0
+            results_info['total_dev_recall'] = 0
             results_info['total_dev_actual_percent'] = 0
+
+        if total_actual_devs > 0:
+            results_info['total_dev_precision'] = (100.0 * total_count_correct) / total_actual_devs
+        else:
+            results_info['total_dev_precision'] = 0
 
         result_json_file = Path(output_folder) / "compare_track_results.json"
 
@@ -406,8 +424,11 @@ def save_results_to_csv(results: dict, file_path, sep=";") -> None:
         total_actual_devs = results_info['total_actual_devs']
         total_expected_devs = results_info['total_expected_devs']
 
-        total_dev_correct_percent = results_info['total_dev_correct_percent']
+        # total_dev_correct_percent = results_info['total_dev_correct_percent']
         total_dev_actual_percent = results_info['total_dev_actual_percent']
+
+        total_dev_precision = results_info['total_dev_precision']
+        total_dev_recall = results_info['total_dev_recall']
 
         by_item_dev_info = results_info['dev_items']
 
@@ -417,13 +438,15 @@ def save_results_to_csv(results: dict, file_path, sep=";") -> None:
         print(f"{key} = {total_equal_percent}, {files_str}")
 
         table.append([key, total_equal_percent, total_equal, total_records, str(files_str),
+                      total_dev_precision, total_dev_recall,
                       total_count_correct, total_actual_devs, total_expected_devs,
-                      total_dev_correct_percent, total_dev_actual_percent, files_dev_str])
+                      total_dev_actual_percent, files_dev_str])
 
     df = DataFrame(table, columns=["tracker_name", "total_equal_percent",
                                    "total_equal", "total_records", "not_equal_items",
+                                   "total_dev_precision", "total_dev_recall",
                                    "total_count_correct", "total_actual_devs", "total_expected_devs",
-                                   "total_dev_correct_percent", "total_dev_actual_percent",
+                                   "total_dev_actual_percent",
                                    "no_correct_dev"])
     df.sort_values(by=['total_equal_percent'], inplace=True, ascending=False)
 
