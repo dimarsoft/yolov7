@@ -304,7 +304,7 @@ def get_deviations(tracks, w, h, fps):
 
 
 def group_3_count(tracks, num, w, h, fps):
-    print(f"Group 3 post processing v1.1 (03.04.2023)")
+    print(f"Group 3 post processing v1.2 (04.04.2023)")
 
     new_tracks = convert_tracks(tracks, w, h)
 
