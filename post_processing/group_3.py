@@ -266,7 +266,7 @@ def get_good_bad_human(id, info, fps):
         violation_key = 1
         print(
             f'Human with id {id} is crossing with {violations_dict[violation_key]} in interval {start_time // 60} min {start_time % 60} sec - {end_time // 60} min {end_time % 60} sec.')
-    return id, violation_key, start_time, end_time
+    return id, violation_key, start_time, end_time, start_frame, end_frame
 
 
 def get_deviations(tracks, w, h, fps):
@@ -295,9 +295,10 @@ def get_deviations(tracks, w, h, fps):
     devs = []
     # Применим функцию get_good_bad_human к полученным ранее спискам вошедших и вышедших
     for track_id in ppl_who_came:
-        track_id, violation_key, start_time, end_time = get_good_bad_human(track_id, info, fps=fps)
+        track_id, violation_key, start_time, end_time, start_frame, end_frame = get_good_bad_human(track_id, info, fps=fps)
 
-        devs.append(Deviation(start_time, end_time, violation_key))
+        if violation_key > 0:
+            devs.append(Deviation(start_frame, end_frame, violation_key))
 
     return devs
 
