@@ -302,16 +302,19 @@ def run_example():
     tracker_config = None  # all_trackers.get(tracker_name)
 
     files = None
-    # files = ['1', '6']
+    files = ['1', '6']
 
     classes = [0]
     classes = None
 
     change_bb = None  # pavel_change_bbox  # change_bbox
 
+    test_func = "group_3"
+    test_func = "popov_alex"
+
     txt_source_folder = "D:\\AI\\2023\\Detect\\2023_03_29_10_35_01_YoloVersion.yolo_v7_detect"
     run_track_yolo(txt_source_folder, video_source, tracker_name, tracker_config,
-                   output_folder, reid_weights, test_file, test_func="group_3",
+                   output_folder, reid_weights, test_file, test_func=test_func,
                    files=files, save_vid=False,  change_bb=change_bb, classes=classes)
 
 
