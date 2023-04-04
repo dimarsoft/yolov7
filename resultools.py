@@ -269,7 +269,7 @@ class TestResults:
             actual_devs = len(actual_deviations)
             expected_devs = len(expected_deviations)
 
-            if count_correct != expected_devs:
+            if count_correct != expected_devs or actual_devs != expected_devs:
                 dev_info = dict()
                 dev_info["file"] = result_item.file
                 dev_info["count_correct"] = count_correct
