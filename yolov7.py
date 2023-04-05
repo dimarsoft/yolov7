@@ -132,7 +132,8 @@ class YOLO7:
                         results.append([frame, -1, cls, xywh[0], xywh[1], xywh[2], xywh[3], conf])
 
                 # Print time (inference + NMS)
-                print(f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS, detections = {total_detections}')
+                print(
+                    f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS, detections = {total_detections}')
 
                 # Save results (image with detections)
 
@@ -233,7 +234,7 @@ class YOLO7:
         return results
 
     def track(self, source, tracker_type, tracker_config, reid_weights="osnet_x0_25_msmt17.pt",
-              conf_threshold=0.3, iou=0.4, classes=None, change_bb=False):
+              conf_threshold=0.3, iou=0.4, classes=None, change_bb=False) -> list:
 
         self.reid_weights = Path(WEIGHTS) / reid_weights
         tracker = create_tracker(tracker_type, tracker_config, self.reid_weights, self.device, self.half)
@@ -392,7 +393,7 @@ class YOLO7:
 
         input_video.release()
 
-        return results, results_det
+        return results  # , results_det
 
     def train(self, **kwargs):
         pass

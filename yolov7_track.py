@@ -34,7 +34,9 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
 
     model = YOLO7(model)
 
-    track, detections = model.track(
+    detections = []
+
+    track = model.track(
         source=source,
         conf_threshold=conf,
         tracker_type=tracker_type,
