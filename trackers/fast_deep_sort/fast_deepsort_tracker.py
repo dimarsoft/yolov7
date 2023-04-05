@@ -23,7 +23,7 @@ class FastDeepSortTracker:
     def update(self, detections, frame):
         dets = []
         for det in detections:
-            bbox = det[:4]
+            bbox = det[:4].clone()
             bbox[2] = bbox[2] - bbox[0]
             bbox[3] = bbox[3] - bbox[1]
             dets.append((bbox, det[4], det[5]))
