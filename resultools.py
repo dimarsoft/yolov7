@@ -38,6 +38,10 @@ def save_test_result(test_results, session_folder, source_path):
     return compare_result
 
 
+def results_to_json(result_items: Result):
+    return json.dumps(result_items, indent=4, sort_keys=True, default=lambda o: o.__dict__)
+
+
 class TestResults:
     def __init__(self, test_file):
         self.test_file = test_file
