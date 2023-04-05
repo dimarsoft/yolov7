@@ -5,6 +5,17 @@ from count_results import Result, Deviation
 
 
 def convert_tracks_df(tracks, w, h) -> DataFrame:
+    """
+    Конвертация в DataFrame нужный постобработке
+    Args:
+        tracks: Список треков
+        w: Ширина фрейма(картинки)
+        h: Высота
+
+    Returns:
+        DataFrame(columns=["frame", "id", "class", "confidence", "bb_left", "bb_top", "bb_right", "bb_bottom",
+                            "cntrx", "cntry"]
+    """
     new_track = []
     # [frame_index, track_id, cls, bbox_left, bbox_top, bbox_w, bbox_h, box.conf]
 
@@ -28,11 +39,22 @@ def convert_tracks_df(tracks, w, h) -> DataFrame:
 
 
 def convert_tracks(tracks, w, h) -> list:
+    """
+    Конвертация в формат нужный постобработке
+    Args:
+        tracks: Список треков
+        w: Ширина фрейма(картинки)
+        h: Высота
+
+    Returns:
+        Список треков в нужном формате [frame_id, track_id, left, top, width, height]
+
+    """
     new_track = []
     # [frame_index, track_id, cls, bbox_left, bbox_top, bbox_w, bbox_h, box.conf]
 
     for item in tracks:
-        if item[2] != 0:
+        if item[2] != 0:  # только humans
             continue
         bbox_left, bbox_top, bbox_w, bbox_h = item[3], item[4], item[5], item[6]
         new_item = [item[0], item[1], bbox_left * w, bbox_top * h, bbox_w * w, bbox_h * h]
@@ -281,7 +303,7 @@ def get_deviations(tracks, w, h, fps):
     # Применим функцию who_came_left и получим списки id прошедших людей.
     ppl_who_came, ppl_who_left = who_came_left(data)
 
-    # Используем созданную функцию get_who_wears_what на данных
+    # Используем созданную функцию get_who_wears_what на данных.
     # Получаем словарь info:
     # ключи - номера кадров,
     # значения - списки кортежей, где каждый кортеж это:
@@ -295,7 +317,8 @@ def get_deviations(tracks, w, h, fps):
     devs = []
     # Применим функцию get_good_bad_human к полученным ранее спискам вошедших и вышедших
     for track_id in ppl_who_came:
-        track_id, violation_key, start_time, end_time, start_frame, end_frame = get_good_bad_human(track_id, info, fps=fps)
+        track_id, violation_key, start_time, end_time, start_frame, end_frame \
+            = get_good_bad_human(track_id, info, fps=fps)
 
         if violation_key > 0:  # 0 нет нарушения
             devs.append(Deviation(start_frame, end_frame, violation_key))
