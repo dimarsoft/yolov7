@@ -123,7 +123,7 @@ def convert_and_save(folder_path):
 
 
 def timur_count_humans(tracks, source):
-    print(f"Timur postprocessing v1.4_03.04.2023")
+    print(f"Timur postprocessing v1.5_05.04.2023")
 
     camera_num, w, h, fps = get_camera(source)
 
@@ -159,14 +159,16 @@ def timur_count_humans(tracks, source):
 
     deviations_info = get_deviations(people_tracks, helmet_tracks, vest_tracks, bound_line)
 
-    print(deviations_info)
+    # print(deviations_info)
 
     for item in deviations_info:
         frame_id = item["frame_id"]
 
-        status = get_status(item["has_helmet"],item["has_uniform"])
-        deviations.append(Deviation(frame_id, frame_id, status))
+        status = get_status(item["has_helmet"], item["has_uniform"])
 
-    print(f"count_in = {count_in}, count_out = {count_out}")
+        if status > 0:  # 0 нет нарушения
+            deviations.append(Deviation(frame_id, frame_id, status))
+
+    print(f"{camera_num}: count_in = {count_in}, count_out = {count_out}, deviations = {len(deviations)}")
 
     return Result(count_in + count_out, count_in, count_out, deviations)
