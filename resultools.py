@@ -39,7 +39,7 @@ def save_test_result(test_results, session_folder, source_path):
 
 
 def results_to_json(result_items: Result):
-    return json.dumps(result_items, indent=4, sort_keys=True, default=lambda o: o.__dict__)
+    return json.dump(result_items, indent=4, sort_keys=True, default=lambda o: o.__dict__)
 
 
 class TestResults:
