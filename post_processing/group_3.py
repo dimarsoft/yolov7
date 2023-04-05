@@ -297,7 +297,7 @@ def get_deviations(tracks, w, h, fps):
     for track_id in ppl_who_came:
         track_id, violation_key, start_time, end_time, start_frame, end_frame = get_good_bad_human(track_id, info, fps=fps)
 
-        if violation_key > 0:
+        if violation_key > 0:  # 0 нет нарушения
             devs.append(Deviation(start_frame, end_frame, violation_key))
 
     return devs
@@ -310,8 +310,8 @@ def group_3_count(tracks, num, w, h, fps):
 
     came_in, came_out = calc_inp_outp_people(new_tracks, w, h)
 
-    print(f"{num}: came_in = {came_in}, came_out = {came_out}")
-
     deviations = get_deviations(tracks, w, h, fps)
+
+    print(f"{num}: count_in = {came_in}, count_out = {came_out}, deviations = {len(deviations)}")
 
     return Result(came_in + came_out, came_in, came_out, deviations)
