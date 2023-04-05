@@ -302,7 +302,7 @@ def run_example():
     tracker_config = None  # all_trackers.get(tracker_name)
 
     files = None
-    # files = ['1', '6']
+    files = ['1']
 
     # classes = [0]
     classes = None
