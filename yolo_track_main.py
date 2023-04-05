@@ -87,6 +87,8 @@ def post_process(test_func, track, num, w, h, bound_line, source):
         except Exception as e:
             print_exception(e, "post processing")
 
+    humans_result.file = str(Path(source).name)
+
     return humans_result
 
 
