@@ -10,7 +10,7 @@
         "deviations": [
             {
                 "end_frame": 380,
-                "start_frame": 100,
+                "start_frame": 370,
                 "status_id": 3
             }
         ],
@@ -23,7 +23,7 @@
         "deviations": [
             {
                 "end_frame": 400,
-                "start_frame": 300,
+                "start_frame": 390,
                 "status_id": 1
             }
         ],
@@ -44,7 +44,7 @@
 
             {
                 "end_frame": 974,
-                "start_frame": 943,
+                "start_frame": 973,
                 "status_id": 1
             }
  
@@ -63,17 +63,17 @@
             },
             {
                 "end_frame": 190,
-                "start_frame": 175,
+                "start_frame": 180,
                 "status_id": 1
 			},
             {
-                "end_frame": 257,
+                "end_frame": 237,
                 "start_frame": 238,
                 "status_id": 1
             },
             {
-                "end_frame": 295,
-                "start_frame": 276,
+                "end_frame": 285,
+                "start_frame": 286,
                 "status_id": 1
             }
 
@@ -86,22 +86,22 @@
     {
         "deviations": [
             {
-                "end_frame": 80,
+                "end_frame": 60,
                 "start_frame": 50,
                 "status_id": 3
             },
             {
-                "end_frame": 397,
+                "end_frame": 367,
                 "start_frame": 367,
                 "status_id": 1
             },
             {
-                "end_frame": 1000,
+                "end_frame": 982,
                 "start_frame": 973,
                 "status_id": 3
             },
             {
-                "end_frame": 1090,
+                "end_frame": 1070,
                 "start_frame": 1069,
                 "status_id": 1
             }
@@ -114,7 +114,7 @@
     {
         "deviations": [
             {
-                "end_frame": 146,
+                "end_frame": 126,
                 "start_frame": 125,
                 "status_id": 1
             },
@@ -124,17 +124,17 @@
                 "status_id": 1
             },
             {
-                "end_frame": 420,
+                "end_frame": 368,
                 "start_frame": 344,
                 "status_id": 1
             },
             {
-                "end_frame": 572,
+                "end_frame": 542,
                 "start_frame": 465,
                 "status_id": 1
             },
             {
-                "end_frame": 648,
+                "end_frame": 618,
                 "start_frame": 607,
                 "status_id": 1
             }
@@ -147,7 +147,7 @@
     {
         "deviations": [
             {
-                "end_frame": 150,
+                "end_frame": 130,
                 "start_frame": 120,
                 "status_id": 3
             }
@@ -165,7 +165,7 @@
                 "status_id": 3
             },
             {
-                "end_frame": 300,
+                "end_frame": 278,
                 "start_frame": 270,
                 "status_id": 3
             }
@@ -179,12 +179,12 @@
             "deviations": [
                   {
                         "end_frame": 256,
-                        "start_frame": 220,
+                        "start_frame": 25,
                         "status_id": 1
                   },
                   {
                         "end_frame": 355,
-                        "start_frame": 320,
+                        "start_frame": 50,
                         "status_id": 1
                   },
                   {
@@ -265,7 +265,7 @@
             "deviations": [
                   {
                         "end_frame": 250,
-                        "start_frame": 200,
+                        "start_frame": 0,
                         "status_id": 1
                   },
                   {
@@ -311,12 +311,12 @@
                   },
                   {
                         "end_frame": 115,
-                        "start_frame": 70,
+                        "start_frame": 80,
                         "status_id": 1
                   },
                   {
                         "end_frame": 164,
-                        "start_frame": 100,
+                        "start_frame": 110,
                         "status_id": 1
                   },
                   {
@@ -502,8 +502,8 @@
     {
         "deviations": [
             {
-                "end_frame": 100,
-                "start_frame": 50,
+                "end_frame": 1110,
+                "start_frame": 0,
                 "status_id": 1
             },
             {
@@ -517,7 +517,7 @@
                 "status_id": 3
             },
             {
-                "end_frame": 1290,
+                "end_frame": 1277,
                 "start_frame": 1255,
                 "status_id": 3
             }
