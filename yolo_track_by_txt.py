@@ -286,14 +286,14 @@ def run_example():
     test_file = TEST_TRACKS_PATH
     output_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\"
     reid_weights = "osnet_x0_25_msmt17.pt"
-    # reid_weights = "D:\\AI\\2023\\Github\\dimar_yolov7\\weights\\mars-small128.pb"
 
+    # reid_weights = "D:\\AI\\2023\\Github\\dimar_yolov7\\weights\\mars-small128.pb"
     # tracker_config = "trackers/NorFairTracker/configs/norfair_track.yaml"
 
     all_trackers = get_all_trackers_full_path()
 
-    selected_trackers_names = ["fastdeepsort"]  # "sort",
-    selected_trackers_names = ["ocsort"]  # "sort",
+    # selected_trackers_names = ["fastdeepsort"]
+    selected_trackers_names = ["ocsort"]
 
     selected_trackers = get_select_trackers(selected_trackers_names, all_trackers)
 
@@ -302,15 +302,16 @@ def run_example():
     tracker_config = None  # all_trackers.get(tracker_name)
 
     files = None
-    files = ['1', '6']
+    # files = ['1', '6']
 
-    classes = [0]
+    # classes = [0]
     classes = None
 
     change_bb = None  # pavel_change_bbox  # change_bbox
 
-    test_func = "group_3"
-    # test_func = "popov_alex"
+    # test_func = "popv_alex"
+    # test_func = "group_3"
+    test_func = "timur"
 
     txt_source_folder = "D:\\AI\\2023\\Detect\\2023_03_29_10_35_01_YoloVersion.yolo_v7_detect"
     run_track_yolo(txt_source_folder, video_source, tracker_name, tracker_config,
@@ -333,7 +334,7 @@ def run_cli(opt_info):
 
 
 if __name__ == '__main__':
-    run_example()
+    # run_example()
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--txt_source_folder', type=str, help='txt_source_folder')
@@ -350,6 +351,6 @@ if __name__ == '__main__':
     parser.add_argument('--change_bb', default=None, help='change bbox, True, False, scale, function')
     parser.add_argument('--conf', type=float, default=0.3, help='object confidence threshold')
     opt = parser.parse_args()
-    # print(opt)
+    print(opt)
 
-    # run_cli(opt)
+    run_cli(opt)
