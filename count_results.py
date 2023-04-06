@@ -19,3 +19,20 @@ class Result:
     def __str__(self):
         return f"file = {self.file}, in = {self.counter_in}, " \
                f"out = {self.counter_out}, deviations = {len(self.deviations)}"
+
+
+def get_status(status) -> str:
+    """
+    Строковое представление типа нарушения
+
+    :param status: тип нарушения
+    :return: Строка
+    """
+    status = int(status)
+    if status == 1:
+        return "без каски и жилета"
+    if status == 2:
+        return "без жилета"
+    if status == 3:
+        return "без каски"
+    return ""

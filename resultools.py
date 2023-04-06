@@ -7,8 +7,8 @@ from types import SimpleNamespace
 import numpy as np
 from pandas import DataFrame
 
-from configs import TEST_TRACKS_PATH
-from count_results import Result, Deviation
+from configs import TEST_TRACKS_PATH, TEST_ROOT
+from count_results import Result, Deviation, get_status
 from exception_tools import save_exception
 
 
@@ -490,7 +490,67 @@ def results_to_table():
     # print(results)
 
 
+def test_results_to_table(results, csv_file_path, excel_file_path, sep: str = ";"):
+    """
+        Сохранение результатов сравнение в csv файл.
+        Данные в таблично виде и упорядоченны по total_equal_percent
+
+        Args:
+            results (dict): Словарь с результатами сравнения
+            csv_file_path: Путь к файлу, для сохранения данных в csv
+            excel_file_path: Путь к файлу, для сохранения данных в excel
+            sep: Разделитель в csv файле
+        """
+    table = []
+    for key in results:
+        results_info = key
+
+        file_name = results_info["file"]
+        file_id = int(Path(file_name).stem)
+
+        counter_in = results_info["counter_in"]
+        counter_out = results_info["counter_out"]
+
+        deviations = results_info['deviations']
+
+        deviations_count = len(deviations)
+
+        if deviations_count > 0:
+            table.append([file_id, file_name, counter_in, counter_out, deviations_count, "", "", "", ""])
+            for i, dev in enumerate(deviations):
+                start_frame = dev["start_frame"]
+                end_frame = dev["end_frame"]
+                status_id = dev["status_id"]
+
+                table.append(
+                    ["", "", "", "", "", start_frame, end_frame, status_id, get_status(status_id)])
+        else:
+            table.append([file_id, file_name, counter_in, counter_out, deviations_count, 0, 0, 0])
+
+    df = DataFrame(table, columns=["file_id", "file",
+                                   "counter_in", "counter_out",
+                                   "deviations",
+                                   "start_frame",
+                                   "end_frame", "status_id", "Тип"])
+    # csv
+    df.to_csv(csv_file_path, sep=sep, index=False)
+    # excel
+    df.to_excel(excel_file_path, index=False)
+
+
+def convert_test_json_to_csv():
+    json_file_path = TEST_TRACKS_PATH
+    csv_file_path = TEST_ROOT / "all_track_results.csv"
+    excel_file_path = TEST_ROOT / "all_track_results.xlsx"
+
+    with open(json_file_path, "r") as read_file:
+        results = json.loads(read_file.read())
+
+    test_results_to_table(results, csv_file_path, excel_file_path)
+
+
 if __name__ == '__main__':
     test_tracks_file(test_file=TEST_TRACKS_PATH)
+    # convert_test_json_to_csv()
 
     # results_to_table()

@@ -334,7 +334,7 @@ def run_cli(opt_info):
 
 
 if __name__ == '__main__':
-    # run_example()
+    run_example()
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--txt_source_folder', type=str, help='txt_source_folder')
@@ -353,4 +353,4 @@ if __name__ == '__main__':
     opt = parser.parse_args()
     print(opt)
 
-    run_cli(opt)
+    #run_cli(opt)

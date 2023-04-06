@@ -54,3 +54,4 @@ class Track(Detection):
         super().__init__(bbox, cls, conf, frame_index)
 
         self.track_id = int(track_id)
+
