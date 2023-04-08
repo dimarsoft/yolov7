@@ -1,7 +1,7 @@
 import optuna
 from optuna.study import StudyDirection
 
-from configs import DETECTIONS_FOLDER
+from configs import get_detections_path
 from optune.optune_tools import save_result, reset_seed
 from yolo_optune import run_track_yolo
 
@@ -41,7 +41,7 @@ def objective_ocsort(trial):
 
     test_func = "timur"
 
-    txt_source_folder = DETECTIONS_FOLDER
+    txt_source_folder = str(get_detections_path())
 
     conf_thres = trial.suggest_float('conf_thres', 0.3, 0.6, step=0.1)
 

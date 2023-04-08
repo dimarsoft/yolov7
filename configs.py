@@ -16,6 +16,7 @@ WEIGHTS = ROOT / 'weights'
 DETECTIONS_ROOT = ROOT / 'Detections'
 
 DETECTIONS_FOLDER = DETECTIONS_ROOT / '2023_03_29_10_35_01_YoloVersion.yolo_v7_detect'
+DETECTIONS_ZIP = DETECTIONS_ROOT / '2023_03_29_10_35_01_YoloVersion.yolo_v7_detect.zip'
 
 
 class YoloVersion(Enum):
@@ -108,3 +109,23 @@ def get_select_trackers(trackers_names, trackers) -> dict:
         selected[key] = trackers[key]
 
     return selected
+
+
+def get_detections_path() -> Path:
+    """
+    Получить путь к папке с сохраненными детекциями.
+    Если папки нет, то она создастся из архива, который хранится в репе
+    Returns:
+        Петь
+
+    """
+    import zipfile
+    if not DETECTIONS_FOLDER.exists():
+        with zipfile.ZipFile(DETECTIONS_ZIP, 'r') as zip_ref:
+            zip_ref.extractall(DETECTIONS_ROOT)
+
+    return DETECTIONS_FOLDER
+
+
+if __name__ == '__main__':
+    print(get_detections_path())

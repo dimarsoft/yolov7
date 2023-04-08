@@ -1,7 +1,7 @@
 import optuna
 from optuna.study import StudyDirection
 
-from configs import DETECTIONS_FOLDER
+from configs import get_detections_path
 from optune.optune_tools import save_result, reset_seed
 from yolo_optune import run_track_yolo
 
@@ -38,7 +38,7 @@ def objective_fastdeepsort(trial):
     test_func = "group_3"
     test_func = "timur"
 
-    txt_source_folder = DETECTIONS_FOLDER
+    txt_source_folder = str(get_detections_path())
 
     ecc = trial.suggest_categorical('ecc', [True, False])
     max_age = (trial.suggest_int('max_age', 1, 10))
