@@ -4,15 +4,10 @@ from pathlib import Path
 
 import cv2
 
+from configs import CAMERAS_PATH, load_bound_line
 from count_results import Result, Deviation
 from labeltools import get_status
 from post_processing.functions import crossing_bound, calc_inp_outp_people, process_filt, get_centrmass, get_deviations
-
-
-def load_bound_line(cameras_path):
-    with open(cameras_path, 'r') as f:
-        bound_line = json.load(f)
-    return bound_line
 
 
 def save_bound_line(cameras_path, bound_line):
@@ -20,15 +15,7 @@ def save_bound_line(cameras_path, bound_line):
         json.dump(bound_line, fp=f, indent=4)
 
 
-config = {
-    "device": "cpu",
-    "GOFILE": True,
-    "people_id": 0,
-    "model_path": os.path.join("ann_mod", "best_b4e54.pt"),
-    "track_model_path": os.path.join("ann_mod", "mars-small128.pb"),
-    "cameras_path": os.path.join("cfg", "camera_config.json")
-}
-bound_line_cameras = load_bound_line(config["cameras_path"])
+bound_line_cameras = load_bound_line(CAMERAS_PATH)
 
 
 # print(bound_line_cameras)

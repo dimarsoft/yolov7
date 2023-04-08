@@ -1,8 +1,7 @@
+import json
 from enum import Enum
 from pathlib import Path
 from typing import Dict
-
-from post_processing.timur import load_bound_line
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]
@@ -14,10 +13,14 @@ CAMERAS_PATH = CONFIG_ROOT / 'camera_config.json'
 TEST_TRACKS_PATH = TEST_ROOT / 'all_track_results.json'
 WEIGHTS = ROOT / 'weights'
 
+DETECTIONS_ROOT = ROOT / 'Detections'
+
+DETECTIONS_FOLDER = DETECTIONS_ROOT / '2023_03_29_10_35_01_YoloVersion.yolo_v7_detect'
+
 
 class YoloVersion(Enum):
     yolo_v7 = 7,
-    yolo_v8 = 8,    # код из yolo8_tracking
+    yolo_v8 = 8,  # код из yolo8_tracking
     yolo_v8ul = 81  # из пакета ultralytics
 
 
@@ -39,6 +42,12 @@ def parse_yolo_version(yolo_version):
             return YoloVersion.yolo_v8ul
 
     return None
+
+
+def load_bound_line(cameras_path):
+    with open(cameras_path, 'r') as f:
+        bound_line = json.load(f)
+    return bound_line
 
 
 def load_default_bound_line():
