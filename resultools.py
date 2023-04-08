@@ -175,7 +175,6 @@ class TestResults:
             write_file.write(json.dumps(results_info, indent=4, sort_keys=True, default=lambda o: o.__dict__))
 
         return results_info
-        # 2 версия считаем дополнительно совпадения инцидентов
 
     def compare_to_file_v2(self, output_folder):
         return self.compare_list_to_file_v2(output_folder, self.test_items)
@@ -273,24 +272,30 @@ class TestResults:
             actual_devs = len(actual_deviations)
             expected_devs = len(expected_deviations)
 
-            if count_correct != expected_devs or actual_devs != expected_devs:
-                dev_info = dict()
-                dev_info["file"] = result_item.file
-                dev_info["count_correct"] = count_correct
-                dev_info["actual_devs"] = actual_devs
-                dev_info["expected_devs"] = expected_devs
+            # if count_correct != expected_devs or actual_devs != expected_devs:
+            dev_info = dict()
+            dev_info["file"] = result_item.file
+            dev_info["count_correct"] = count_correct
+            dev_info["actual_devs"] = actual_devs
+            dev_info["expected_devs"] = expected_devs
 
-                if actual_devs > 0:
-                    dev_info["dev_precision"] = count_correct / actual_devs
-                else:
-                    dev_info["dev_precision"] = 0
+            dev_info["expected_in"] = expected_counter_in
+            dev_info["expected_out"] = expected_counter_out
 
-                if expected_devs > 0:
-                    dev_info["dev_recall"] = count_correct / expected_devs
-                else:
-                    dev_info["dev_recall"] = 0
+            dev_info["actual_in"] = actual_counter_in
+            dev_info["actual_out"] = actual_counter_out
 
-                by_item_dev_info.append(dev_info)
+            if actual_devs > 0:
+                dev_info["dev_precision"] = count_correct / actual_devs
+            else:
+                dev_info["dev_precision"] = 0
+
+            if expected_devs > 0:
+                dev_info["dev_recall"] = count_correct / expected_devs
+            else:
+                dev_info["dev_recall"] = 0
+
+            by_item_dev_info.append(dev_info)
 
             total_count_correct += count_correct
             total_actual_devs += actual_devs
@@ -341,6 +346,11 @@ class TestResults:
         with open(result_json_file, "w") as write_file:
             write_file.write(json.dumps(results_info, indent=4, sort_keys=True, default=lambda o: o.__dict__))
 
+        result_csv_file = Path(output_folder) / "compare_track_results.csv"
+        result_xlsx_file = Path(output_folder) / "compare_track_results.xlsx"
+
+        test_dev_results_to_table(by_item_dev_info, result_csv_file, result_xlsx_file)
+
         return results_info
 
 
@@ -388,7 +398,7 @@ def unique(list1):
     return np.unique(x)
 
 
-def get_files_str(items: dict) -> str:
+def get_files_str(items: list[dict]) -> str:
     files: list[int] = []
     for nc in items:
         f = int(Path(nc['file']).stem)
@@ -402,6 +412,21 @@ def get_files_str(items: dict) -> str:
         files_str += f"{f},"
 
     return files_str
+
+
+def get_no_correct_dev(all_dev: list[dict]) -> list[dict]:
+    no_correct_dev = []
+
+    for dev_info in all_dev:
+
+        count_correct = dev_info["count_correct"]
+        actual_devs = dev_info["actual_devs"]
+        expected_devs = dev_info["expected_devs"]
+
+        if count_correct != expected_devs or actual_devs != expected_devs:
+            no_correct_dev.append(dev_info)
+
+    return no_correct_dev
 
 
 def save_results_to_csv(results: dict, file_path, sep=";") -> None:
@@ -437,7 +462,7 @@ def save_results_to_csv(results: dict, file_path, sep=";") -> None:
         by_item_dev_info = results_info['dev_items']
 
         files_str = get_files_str(not_equal_items)
-        files_dev_str = get_files_str(by_item_dev_info)
+        files_dev_str = get_files_str(get_no_correct_dev(by_item_dev_info))
 
         print(f"{key} = {total_equal_percent}, {files_str}")
 
@@ -488,6 +513,45 @@ def results_to_table():
     print(df)
 
     # print(results)
+
+
+def test_dev_results_to_table(results: list, csv_file_path, excel_file_path, sep: str = ";"):
+    table = []
+
+    for dev_info in results:
+        actual_devs = dev_info["actual_devs"]
+        count_correct = dev_info["count_correct"]
+        expected_devs = dev_info["expected_devs"]
+
+        file = int(Path(dev_info["file"]).stem)
+
+        precision = dev_info["dev_precision"]
+        recall = dev_info["dev_recall"]
+
+        expected_counter_in = dev_info["expected_in"]
+        expected_counter_out = dev_info["expected_out"]
+
+        actual_counter_in = dev_info["actual_in"]
+        actual_counter_out = dev_info["actual_out"]
+
+        table.append([file, actual_counter_in, actual_counter_out,
+                      expected_counter_in,
+                      expected_counter_out,
+                      precision, recall, actual_devs, count_correct, expected_devs])
+
+    df = DataFrame(table, columns=["file",
+                                   "Вход", "Выход",
+                                   "Вход(эталон)", "Выход(эталон)",
+                                   "precision", "recall",
+                                   "actual_devs",
+                                   "count_correct",
+                                   "expected_devs"])
+
+    df.sort_values(by=['file'], inplace=True, ascending=True)
+    # csv
+    df.to_csv(csv_file_path, sep=sep, index=False)
+    # excel
+    df.to_excel(excel_file_path, index=False)
 
 
 def test_results_to_table(results, csv_file_path, excel_file_path, sep: str = ";"):
