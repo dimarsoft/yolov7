@@ -389,7 +389,7 @@ def unique(list1):
 
 
 def get_files_str(items: dict) -> str:
-    files = []
+    files: list[int] = []
     for nc in items:
         f = int(Path(nc['file']).stem)
         files.append(f)
