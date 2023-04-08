@@ -9,7 +9,7 @@ from pandas import DataFrame
 
 from configs import TEST_TRACKS_PATH, TEST_ROOT
 from count_results import Result, Deviation, get_status
-from exception_tools import save_exception
+from exception_tools import save_exception, print_exception
 
 
 def save_test_result(test_results, session_folder, source_path):
@@ -34,6 +34,16 @@ def save_test_result(test_results, session_folder, source_path):
     except Exception as e:
         text_ex_path = Path(session_folder) / f"{source_path.stem}_ex_compare.log"
         save_exception(e, text_ex_path, "compare_to_file_v2")
+
+    return compare_result
+
+
+def get_test_result(test_results, session_folder):
+    compare_result = None
+    try:
+        compare_result = test_results.compare_to_file_v2(session_folder)
+    except Exception as e:
+        print_exception(e, "get_test_result")
 
     return compare_result
 
@@ -339,17 +349,19 @@ class TestResults:
         else:
             results_info['total_dev_precision'] = 0
 
-        result_json_file = Path(output_folder) / "compare_track_results.json"
+        if output_folder is not None:
 
-        print(f"Save compare results info '{str(result_json_file)}'")
+            result_json_file = Path(output_folder) / "compare_track_results.json"
 
-        with open(result_json_file, "w") as write_file:
-            write_file.write(json.dumps(results_info, indent=4, sort_keys=True, default=lambda o: o.__dict__))
+            print(f"Save compare results info '{str(result_json_file)}'")
 
-        result_csv_file = Path(output_folder) / "compare_track_results.csv"
-        result_xlsx_file = Path(output_folder) / "compare_track_results.xlsx"
+            with open(result_json_file, "w") as write_file:
+                write_file.write(json.dumps(results_info, indent=4, sort_keys=True, default=lambda o: o.__dict__))
 
-        test_dev_results_to_table(by_item_dev_info, result_csv_file, result_xlsx_file)
+            result_csv_file = Path(output_folder) / "compare_track_results.csv"
+            result_xlsx_file = Path(output_folder) / "compare_track_results.xlsx"
+
+            test_dev_results_to_table(by_item_dev_info, result_csv_file, result_xlsx_file)
 
         return results_info
 
