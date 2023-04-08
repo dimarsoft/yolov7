@@ -53,3 +53,4 @@ deep_sort_realtime
 norfair-tracker
 DNN
 openpyxl
+optuna
