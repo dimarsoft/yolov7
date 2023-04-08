@@ -6,7 +6,11 @@ from trackers.strongsort.utils.parser import get_config
 
 def create_tracker(tracker_type, tracker_config, reid_weights, device, half):
     cfg = get_config()
-    cfg.merge_from_file(tracker_config)
+
+    if isinstance(tracker_config, dict):
+        cfg.merge_from_dict(tracker_config)
+    else:
+        cfg.merge_from_file(tracker_config)
 
     if tracker_type == 'strongsort':
         from trackers.strongsort.strong_sort import StrongSORT
