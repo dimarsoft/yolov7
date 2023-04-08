@@ -1,11 +1,6 @@
-import json
-import os
 from pathlib import Path
 
-import numpy as np
 import optuna
-import torch
-from optuna.study import StudyDirection
 
 from configs import TEST_TRACKS_PATH, load_default_bound_line
 from exception_tools import print_exception
@@ -16,15 +11,15 @@ from post_processing.timur import get_camera, timur_count_humans
 from resultools import TestResults
 from utils.general import set_logging
 from yolo_track_bbox import YoloTrackBbox
-from yolo_track_by_txt import run_track_yolo
 
 print(f"optuna version = {optuna.__version__}")
 
 cameras_info = {}
 
 
-def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_config, reid_weights,
-                   test_result_file, test_func=None, files=None,
+def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_config,
+                   reid_weights="osnet_x0_25_msmt17.pt",
+                   test_result_file=TEST_TRACKS_PATH, test_func=None, files=None,
                    classes=None, change_bb=None, conf=0.3):
     """
 
@@ -51,8 +46,6 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_co
     # при старте сессии считываем настройки камер
     global cameras_info
     cameras_info = load_default_bound_line()
-
-    source_path = Path(source)
 
     # в выходной папке создаем папку с сессией: дата_трекер туда уже сохраняем все файлы
 
@@ -148,113 +141,3 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
 
         except Exception as e:
             print_exception(e, "post processing")
-
-
-def reset_seed(seed=123):
-    torch.manual_seed(seed)
-    np.random.seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
-
-
-def objective_osc(trial):
-    """
-      asso_func: giou
-      conf_thres: 0.5122620708221085
-      delta_t: 1
-      det_thresh: 0
-      inertia: 0.3941737016672115
-      iou_thresh: 0.22136877277096445
-      max_age: 50
-      min_hits: 1
-      use_byte: false
-
-      ASSO_FUNCS = {  "iou": iou_batch,
-                    "giou": giou_batch,
-                    "ciou": ciou_batch,
-                    "diou": diou_batch,
-                    "ct_dist": ct_dist}
-
-    """
-
-    reset_seed()
-
-    video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\"
-    test_file = TEST_TRACKS_PATH
-    reid_weights = "osnet_x0_25_msmt17.pt"
-
-    files = None
-    # files = ['1', "2", "3"]
-    # files = ["3"]
-
-    # classes = [0]
-    classes = None
-
-    change_bb = None  # pavel_change_bbox  # change_bbox
-
-    # test_func = "popov_alex"
-    test_func = "group_3"
-    test_func = "timur"
-
-    txt_source_folder = "D:\\AI\\2023\\Detect\\2023_03_29_10_35_01_YoloVersion.yolo_v7_detect"
-
-    conf_thres = trial.suggest_float('conf_thres', 0.36, 0.56, log=True)
-    max_age = int(trial.suggest_float('max_age', 1, 10, log=True))  #
-    min_hits = int(trial.suggest_float('min_hits', 6, 8, log=True))  #
-    iou_threshold = trial.suggest_float('iou_threshold', 0.62, 0.66, log=True)
-    delta_t = int(trial.suggest_float('delta_t', 5, 8, log=True))  #
-    asso_func = trial.suggest_categorical('asso', ["iou", "giou"])
-    inertia = trial.suggest_float('inertia', 0.6, 0.75, log=True)
-    use_byte = trial.suggest_categorical('use_byte', [True, False])
-
-    # test_func = trial.suggest_categorical('test_func', ["timur", "group_3"])
-
-    tracker_config = \
-        {
-            "det_thresh": conf_thres,
-            "max_age": max_age,
-            "min_hits": min_hits,
-            "iou_thresh": iou_threshold,
-            "delta_t": delta_t,
-            "asso_func": asso_func,
-            "inertia": inertia,
-            "use_byte": use_byte
-        }
-
-    tracker_name = "ocsort"
-    tracker_config = {tracker_name: tracker_config}
-
-    cmp_results = run_track_yolo(txt_source_folder, video_source, tracker_name, tracker_config,
-                                 reid_weights, test_file, test_func=test_func,
-                                 files=files, change_bb=change_bb, classes=classes)
-
-    acc = cmp_results["total_equal_percent"]
-
-    return acc
-
-
-def run_optuna():
-    study = optuna.create_study(direction=StudyDirection.MAXIMIZE)
-    study.optimize(objective_osc, n_trials=60)
-
-    trial = study.best_trial
-
-    print(trial)
-
-    print('total_equal_percent: {}'.format(trial.value))
-    print("Best hyper parameters: {}".format(trial.params))
-
-    output_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\"
-
-    value_json_file = Path(output_folder) / f"ocsort_value.json"
-
-    params_json_file = Path(output_folder) / f"ocsort_params.json"
-
-    with open(value_json_file, "w") as write_file:
-        write_file.write(json.dumps(trial.value, indent=4, sort_keys=True))
-
-    with open(params_json_file, "w") as write_file:
-        write_file.write(json.dumps(trial.params, indent=4, sort_keys=True))
-
-
-if __name__ == '__main__':
-    run_optuna()
