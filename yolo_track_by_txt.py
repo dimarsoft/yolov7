@@ -169,11 +169,13 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_co
     import shutil
 
     if not isinstance(tracker_type, dict):
-        save_tracker_config = str(Path(session_folder) / Path(tracker_config).name)
 
-        print(f"Copy '{tracker_config}' to '{save_tracker_config}")
+        if not isinstance(tracker_config, dict):
+            save_tracker_config = str(Path(session_folder) / Path(tracker_config).name)
 
-        shutil.copy(tracker_config, save_tracker_config)
+            print(f"Copy '{tracker_config}' to '{save_tracker_config}")
+
+            shutil.copy(tracker_config, save_tracker_config)
 
     save_test_result_file = str(Path(session_folder) / Path(test_result_file).name)
 
@@ -185,7 +187,6 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_co
 
     session_info['txt_source_folder'] = str(txt_source_folder)
     session_info['reid_weights'] = str(Path(reid_weights).name)
-    # session_info['conf'] = conf
     session_info['test_result_file'] = str(test_result_file)
     session_info['save_vid'] = save_vid
     session_info['files'] = files
@@ -278,7 +279,9 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_co
                                   save_vid=save_vid)
         # save results
 
-        save_test_result(test_results, session_folder, source_path)
+        cmp_results = save_test_result(test_results, session_folder, source_path)
+
+        return cmp_results
 
 
 def run_example():
@@ -301,15 +304,15 @@ def run_example():
     # tracker_name = selected_trackers  # "norfair"
     tracker_config = None  # all_trackers.get(tracker_name)
 
-    files = None
-    files = ['1']
+    # files = None
+    files = ['1', "2", "3"]
 
     # classes = [0]
     classes = None
 
     change_bb = None  # pavel_change_bbox  # change_bbox
 
-    # test_func = "popv_alex"
+    # test_func = "popov_alex"
     # test_func = "group_3"
     test_func = "timur"
 
@@ -334,7 +337,7 @@ def run_cli(opt_info):
 
 
 if __name__ == '__main__':
-    run_example()
+    # run_example()
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--txt_source_folder', type=str, help='txt_source_folder')
@@ -353,4 +356,4 @@ if __name__ == '__main__':
     opt = parser.parse_args()
     print(opt)
 
-    #run_cli(opt)
+    run_cli(opt)
