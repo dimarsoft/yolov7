@@ -199,6 +199,18 @@ class TestResults:
         return False
 
     def compare_deviations(self, actual_deviations: list, expected_deviations: list) -> int:
+        """
+
+        Args:
+            actual_deviations: Найденные нарушения
+            expected_deviations: Ожидаемые нарушения (шаблон, разметка)
+
+        Returns:
+            Количество совпадений, т.е. правильный нарушений
+
+        """
+        # Копия нужна, т.к. при нахождении совпадения, одно будет удаляться
+        expected_deviations = expected_deviations.copy()
 
         count_equal = 0
 
@@ -207,6 +219,7 @@ class TestResults:
             for e_div in expected_deviations:
                 if self.intersect_deviation(a_div, e_div):
                     count_equal += 1
+                    expected_deviations.remove(e_div)
                     break
 
         return count_equal
