@@ -20,7 +20,7 @@ class YoloTrackBbox:
         if half:
             self.half = self.device.type != 'cpu'  # half precision only supported on CUDA
 
-        print(f"device = {self.device}, half = {self.half}")
+        # print(f"device = {self.device}, half = {self.half}")
 
         self.reid_weights = ""
 
@@ -73,7 +73,8 @@ class YoloTrackBbox:
             bbox_track = df_bbox
             bbox_no_track = None
 
-        print(f"file '{txt_source}' read in ({(1E3 * (file_t2 - file_t1)):.1f}ms)")
+        if log:
+            print(f"file '{txt_source}' read in ({(1E3 * (file_t2 - file_t1)):.1f}ms)")
 
         input_video = cv2.VideoCapture(source)
 
@@ -86,7 +87,8 @@ class YoloTrackBbox:
         # количество кадров в видео
         frames_in_video = int(input_video.get(cv2.CAP_PROP_FRAME_COUNT))
 
-        print(f"input = {source}, w = {w}, h = {h}, fps = {fps}, frames_in_video = {frames_in_video}")
+        if log:
+            print(f"input = {source}, w = {w}, h = {h}, fps = {fps}, frames_in_video = {frames_in_video}")
 
         file_name = Path(source).name
 
@@ -203,11 +205,12 @@ class YoloTrackBbox:
 
         tracks_t2 = time_synchronized()
 
-        print(f'Total tracking ({(1E3 * (tracks_t2 - tracks_t1)):.1f}ms), '
-              f'd_tracks_sum = ({(1E3 * d_tracks_sum):.1f}ms),'
-              f'd_group_sum = ({(1E3 * d_group_sum):.1f}ms),'
-              f'd_video_sum = ({(1E3 * d_video_sum):.1f}ms),'
-              f'd_df_sum = ({(1E3 * d_df_sum):.1f}ms)')
+        if log:
+            print(f'Total tracking ({(1E3 * (tracks_t2 - tracks_t1)):.1f}ms), '
+                  f'd_tracks_sum = ({(1E3 * d_tracks_sum):.1f}ms),'
+                  f'd_group_sum = ({(1E3 * d_group_sum):.1f}ms),'
+                  f'd_video_sum = ({(1E3 * d_video_sum):.1f}ms),'
+                  f'd_df_sum = ({(1E3 * d_df_sum):.1f}ms)')
 
         # которых не трекали, запишем тоже, но с id -1
         if bbox_no_track is not None:

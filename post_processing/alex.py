@@ -40,8 +40,9 @@ bbox_h(0-1.0), box.conf(0-1.0)] здесь можно написать свой 
 # h(int) - высота
 
 # пример от Александра
-def alex_count_humans(tracks, num, w, h, bound_line):
-    print(f"Alex post processing v2.3_09.04.2023")
+def alex_count_humans(tracks, num, w, h, bound_line, log: bool = True):
+    if log:
+        print(f"Alex post processing v2.3_09.04.2023")
     #    print(f"num = {num}, w = {w}, h = {h}, bound_line = {bound_line}")
     fn = num
     #    print(fn)
