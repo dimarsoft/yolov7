@@ -6,6 +6,7 @@
 bbox - в относительный величинах
 """
 import json
+from pathlib import Path
 
 from exception_tools import print_exception
 from track_objects import Track
@@ -187,7 +188,11 @@ def yolo_load_detections_from_txt(txt_path):
     import pandas as pd
 
     try:
-        df = pd.read_csv(txt_path, delimiter=" ", dtype=float, header=None)
+        if Path(txt_path).stat().st_size > 0:
+            df = pd.read_csv(txt_path, delimiter=" ", dtype=float, header=None)
+        else:
+            # если файл пустой, создаем пустой df, f nj pd.read_csv exception выдает
+            df = pd.DataFrame(dtype=float, columns=[0, 1, 2, 3, 4, 5, 6, 7])
         # df = pd.DataFrame(df, columns=['frame', 'id', 'class', 'bb_left', 'bb_top', 'bb_width', 'bb_height', 'conf'])
     except Exception as ex:
         print_exception(ex, f"yolo_load_detections_from_txt: '{str(txt_path)}'")
