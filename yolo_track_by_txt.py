@@ -5,7 +5,7 @@ from datetime import datetime
 from pathlib import Path
 
 from configs import load_default_bound_line, CAMERAS_PATH, get_all_trackers_full_path, get_select_trackers, \
-    TEST_TRACKS_PATH, ROOT
+    TEST_TRACKS_PATH
 from labeltools import TrackWorker
 from path_tools import get_video_files
 from post_processing.alex import alex_count_humans
@@ -24,7 +24,7 @@ cameras_info = {}
 
 def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_config, output_folder,
                           reid_weights, test_file, test_func,
-                          classes=None, change_bb=False, conf=0.3, save_vid=False):
+                          classes=None, change_bb=False, conf=0.3, save_vid=False, log: bool = True):
     print(f"start {source}, {txt_source_folder}")
 
     source_path = Path(source)
@@ -43,7 +43,8 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
         tracker_config=tracker_config,
         reid_weights=reid_weights,
         classes=classes,
-        change_bb=change_bb
+        change_bb=change_bb,
+        log=log
     )
 
     if save_vid:
@@ -78,10 +79,10 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
                 humans_result = None
 
                 if test_func == "popov_alex":
-                    humans_result = alex_count_humans(tracks_new, num, w, h, bound_line)
+                    humans_result = alex_count_humans(tracks_new, num, w, h, bound_line, log=log)
                     pass
                 if test_func == "timur":
-                    humans_result = timur_count_humans(tracks_new, source)
+                    humans_result = timur_count_humans(tracks_new, source, log=log)
                     pass
                 if test_func == "group_3":
                     humans_result = group_3_count(tracks_new, num, w, h, fps)
@@ -116,10 +117,11 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
 
 def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_config, output_folder, reid_weights,
                    test_result_file, test_func=None, files=None,
-                   classes=None, change_bb=None, conf=0.3, save_vid=False):
+                   classes=None, change_bb=None, conf=0.3, save_vid=False, log: bool = True):
     """
 
     Args:
+        log: вкл/выкл логирования (print)
         txt_source_folder: папка с Labels: 1.txt....
         change_bb: менять bbox после детекции для трекера,
                    bbox будет меньше и по центру человека
@@ -240,7 +242,7 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_co
                                       reid_weights, test_results, test_func, classes,
                                       change_bb=change_bb,
                                       conf=conf,
-                                      save_vid=save_vid)
+                                      save_vid=save_vid, log=log)
 
             file_result = save_test_result(test_results, tracker_session_folder, source_path)
 
@@ -277,7 +279,7 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_co
                                   reid_weights, test_results, test_func, classes,
                                   change_bb=change_bb,
                                   conf=conf,
-                                  save_vid=save_vid)
+                                  save_vid=save_vid, log=log)
         # save results
 
         cmp_results = save_test_result(test_results, session_folder, source_path)
@@ -297,7 +299,8 @@ def run_example():
     all_trackers = get_all_trackers_full_path()
 
     # selected_trackers_names = ["fastdeepsort"]
-    selected_trackers_names = ["ocsort"]
+    selected_trackers_names = ["ocsort", "sort", "fastdeepsort"]
+    # selected_trackers_names = ["sort"]
 
     selected_trackers = get_select_trackers(selected_trackers_names, all_trackers)
 
@@ -306,7 +309,7 @@ def run_example():
     tracker_config = None  # all_trackers.get(tracker_name)
 
     files = None
-    files = ['6', "8", "26", "36"]
+    # files = ['6', "8", "26", "36"]
     # files = ['1', "2", "3"]
 
     # classes = [0]
@@ -314,17 +317,17 @@ def run_example():
 
     change_bb = None  # pavel_change_bbox  # change_bbox
 
-    # test_func = "popov_alex"
+    test_func = "popov_alex"
     # test_func = "group_3"
     test_func = "timur"
 
-    tracker_name = "ocsort"
-    tracker_config = ROOT / "trackers/ocsort/configs/ocsort _optune.yaml"
+    # tracker_name = "ocsort"
+    # tracker_config = ROOT / "trackers/ocsort/configs/ocsort_optune.yaml"
 
     txt_source_folder = "D:\\AI\\2023\\Detect\\2023_03_29_10_35_01_YoloVersion.yolo_v7_detect"
     run_track_yolo(txt_source_folder, video_source, tracker_name, tracker_config,
                    output_folder, reid_weights, test_file, test_func=test_func,
-                   files=files, save_vid=False,  change_bb=change_bb, classes=classes)
+                   files=files, save_vid=False,  change_bb=change_bb, classes=classes, log=False)
 
 
 # запуск из командной строки: python yolo_detect.py  --yolo 7 --weights "" source ""
