@@ -263,10 +263,11 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_co
                                             indent=4, sort_keys=True, default=lambda o: o.__dict__))
 
             save_results_csv_file = str(Path(session_folder) / 'all_compare_track_results.csv')
+            save_results_excel_file = str(Path(session_folder) / 'all_compare_track_results.xlsx')
 
             print(f"Save total to csv '{str(save_results_csv_file)}'")
 
-            save_results_to_csv(test_result_by_traker, save_results_csv_file)
+            save_results_to_csv(test_result_by_traker, save_results_csv_file, save_results_excel_file)
     else:
         for i, item in enumerate(list_of_videos):
             print(f"process file: {i + 1}/{total_videos} {item}")

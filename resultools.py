@@ -350,7 +350,6 @@ class TestResults:
             results_info['total_dev_precision'] = 0
 
         if output_folder is not None:
-
             result_json_file = Path(output_folder) / "compare_track_results.json"
 
             print(f"Save compare results info '{str(result_json_file)}'")
@@ -441,14 +440,15 @@ def get_no_correct_dev(all_dev: list[dict]) -> list[dict]:
     return no_correct_dev
 
 
-def save_results_to_csv(results: dict, file_path, sep=";") -> None:
+def save_results_to_csv(results: dict, csv_file_path, excel_file_path, sep=";") -> None:
     """
     Сохранение результатов сравнение в csv файл.
     Данные в таблично виде и упорядоченны по total_equal_percent
 
     Args:
         results (dict): Словарь с результатами сравнения
-        file_path: Путь к файлу, для сохранения данных
+        csv_file_path: Путь к файлу, для сохранения данных в формате csv
+        excel_file_path: Путь к файлу, для сохранения данных в формате excel
         sep: Разделитель в csv файле
     """
     table = []
@@ -492,7 +492,9 @@ def save_results_to_csv(results: dict, file_path, sep=";") -> None:
     df.sort_values(by=['total_equal_percent'], inplace=True, ascending=False)
 
     # print(df)
-    df.to_csv(file_path, sep=sep, index=False)
+    df.to_csv(csv_file_path, sep=sep, index=False)
+
+    df.to_excel(excel_file_path, index=False)
 
 
 def results_to_table():
@@ -501,11 +503,13 @@ def results_to_table():
 
     file_path_tbl = "D:\\AI\\2023\\corridors\\dataset-v1.1\\2023_04_02_07_43_54_yolo_tracks_by_txt" \
                     "\\all_compare_track_results.csv"
+    file_path_tbl_excel = "D:\\AI\\2023\\corridors\\dataset-v1.1\\2023_04_02_07_43_54_yolo_tracks_by_txt" \
+                          "\\all_compare_track_results.xlsx"
 
     with open(file_path, "r") as read_file:
         results = json.loads(read_file.read())
 
-    save_results_to_csv(results, file_path_tbl)
+    save_results_to_csv(results, file_path_tbl, file_path_tbl_excel)
 
     table = []
     for key in results.keys():
