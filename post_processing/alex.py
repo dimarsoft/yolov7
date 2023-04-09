@@ -1,4 +1,4 @@
-# Новый вариант
+# Вариант проверки вошедших и вышедших
 import numpy as np
 import pandas as pd
 import json
@@ -41,7 +41,7 @@ bbox_h(0-1.0), box.conf(0-1.0)] здесь можно написать свой 
 
 # пример от Александра
 def alex_count_humans(tracks, num, w, h, bound_line):
-    print(f"Alex post processing v2.1 (29.03.2023)")
+    print(f"Alex post processing v2.3_09.04.2023")
     #    print(f"num = {num}, w = {w}, h = {h}, bound_line = {bound_line}")
     fn = num
     #    print(fn)
@@ -152,7 +152,7 @@ def alex_count_humans(tracks, num, w, h, bound_line):
     res_inpotp.update({fn: result})
     #    print('Вошли:', list_in, 'Вышли:', list_out)
     #    print(fn, result)
-
+    list_sum = list_in + list_out
     count_in = result["input"]
     count_out = result["output"]
     count_all = count_in + count_out
@@ -200,8 +200,8 @@ def alex_count_humans(tracks, num, w, h, bound_line):
         else:
             return 0
 
-    # Проверка всех вошедших на наличие каски и жилета
-    for hum in list_in:
+    # Проверка всех вошедших и вышедших на наличие каски и жилета
+    for hum in list_sum:
         # Определение значений IoU для всех жилетов
         arr_0_2 = np.full((df.shape[0], len(list_2)), 0.)
         df_0_2 = pd.DataFrame(arr_0_2, columns=list_2)  # Датафрейм с IoU жилетов и людей
