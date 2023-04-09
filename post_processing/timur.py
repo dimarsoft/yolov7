@@ -109,12 +109,13 @@ def convert_and_save(folder_path):
     save_bound_line(file_to_save, bl)
 
 
-def timur_count_humans(tracks, source):
+def timur_count_humans(tracks, source, log: bool = True):
     print(f"Timur postprocessing v1.5_05.04.2023")
 
     camera_num, w, h, fps = get_camera(source)
 
-    print(f"camera_num =  {camera_num}, ({w} {h})")
+    if log:
+        print(f"camera_num =  {camera_num}, ({w} {h})")
 
     people_tracks, helmet_tracks, vest_tracks = tracks_to_dic(tracks, w, h)
 
@@ -128,14 +129,16 @@ def timur_count_humans(tracks, source):
 
     bound_line = bound_line_cameras.get(camera_num)
 
-    print(f"bound_line =  {bound_line}")
+    if log:
+        print(f"bound_line =  {bound_line}")
 
     tracks_info = []
     for p_id in people_tracks.keys():
         people_path = people_tracks[p_id]
         tr_info = crossing_bound(people_path['path'], bound_line)
         tracks_info.append(tr_info)
-        print(f"{p_id}: {tr_info}")
+        if log:
+            print(f"{p_id}: {tr_info}")
 
     result = calc_inp_outp_people(tracks_info)
 
@@ -144,7 +147,7 @@ def timur_count_humans(tracks, source):
 
     deviations = []
 
-    deviations_info = get_deviations(people_tracks, helmet_tracks, vest_tracks, bound_line)
+    deviations_info = get_deviations(people_tracks, helmet_tracks, vest_tracks, bound_line, log=log)
 
     # print(deviations_info)
 
@@ -156,6 +159,7 @@ def timur_count_humans(tracks, source):
         if status > 0:  # 0 нет нарушения
             deviations.append(Deviation(frame_id, frame_id, status))
 
-    print(f"{camera_num}: count_in = {count_in}, count_out = {count_out}, deviations = {len(deviations)}")
+    if log:
+        print(f"{camera_num}: count_in = {count_in}, count_out = {count_out}, deviations = {len(deviations)}")
 
     return Result(count_in + count_out, count_in, count_out, deviations)

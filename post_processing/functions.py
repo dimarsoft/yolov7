@@ -248,9 +248,9 @@ def iou_prop(people, helmet, vest):
             people[frid] = calc_iou(people[frid], vest[frid], "vest", upbbox=False)
 
 
-def get_deviations(people_tracks, helmet_tracks, vest_tracks, bound_line):
+def get_deviations(people_tracks, helmet_tracks, vest_tracks, bound_line, log: bool = True):
     people_info = get_people_info(people_tracks, helmet_tracks, vest_tracks)
-    return find_deviations(people_info, bound_line, False)
+    return find_deviations(people_info, bound_line, False, log)
 
 
 def get_people_info(people_tracks, helmet_tracks, vest_tracks):
@@ -292,7 +292,7 @@ def search_frame(people_info, bound_line):
     return res
 
 
-def find_deviations(people_tracks, bound_line, only_down: bool = True):
+def find_deviations(people_tracks, bound_line, only_down: bool = True, log: bool = True):
     tracks_info = []
     intrs_pid = []
 
@@ -335,9 +335,10 @@ def find_deviations(people_tracks, bound_line, only_down: bool = True):
 
                 if in_vest == False or in_helm == False:
                     # print(file, p_id, "Тут есть нарушение? - ", truefalse, f"id_frame = {id_frame}")
-                    print(p_id, "Тут есть нарушение? - ", truefalse, f"id_frame = {id_frame}")
 
-                    print(f"Жилетка: {in_vest} / Каска: {in_helm}")
+                    if log:
+                        print(p_id, "Тут есть нарушение? - ", truefalse, f"id_frame = {id_frame}")
+                        print(f"Жилетка: {in_vest} / Каска: {in_helm}")
                     # save_frame(fn, id_frame, people_tracks[p_id]["bbox"][id_frame_ind], bound_line, folder_with_video)
 
             bool_print = True

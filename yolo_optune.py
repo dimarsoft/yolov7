@@ -115,7 +115,7 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
                     humans_result = alex_count_humans(tracks_new, num, w, h, bound_line)
                     pass
                 if test_func == "timur":
-                    humans_result = timur_count_humans(tracks_new, source)
+                    humans_result = timur_count_humans(tracks_new, source, log=False)
                     pass
                 if test_func == "group_3":
                     humans_result = group_3_count(tracks_new, num, w, h, fps)
