@@ -42,7 +42,7 @@ class YoloTrackBbox:
     def track(self, source, txt_source, tracker_type, tracker_config, reid_weights="osnet_x0_25_msmt17.pt",
               conf_threshold=0.3,
               iou=0.4,
-              classes=None, change_bb=False):
+              classes=None, change_bb=False, log: bool = True):
 
         file_id = Path(source).stem
 
@@ -177,10 +177,6 @@ class YoloTrackBbox:
 
             t2 = time_synchronized()
 
-            detections_info = f"({dets} tracks)"
-
-            empty_conf_count_str = f"{'' if empty_conf_count == 0 else f', empty_confs = {empty_conf_count}'}"
-
             prev_frame = frame
 
             d_track = track_t2 - track_t1
@@ -193,11 +189,15 @@ class YoloTrackBbox:
             d_group_sum += d_group
             d_video_sum += d_video
 
-            print(f'{file_name} ({frame_id + 1}/{frames_in_video}) Done. track = ({(1E3 * d_track):.1f}ms), '
-                  f' df = ({(1E3 * d_df):.1f}ms), ({(1E3 * (t2 - t1)):.1f}ms) tracking, '
-                  f' d_group = ({(1E3 * d_group):.1f}ms), '
-                  f' d_video = ({(1E3 * d_video):.1f}ms), '
-                  f'{detections_info} {empty_conf_count_str}')
+            if log:
+                detections_info = f"({dets} tracks)"
+                empty_conf_count_str = f"{'' if empty_conf_count == 0 else f', empty_confs = {empty_conf_count}'}"
+
+                print(f'{file_name} ({frame_id + 1}/{frames_in_video}) Done. track = ({(1E3 * d_track):.1f}ms), '
+                      f' df = ({(1E3 * d_df):.1f}ms), ({(1E3 * (t2 - t1)):.1f}ms) tracking, '
+                      f' d_group = ({(1E3 * d_group):.1f}ms), '
+                      f' d_video = ({(1E3 * d_video):.1f}ms), '
+                      f'{detections_info} {empty_conf_count_str}')
 
         input_video.release()
 

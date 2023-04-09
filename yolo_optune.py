@@ -89,7 +89,8 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
         tracker_config=tracker_config,
         reid_weights=reid_weights,
         classes=classes,
-        change_bb=change_bb
+        change_bb=change_bb,
+        log=False
     )
 
     # track_worker = TrackWorker(track)
