@@ -5,7 +5,7 @@ from datetime import datetime
 from pathlib import Path
 
 from configs import load_default_bound_line, CAMERAS_PATH, get_all_trackers_full_path, get_select_trackers, \
-    TEST_TRACKS_PATH
+    TEST_TRACKS_PATH, ROOT
 from labeltools import TrackWorker
 from path_tools import get_video_files
 from post_processing.alex import alex_count_humans
@@ -304,8 +304,9 @@ def run_example():
     # tracker_name = selected_trackers  # "norfair"
     tracker_config = None  # all_trackers.get(tracker_name)
 
-    # files = None
-    files = ['1', "2", "3"]
+    files = None
+    files = ['6', "8", "26", "36"]
+    # files = ['1', "2", "3"]
 
     # classes = [0]
     classes = None
@@ -315,6 +316,9 @@ def run_example():
     # test_func = "popov_alex"
     # test_func = "group_3"
     test_func = "timur"
+
+    tracker_name = "ocsort"
+    tracker_config = ROOT / "trackers/ocsort/configs/ocsort _optune.yaml"
 
     txt_source_folder = "D:\\AI\\2023\\Detect\\2023_03_29_10_35_01_YoloVersion.yolo_v7_detect"
     run_track_yolo(txt_source_folder, video_source, tracker_name, tracker_config,

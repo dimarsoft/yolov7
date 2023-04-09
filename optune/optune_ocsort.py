@@ -33,6 +33,7 @@ def objective_ocsort(trial):
     files = None
     # files = ['1', "2", "3"]
     # files = ["3"]
+    # files = ['6', "8", "26", "36"]
 
     # classes = [0]
     classes = None
@@ -43,15 +44,15 @@ def objective_ocsort(trial):
 
     txt_source_folder = str(get_detections_path())
 
-    conf_thres = trial.suggest_float('conf_thres', 0.3, 0.6, step=0.1)
+    det_thresh = trial.suggest_float('det_thresh', 0.3, 0.6, step=0.1)
 
     # max_age = trial.suggest_int('max_age', 1, 10, log=True)
-    max_age = int(trial.suggest_categorical('max_age', [10, 50, 100]))
+    max_age = int(trial.suggest_categorical('max_age', [3, 10, 50, 100]))
 
     min_hits = trial.suggest_int('min_hits', 6, 8)
     iou_threshold = trial.suggest_float('iou_threshold', 0.6, 0.8, step=0.1)
-    delta_t = trial.suggest_int('delta_t', 5, 8)
-    asso_func = trial.suggest_categorical('asso', ["iou", "giou"])
+    delta_t = trial.suggest_int('delta_t', 5, 15)
+    asso_func = trial.suggest_categorical('asso_func', ["iou", "giou"])
     inertia = trial.suggest_float('inertia', 0.6, 0.8, step=0.1)
     use_byte = trial.suggest_categorical('use_byte', [True, False])
 
@@ -62,7 +63,7 @@ def objective_ocsort(trial):
         {
             tracker_name:
                 {
-                    "det_thresh": conf_thres,
+                    "det_thresh": det_thresh,
                     "max_age": max_age,
                     "min_hits": min_hits,
                     "iou_thresh": iou_threshold,
@@ -84,7 +85,7 @@ def objective_ocsort(trial):
 
 def run_optuna():
     study = optuna.create_study(direction=StudyDirection.MAXIMIZE)
-    study.optimize(objective_ocsort, n_trials=60, show_progress_bar=True)
+    study.optimize(objective_ocsort, n_trials=200, show_progress_bar=True)
 
     trial = study.best_trial
 
@@ -96,5 +97,46 @@ def run_optuna():
     save_result(trial, output_folder, "ocsort")
 
 
+def test():
+    video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\"
+
+    files = None
+    # files = ['1', "2", "3"]
+    # files = ["3"]
+
+    # classes = [0]
+    classes = None
+
+    change_bb = None  # pavel_change_bbox  # change_bbox
+
+    test_func = "timur"
+
+    txt_source_folder = str(get_detections_path())
+    tracker_name = "ocsort"
+    tracker_config = \
+        {
+            tracker_name:
+                {
+                    "asso_func": "giou",
+                    "det_thresh": 0.4094083246275299,
+                    "delta_t": 6,
+                    "inertia": 0.6066896482364373,
+                    "iou_thresh": 0.629302262088819,
+                    "max_age": 5,
+                    "min_hits": 7,
+                    "use_byte": True
+                }
+        }
+
+    cmp_results = run_track_yolo(txt_source_folder, video_source, tracker_name, tracker_config,
+                                 test_func=test_func,
+                                 files=files, change_bb=change_bb, classes=classes)
+
+    accuracy = cmp_results["total_equal_percent"]
+
+    print(f"accuracy = {accuracy}")
+
+
 if __name__ == '__main__':
     run_optuna()
+    # test()
