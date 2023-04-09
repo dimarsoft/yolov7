@@ -154,7 +154,7 @@ def calc_inp_outp_people(tracks, width, height):
 
 
 # Задаем функцию who_came_left, принимает датафрейм, возвращает id людей, которые вошли и вышли.
-def who_came_left(data):
+def who_came_left(data, log: bool = True):
     frame_top = data['bb_top'].min()  # кадры иногда имеют черную рамку, ищем границы картинки
     frame_bottom = data['bb_bottom'].max()
     ppl_who_came = []
@@ -166,35 +166,50 @@ def who_came_left(data):
             cntry_max = df['cntry'].max()  # поэтому учитываем не только его начальную и конечную координаты,
             cntry_start = df['cntry'].iat[0]  # но и его минимальную и максимальную координаты.
             cntry_end = df['cntry'].iat[-1]
-            print(f'cntry_min = {cntry_min}, cntry_max = {cntry_max}')
-            print(f'cntry_start = {cntry_start}, cntry_end = {cntry_end}')
+
+            if log:
+                print(f'cntry_min = {cntry_min}, cntry_max = {cntry_max}')
+                print(f'cntry_start = {cntry_start}, cntry_end = {cntry_end}')
+
             moved = (cntry_max - cntry_min) / (frame_bottom - frame_top)
-            print(f'Human {idx[1]} moved {int(100 * moved)}% of the frame (vertically)')
+
+            if log:
+                print(f'Human {idx[1]} moved {int(100 * moved)}% of the frame (vertically)')
+
             if moved >= 0.25:  # если центр бб человека переместился более 25% кадра по вертикали, считаем прошедшим
                 if (
                         0.8 * cntry_min < cntry_start < 1.2 * cntry_min and  # если человек начал путь примерно наверху кадра
                         0.8 * cntry_max < cntry_end < 1.2 * cntry_max):  # если человек закончил путь примерно внизу кадра
                     ppl_who_came.append(idx[1])  # то мы засчитываем его как вошедшего
-                    print(f'Human {idx[1]} came in.')
+
+                    if log:
+                        print(f'Human {idx[1]} came in.')
                 elif (
                         0.8 * cntry_min < cntry_end < 1.2 * cntry_min and  # если человек закончил путь примерно наверху кадра
                         0.8 * cntry_max < cntry_start < 1.2 * cntry_max):  # если человек начал путь примерно внизу кадра
                     ppl_who_left.append(idx[1])  # то мы засчитываем его как вышедшего
-                    print(f'Human {idx[1]} left.')
+
+                    if log:
+                        print(f'Human {idx[1]} left.')
                 elif (
                         0.8 * cntry_min < cntry_start < 1.2 * cntry_min and  # если человек начал путь примерно наверху кадра
                         0.8 * cntry_min < cntry_end < 1.2 * cntry_min):  # если человек закончил путь примерно наверху кадра
                     ppl_who_came.append(idx[1])  # то мы считаем, что он вошел и сразу вышел
                     ppl_who_left.append(idx[1])
-                    print(f'Human {idx[1]} came and left.')
+
+                    if log:
+                        print(f'Human {idx[1]} came and left.')
                 elif (
                         0.8 * cntry_max < cntry_start < 1.2 * cntry_max and  # если человек начал путь примерно внизу кадра
                         0.8 * cntry_max < cntry_end < 1.2 * cntry_max):  # если человек закончил путь примерно внизу кадра
                     ppl_who_came.append(idx[1])  # то мы считаем, что он вышел и сразу вернулся
                     ppl_who_left.append(idx[1])
-                    print(f'Human {idx[1]} left and came back.')
+
+                    if log:
+                        print(f'Human {idx[1]} left and came back.')
                 else:
-                    print(f'Can not define what human {idx[1]} did.')
+                    if log:
+                        print(f'Can not define what human {idx[1]} did.')
     return ppl_who_came, ppl_who_left
 
 
@@ -251,7 +266,7 @@ def get_who_wears_what(current_frame):
 
 
 # Теперь, когда у нас есть словарь info, мы можем оценить в каком количестве кадров у человека детектится каска и жилет
-def get_good_bad_human(id, info, fps):
+def get_good_bad_human(id, info, fps, log: bool = True):
     human_frames = []
     hardhat_frames = []
     vest_frames = []
@@ -271,27 +286,43 @@ def get_good_bad_human(id, info, fps):
     hardhat_frames_n = len(hardhat_frames)
     vest_frames_n = len(vest_frames)
     violations_dict = {0: 'all good!', 1: 'no hat, no vest', 2: 'no vest', 3: 'no hat'}
-    print(
-        f'Human {id} is detected in {human_frames_n} frames, we detect that he has a hat in {hardhat_frames_n} frames and vest in {vest_frames_n} frames.')
+
+    if log:
+        print(f'Human {id} is detected in {human_frames_n} frames, '
+              f'we detect that he has a hat in {hardhat_frames_n} frames and vest in {vest_frames_n} frames.')
+
     if hardhat_frames_n / human_frames_n >= 0.7 and vest_frames_n / human_frames_n >= 0.7:
         violation_key = 0
-        print(f"Human {id} is a good human. :-)")
+
+        if log:
+            print(f"Human {id} is a good human. :-)")
     elif hardhat_frames_n / human_frames_n >= 0.7:
         violation_key = 2
-        print(
-            f'Human with id {id} is crossing with {violations_dict[violation_key]} in interval {start_time // 60} min {start_time % 60} sec - {end_time // 60} min {end_time % 60} sec.')
+
+        if log:
+            print(f'Human with id {id} is crossing with {violations_dict[violation_key]} '
+                  f'in interval {start_time // 60} min {start_time % 60} sec - {end_time // 60} '
+                  f'min {end_time % 60} sec.')
+
     elif vest_frames_n / human_frames_n >= 0.7:
         violation_key = 3
-        print(
-            f'Human with id {id} is crossing with {violations_dict[violation_key]} in interval {start_time // 60} min {start_time % 60} sec - {end_time // 60} min {end_time % 60} sec.')
+
+        if log:
+            print(f'Human with id {id} is crossing with {violations_dict[violation_key]} '
+                  f'in interval {start_time // 60} min {start_time % 60} sec - {end_time // 60} '
+                  f'min {end_time % 60} sec.')
     else:
         violation_key = 1
-        print(
-            f'Human with id {id} is crossing with {violations_dict[violation_key]} in interval {start_time // 60} min {start_time % 60} sec - {end_time // 60} min {end_time % 60} sec.')
+
+        if log:
+            print(f'Human with id {id} is crossing with {violations_dict[violation_key]} '
+                  f'in interval {start_time // 60} min {start_time % 60} sec - {end_time // 60} '
+                  f'min {end_time % 60} sec.')
+
     return id, violation_key, start_time, end_time, start_frame, end_frame
 
 
-def get_deviations(tracks, w, h, fps):
+def get_deviations(tracks, w, h, fps, log: bool = True):
     data = convert_tracks_df(tracks, w, h)
 
     # Сортируем по значениям кадров и классов (по возрастанию)
@@ -301,7 +332,7 @@ def get_deviations(tracks, w, h, fps):
     data.set_index(['frame', 'class'], inplace=True)
 
     # Применим функцию who_came_left и получим списки id прошедших людей.
-    ppl_who_came, ppl_who_left = who_came_left(data)
+    ppl_who_came, ppl_who_left = who_came_left(data, log=log)
 
     # Используем созданную функцию get_who_wears_what на данных.
     # Получаем словарь info:
@@ -318,7 +349,7 @@ def get_deviations(tracks, w, h, fps):
     # Применим функцию get_good_bad_human к полученным ранее спискам вошедших и вышедших
     for track_id in ppl_who_came:
         track_id, violation_key, start_time, end_time, start_frame, end_frame \
-            = get_good_bad_human(track_id, info, fps=fps)
+            = get_good_bad_human(track_id, info, fps=fps, log=log)
 
         if violation_key > 0:  # 0 нет нарушения
             devs.append(Deviation(start_frame, end_frame, violation_key))
@@ -326,15 +357,16 @@ def get_deviations(tracks, w, h, fps):
     return devs
 
 
-def group_3_count(tracks, num, w, h, fps):
+def group_3_count(tracks, num, w, h, fps, log: bool = True):
     print(f"Group 3 post processing v1.2 (04.04.2023)")
 
     new_tracks = convert_tracks(tracks, w, h)
 
     came_in, came_out = calc_inp_outp_people(new_tracks, w, h)
 
-    deviations = get_deviations(tracks, w, h, fps)
+    deviations = get_deviations(tracks, w, h, fps, log=log)
 
-    print(f"{num}: count_in = {came_in}, count_out = {came_out}, deviations = {len(deviations)}")
+    if log:
+        print(f"{num}: count_in = {came_in}, count_out = {came_out}, deviations = {len(deviations)}")
 
     return Result(came_in + came_out, came_in, came_out, deviations)
