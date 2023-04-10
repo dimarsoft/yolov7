@@ -3,6 +3,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict
 
+
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]
 CONFIG_ROOT = ROOT / 'cfg'
@@ -17,6 +18,8 @@ DETECTIONS_ROOT = ROOT / 'Detections'
 
 DETECTIONS_FOLDER = DETECTIONS_ROOT / '2023_03_29_10_35_01_YoloVersion.yolo_v7_detect'
 DETECTIONS_ZIP = DETECTIONS_ROOT / '2023_03_29_10_35_01_YoloVersion.yolo_v7_detect.zip'
+
+TEST_VIDEOS = TEST_ROOT / "test_video"
 
 
 class YoloVersion(Enum):
@@ -116,7 +119,7 @@ def get_detections_path() -> Path:
     Получить путь к папке с сохраненными детекциями.
     Если папки нет, то она создастся из архива, который хранится в репе
     Returns:
-        Петь
+        Путь
 
     """
     import zipfile
@@ -125,6 +128,22 @@ def get_detections_path() -> Path:
             zip_ref.extractall(DETECTIONS_ROOT)
 
     return DETECTIONS_FOLDER
+
+
+def attempt_download_test_videos() -> Path:
+    """
+    Скачать тестовые видео и получить путь к локальной папке.
+    Returns:
+        Путь
+
+    """
+    import gdown
+
+    output = str(TEST_VIDEOS)
+
+    gdown.download_folder(id="1YK0a3peuwdbvoZUAKciCvYM5KjKeizA6", output=output, quiet=False)
+
+    return TEST_VIDEOS
 
 
 if __name__ == '__main__':
