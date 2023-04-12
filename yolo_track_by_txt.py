@@ -5,7 +5,7 @@ from datetime import datetime
 from pathlib import Path
 
 from configs import load_default_bound_line, CAMERAS_PATH, get_all_trackers_full_path, get_select_trackers, \
-    TEST_TRACKS_PATH
+    TEST_TRACKS_PATH, ROOT
 from labeltools import TrackWorker
 from path_tools import get_video_files
 from post_processing.alex import alex_count_humans
@@ -300,7 +300,7 @@ def run_example():
 
     # selected_trackers_names = ["fastdeepsort"]
     selected_trackers_names = ["ocsort", "sort", "fastdeepsort"]
-    # selected_trackers_names = ["sort"]
+    selected_trackers_names = ["ocsort"]
 
     selected_trackers = get_select_trackers(selected_trackers_names, all_trackers)
 
@@ -322,7 +322,11 @@ def run_example():
     test_func = "timur"
 
     # tracker_name = "ocsort"
-    # tracker_config = ROOT / "trackers/ocsort/configs/ocsort_optune.yaml"
+    # tracker_config = ROOT / "trackers/ocsort/configs/ocsort_group1.yaml"
+
+    selected_trackers["ocsort"] = ROOT / "trackers/ocsort/configs/ocsort_group1.yaml"
+
+    print(str(tracker_config))
 
     txt_source_folder = "D:\\AI\\2023\\Detect\\2023_03_29_10_35_01_YoloVersion.yolo_v7_detect"
     run_track_yolo(txt_source_folder, video_source, tracker_name, tracker_config,
