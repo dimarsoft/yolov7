@@ -4,7 +4,7 @@
 from pathlib import Path
 import gdown
 
-from configs import load_default_bound_line, get_all_trackers_full_path, WEIGHTS, YoloVersion, parse_yolo_version
+from configs import load_default_bound_line, get_all_trackers_full_path, WEIGHTS, YoloVersion, parse_yolo_version, ROOT
 from count_results import Result
 from exception_tools import print_exception
 from post_processing.alex import alex_count_humans
@@ -16,6 +16,8 @@ folder_link = "https://drive.google.com/drive/folders/1b-tp_yxHgadeElP4XoDCFoXxC
 yolo7_model_gdrive = "https://drive.google.com/drive/u/4/folders/1b-tp_yxHgadeElP4XoDCFoXxCwXHK9CV"
 yolo7_model_gdrive_file = "25.02.2023_dataset_1.1_yolov7_best.pt"
 yolo8_model_gdrive_file = "640img_8x_best_b16_e10.pt"
+
+test_video_share_folder_link = "https://drive.google.com/drive/folders/1YK0a3peuwdbvoZUAKciCvYM5KjKeizA6?usp=sharing"
 
 
 def get_local_path(yolo_version: YoloVersion) -> Path:
@@ -48,6 +50,18 @@ def get_model_file(yolo_version: YoloVersion):
     gdown.download(url, output, quiet=False)
 
     return output
+
+
+def download_test_video():
+    output = str(ROOT / "testinfo")
+
+    url = 'https://drive.google.com/uc?id=1YK0a3peuwdbvoZUAKciCvYM5KjKeizA6'
+
+    print(f"download {output} from {url}")
+
+    folders = gdown.download_folder(id="1YK0a3peuwdbvoZUAKciCvYM5KjKeizA6", output=output, quiet=False)
+    # folders = gdown.download_folder(url=url, quiet=False)
+    print(folders)
 
 
 def post_process(test_func, track, num, w, h, bound_line, source):
@@ -131,12 +145,14 @@ def run_single_video_yolo(source, yolo_info="7", conf=0.3, iou=0.45, test_func="
 
 
 if __name__ == '__main__':
+    # download_test_video()
+
     # get_model_file(YoloVersion.yolo_v7)
 
     video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\"
 
     video_file = str(Path(video_source) / "1.mp4")
 
-    result = run_single_video_yolo(video_file, yolo_info="8ul")
+    # result = run_single_video_yolo(video_file, yolo_info="8ul")
 
-    print(result)
+    # print(result)
