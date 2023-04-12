@@ -41,6 +41,7 @@ def objective_ocsort(trial):
     change_bb = None  # pavel_change_bbox  # change_bbox
 
     test_func = "timur"
+    test_func = "popov_alex"
 
     txt_source_folder = str(get_detections_path())
 
@@ -85,7 +86,7 @@ def objective_ocsort(trial):
 
 def run_optuna():
     study = optuna.create_study(direction=StudyDirection.MAXIMIZE)
-    study.optimize(objective_ocsort, n_trials=200, show_progress_bar=True)
+    study.optimize(objective_ocsort, n_trials=3, show_progress_bar=True)
 
     trial = study.best_trial
 
@@ -102,7 +103,7 @@ def test():
 
     files = None
     # files = ['1', "2", "3"]
-    # files = ["3"]
+    files = ["3"]
 
     # classes = [0]
     classes = None
