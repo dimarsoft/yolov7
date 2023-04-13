@@ -1,10 +1,8 @@
 import optuna
-from optuna import Study
 from optuna.study import StudyDirection
-from optuna.trial import FrozenTrial
 
 from configs import get_detections_path
-from optune.optune_tools import save_result, reset_seed, add_date_prefix
+from optune.optune_tools import save_result, reset_seed, add_date_prefix, save_callback
 from yolo_optune import run_track_yolo
 
 
@@ -65,13 +63,6 @@ bytetrack:
     return accuracy
 
 
-def my_callback(study: Study, trial: FrozenTrial) -> None:
-    save_folder = study.user_attrs["save_folder"]
-    tag = study.user_attrs["tag"]
-
-    save_result(trial, save_folder, tag, use_date=False, study=study)
-
-
 def run_optuna() -> None:
     study = optuna.create_study(direction=StudyDirection.MAXIMIZE)
 
@@ -82,7 +73,7 @@ def run_optuna() -> None:
     study.set_user_attr("save_folder", output_folder)
     study.set_user_attr("tag", tag)
 
-    study.optimize(objective_bytetrack, n_trials=100, show_progress_bar=True, callbacks=[my_callback])
+    study.optimize(objective_bytetrack, n_trials=100, show_progress_bar=True, callbacks=[save_callback])
 
     trial = study.best_trial
 

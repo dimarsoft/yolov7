@@ -2,7 +2,7 @@ import optuna
 from optuna.study import StudyDirection
 
 from configs import get_detections_path
-from optune.optune_tools import save_result, reset_seed
+from optune.optune_tools import save_result, reset_seed, add_date_prefix, save_callback
 from yolo_optune import run_track_yolo
 
 
@@ -56,16 +56,22 @@ sort:
 
 def run_optuna():
     study = optuna.create_study(direction=StudyDirection.MAXIMIZE)
-    study.optimize(objective_sort, n_trials=101, show_progress_bar=True)
+
+    output_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\Optune"
+
+    tag = add_date_prefix("sort")
+
+    study.set_user_attr("save_folder", output_folder)
+    study.set_user_attr("tag", tag)
+
+    study.optimize(objective_sort, n_trials=100, show_progress_bar=True, callbacks=[save_callback])
 
     trial = study.best_trial
 
     print(f"Accuracy: {trial.value}")
     print(f"Best hyper parameters: {trial.params}")
 
-    output_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\"
-
-    save_result(trial, output_folder, "ocsort")
+    save_result(trial, output_folder, tag, use_date=False, study=study)
 
 
 if __name__ == '__main__':

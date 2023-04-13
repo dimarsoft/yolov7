@@ -56,3 +56,26 @@ def save_result(trial: FrozenTrial, save_folder: str, tag: str, use_date: bool =
 
     with open(optune_json_file, "w") as write_file:
         write_file.write(json.dumps(common_dic, indent=4, sort_keys=True))
+
+
+def save_callback(study: Study, trial: FrozenTrial) -> None:
+    """
+
+    callback для сохранения информации, вызывается каждый триал в оптуне.
+    До запуска обязательно нужно указать аттрибуты:
+
+    study.set_user_attr("save_folder", output_folder)
+    study.set_user_attr("tag", tag)
+
+
+    Args:
+        study:
+        trial:
+
+    Returns:
+
+    """
+    save_folder = study.user_attrs["save_folder"]
+    tag = study.user_attrs["tag"]
+
+    save_result(trial, save_folder, tag, use_date=False, study=study)
