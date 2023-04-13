@@ -43,6 +43,8 @@ botsort:
     proximity_thresh = trial.suggest_float('proximity_thresh', 0.3, 0.8, step=0.1)
     track_high_thresh = trial.suggest_float('track_high_thresh', 0.1, 0.8, step=0.1)
 
+    lambda_ = trial.suggest_float('lambda_', 0.8, 1.0, step=0.1)
+
     track_buffer = trial.suggest_int('track_buffer', 20, 100, step=10)
 
     cmc_method = trial.suggest_categorical('cmc_method',
@@ -63,6 +65,7 @@ botsort:
                     "track_high_thresh": track_high_thresh,
                     "track_buffer": track_buffer,
                     "cmc_method": cmc_method,
+                    "lambda_": lambda_,
                     "with_reid": False
                 }
         }
