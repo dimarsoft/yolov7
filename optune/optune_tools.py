@@ -5,6 +5,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
+from optuna import Study
 from optuna.trial import FrozenTrial
 
 
@@ -14,10 +15,18 @@ def reset_seed(seed=123):
     os.environ['PYTHONHASHSEED'] = str(seed)
 
 
-def save_result(trial: FrozenTrial, save_folder: str, tag: str, use_date: bool = True) -> None:
+def add_date_prefix(tag) -> str:
+    now = datetime.now()
+    tag = f"{now.year:04d}_{now.month:02d}_{now.day:02d}_{now.hour:02d}_{now.minute:02d}_" \
+          f"{now.second:02d}_{tag}"
+    return tag
+
+
+def save_result(trial: FrozenTrial, save_folder: str, tag: str, use_date: bool = True, study: Study = None) -> None:
     """
     Сохраняет результаты работы Optune
     Args:
+        study(Study):
         use_date(bool): Дополнить имя файла датой
         tag: Тип трекера, который использовали. Будет добавлено к имени файла
         trial(FrozenTrial): результат работы Optune
@@ -28,16 +37,22 @@ def save_result(trial: FrozenTrial, save_folder: str, tag: str, use_date: bool =
     """
 
     if use_date:
-        now = datetime.now()
-        tag = f"{now.year:04d}_{now.month:02d}_{now.day:02d}_{now.hour:02d}_{now.minute:02d}_" \
-              f"{now.second:02d}_{tag}"
+        tag = add_date_prefix(tag)
 
-    value_json_file = Path(save_folder) / f"{tag}_value.json"
+    optune_json_file = Path(save_folder) / f"{tag}_optune.json"
 
-    params_json_file = Path(save_folder) / f"{tag}_params.json"
+    common_dic = {
+        "Value": trial.value,
+        "params": trial.params,
+        "number": trial.number,
+    }
 
-    with open(value_json_file, "w") as write_file:
-        write_file.write(json.dumps(trial.value, indent=4, sort_keys=True))
+    if study is not None:
+        common_dic["study.direction"] = str(study.direction)
+        common_dic["study.best_trial.params"] = study.best_trial.params
+        common_dic["study.best_trial.params.number"] = study.best_trial.number
+        common_dic["study.best_value"] = study.best_value
+        common_dic["study.user_attrs"] = study.user_attrs
 
-    with open(params_json_file, "w") as write_file:
-        write_file.write(json.dumps(trial.params, indent=4, sort_keys=True))
+    with open(optune_json_file, "w") as write_file:
+        write_file.write(json.dumps(common_dic, indent=4, sort_keys=True))
