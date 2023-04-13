@@ -584,6 +584,16 @@
                 "status_id": 1
             },
             {
+                "end_frame": 450,
+                "start_frame": 400,
+                "status_id": 1
+            },
+            {
+                "end_frame": 1050,
+                "start_frame": 1000,
+                "status_id": 1
+            },
+            {
                 "end_frame": 1250,
                 "start_frame": 1189,
                 "status_id": 1
