@@ -2,10 +2,13 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
+from typing import Callable
 
 import numpy as np
+import optuna
 import torch
 from optuna import Study
+from optuna.study import StudyDirection
 from optuna.trial import FrozenTrial
 
 
@@ -79,3 +82,35 @@ def save_callback(study: Study, trial: FrozenTrial) -> None:
     tag = study.user_attrs["tag"]
 
     save_result(trial, save_folder, tag, use_date=False, study=study)
+
+
+def common_run_optuna(tracker_tag: str, output_folder: str, objective: Callable, trials=100) -> Study:
+    """
+
+    Args:
+        tracker_tag: Название трекера, используется при создании файла с результатами
+        output_folder: Папка для сохранения результата
+        objective: Функция перебора параметров
+        trials: Количество итераций n_trials
+
+    Returns:
+        Study
+
+    """
+    study = optuna.create_study(direction=StudyDirection.MAXIMIZE)
+
+    tag = add_date_prefix(tracker_tag)
+
+    study.set_user_attr("save_folder", output_folder)
+    study.set_user_attr("tag", tag)
+
+    study.optimize(objective, n_trials=trials, show_progress_bar=True, callbacks=[save_callback])
+
+    trial = study.best_trial
+
+    print(f"Accuracy: {trial.value}")
+    print(f"Best hyper parameters: {trial.params}")
+
+    save_result(trial, output_folder, tag, use_date=False, study=study)
+
+    return study

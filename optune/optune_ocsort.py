@@ -1,8 +1,6 @@
-import optuna
-from optuna.study import StudyDirection
 
 from configs import get_detections_path
-from optune.optune_tools import save_result, reset_seed
+from optune.optune_tools import reset_seed, common_run_optuna
 from yolo_optune import run_track_yolo
 
 
@@ -85,57 +83,12 @@ def objective_ocsort(trial):
 
 
 def run_optuna():
-    study = optuna.create_study(direction=StudyDirection.MAXIMIZE)
-    study.optimize(objective_ocsort, n_trials=3, show_progress_bar=True)
+    output_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\Optune"
 
-    trial = study.best_trial
-
-    print(f"Accuracy: {trial.value}")
-    print(f"Best hyper parameters: {trial.params}")
-
-    output_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\"
-
-    save_result(trial, output_folder, "ocsort")
-
-
-def test():
-    video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\"
-
-    files = None
-    # files = ['1', "2", "3"]
-    files = ["3"]
-
-    # classes = [0]
-    classes = None
-
-    change_bb = None  # pavel_change_bbox  # change_bbox
-
-    test_func = "timur"
-
-    txt_source_folder = str(get_detections_path())
-    tracker_name = "ocsort"
-    tracker_config = \
-        {
-            tracker_name:
-                {
-                    "asso_func": "giou",
-                    "det_thresh": 0.4094083246275299,
-                    "delta_t": 6,
-                    "inertia": 0.6066896482364373,
-                    "iou_thresh": 0.629302262088819,
-                    "max_age": 5,
-                    "min_hits": 7,
-                    "use_byte": True
-                }
-        }
-
-    cmp_results = run_track_yolo(txt_source_folder, video_source, tracker_name, tracker_config,
-                                 test_func=test_func,
-                                 files=files, change_bb=change_bb, classes=classes)
-
-    accuracy = cmp_results["total_equal_percent"]
-
-    print(f"accuracy = {accuracy}")
+    common_run_optuna(tracker_tag="ocsort",
+                      output_folder=output_folder,
+                      objective=objective_ocsort,
+                      trials=100)
 
 
 if __name__ == '__main__':

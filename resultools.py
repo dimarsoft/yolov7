@@ -641,9 +641,31 @@ def convert_test_json_to_csv():
 
     test_results_to_table(results, csv_file_path, excel_file_path)
 
+def gr1():
+    # Истинные значения вошедших и вышедших на видео
+    dict_in_true = {'1': 3, '2': 3, '3': 3, '4': 4, '5': 0, '6': 1, '7': 0, '8': 0, '9': 1, '10': 0, '11': 0, '12': 0,
+                    '13': 2, '14': 0, '15': 2, '16': 0, '17': 0, '18': 4, '19': 1, '20': 0, '21': 1, '22': 0, '23': 0,
+                    '24': 1, '25': 2, '26': 0, '27': 1, '28': 1, '29': 1, '30': 1, '31': 0, '32': 0, '33': 0, '34': 0,
+                    '35': 0, '36': 0, '37': 0, '38': 8, '39': 0, '40': 0, '41': 0, '42': 2,
+                    '43': 0}  # 20 видео битое с невошедшим призраком (человек раздвоился)
+
+    dict_out_true = {'1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 4, '7': 4, '8': 5, '9': 1, '10': 2, '11': 3, '12': 4,
+                     '13': 4, '14': 3, '15': 0, '16': 4, '17': 5, '18': 0, '19': 0, '20': 0, '21': 1, '22': 3, '23': 1,
+                     '24': 0, '25': 0, '26': 1, '27': 1, '28': 1, '29': 1, '30': 3, '31': 2, '32': 0, '33': 0, '34': 0,
+                     '35': 0, '36': 0, '37': 0, '38': 7, '39': 1, '40': 1, '41': 0, '42': 0, '43': 0}
+
+    # print(dict_in_true)
+
+    df_in = DataFrame.from_dict(dict_in_true, orient="index", columns=['A'])
+    df_out = DataFrame.from_dict(dict_out_true, orient="index", columns=['A'])
+
+    df_in.to_excel("df_in.xlsx", index=False)
+    df_out.to_excel("df_out.xlsx", index=False)
+
 
 if __name__ == '__main__':
-    test_tracks_file(test_file=TEST_TRACKS_PATH)
+    gr1()
+    # test_tracks_file(test_file=TEST_TRACKS_PATH)
     # convert_test_json_to_csv()
 
     # results_to_table()

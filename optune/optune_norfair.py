@@ -1,8 +1,6 @@
-import optuna
-from optuna.study import StudyDirection
 
 from configs import get_detections_path
-from optune.optune_tools import save_result, reset_seed
+from optune.optune_tools import reset_seed, common_run_optuna
 from yolo_optune import run_track_yolo
 
 
@@ -81,17 +79,12 @@ def objective_norfair(trial):
 
 
 def run_optuna():
-    study = optuna.create_study(direction=StudyDirection.MAXIMIZE)
-    study.optimize(objective_norfair, n_trials=60, show_progress_bar=True)
+    output_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\Optune"
 
-    trial = study.best_trial
-
-    print(f"Accuracy: {trial.value}")
-    print(f"Best hyper parameters: {trial.params}")
-
-    output_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\"
-
-    save_result(trial, output_folder, "fastdeepsort")
+    common_run_optuna(tracker_tag="norfair",
+                      output_folder=output_folder,
+                      objective=objective_norfair,
+                      trials=100)
 
 
 if __name__ == '__main__':
