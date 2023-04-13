@@ -226,3 +226,27 @@ class YoloTrackBbox:
                         float(detection[7])]
                 results.append(info)
         return results
+
+
+def test():
+    txt_source_folder = "D:\\AI\\2023\\Detect\\2023_03_29_10_35_01_YoloVersion.yolo_v7_detect"
+
+    txt_source = Path(txt_source_folder) / f"17.txt"
+
+    df_bbox = yolo_load_detections_from_txt(txt_source)
+
+    frame_id = 23
+
+    bbox_track = df_bbox
+
+    df_bbox_det = bbox_track[bbox_track[0] == frame_id]
+
+    print(df_bbox_det)
+
+    group = df_bbox_det[df_bbox_det[0] == frame_id]
+
+    print(group)
+
+
+if __name__ == '__main__':
+    test()
