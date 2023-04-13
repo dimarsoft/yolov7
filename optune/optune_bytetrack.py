@@ -75,14 +75,14 @@ def my_callback(study: Study, trial: FrozenTrial) -> None:
 def run_optuna() -> None:
     study = optuna.create_study(direction=StudyDirection.MAXIMIZE)
 
-    output_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\"
+    output_folder = "d:\\AI\\2023\\corridors\\dataset-v1.1\\Optune"
 
     tag = add_date_prefix("bytetrack")
 
     study.set_user_attr("save_folder", output_folder)
     study.set_user_attr("tag", tag)
 
-    study.optimize(objective_bytetrack, n_trials=4, show_progress_bar=True, callbacks=[my_callback])
+    study.optimize(objective_bytetrack, n_trials=100, show_progress_bar=True, callbacks=[my_callback])
 
     trial = study.best_trial
 
