@@ -3,14 +3,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 from collections import deque
 
-from trackers.botsort import  matching
+from trackers.botsort import matching
 from trackers.botsort.gmc import GMC
 from trackers.botsort.basetrack import BaseTrack, TrackState
 from trackers.botsort.kalman_filter import KalmanFilter
 
 # from fast_reid.fast_reid_interfece import FastReIDInterface
 
-#from reid_multibackend import ReIDDetectMultiBackend
+# from reid_multibackend import ReIDDetectMultiBackend
 from trackers.strongsort.reid_multibackend import ReIDDetectMultiBackend
 from ultralytics.yolo.utils.ops import xyxy2xywh, xywh2xyxy
 
@@ -125,7 +125,8 @@ class STrack(BaseTrack):
 
     def re_activate(self, new_track, frame_id, new_id=False):
 
-        self.mean, self.covariance = self.kalman_filter.update(self.mean, self.covariance, self.tlwh_to_xywh(new_track.tlwh))
+        self.mean, self.covariance = self.kalman_filter.update(self.mean, self.covariance,
+                                                               self.tlwh_to_xywh(new_track.tlwh))
         if new_track.curr_feat is not None:
             self.update_features(new_track.curr_feat)
         self.tracklet_len = 0
@@ -230,20 +231,21 @@ class STrack(BaseTrack):
 
 
 class BoTSORT(object):
-    def __init__(self, 
-                model_weights,
-                device,
-                fp16,
-                track_high_thresh:float = 0.45,
-                new_track_thresh:float = 0.6,
-                track_buffer:int = 30,
-                match_thresh:float = 0.8,
-                proximity_thresh:float = 0.5,
-                appearance_thresh:float = 0.25,
-                cmc_method:str = 'sparseOptFlow',
-                frame_rate=30,
-                lambda_=0.985
-                ):
+    def __init__(self,
+                 model_weights,
+                 device,
+                 fp16,
+                 track_high_thresh: float = 0.45,
+                 new_track_thresh: float = 0.6,
+                 track_buffer: int = 30,
+                 match_thresh: float = 0.8,
+                 proximity_thresh: float = 0.5,
+                 appearance_thresh: float = 0.25,
+                 cmc_method: str = 'sparseOptFlow',
+                 frame_rate=30,
+                 lambda_=0.985,
+                 with_reid: bool = True
+                 ):
 
         self.tracked_stracks = []  # type: list[STrack]
         self.lost_stracks = []  # type: list[STrack]
@@ -251,6 +253,7 @@ class BoTSORT(object):
         BaseTrack.clear_count()
 
         self.frame_id = 0
+        self.with_reid = with_reid
 
         self.lambda_ = lambda_
         self.track_high_thresh = track_high_thresh
@@ -265,9 +268,10 @@ class BoTSORT(object):
         self.appearance_thresh = appearance_thresh
         self.match_thresh = match_thresh
 
-        self.model = ReIDDetectMultiBackend(weights=model_weights, device=device, fp16=fp16)
+        if self.with_reid:
+            self.model = ReIDDetectMultiBackend(weights=model_weights, device=device, fp16=fp16)
 
-        self.gmc = GMC(method=cmc_method, verbose=[None,False])
+        self.gmc = GMC(method=cmc_method, verbose=[None, False])
 
     def update(self, output_results, img):
         self.frame_id += 1
@@ -275,12 +279,12 @@ class BoTSORT(object):
         refind_stracks = []
         lost_stracks = []
         removed_stracks = []
-        
+
         xyxys = output_results[:, 0:4]
         xywh = xyxy2xywh(xyxys.numpy())
         confs = output_results[:, 4]
         clss = output_results[:, 5]
-        
+
         classes = clss.numpy()
         xyxys = xyxys.numpy()
         confs = confs.numpy()
@@ -290,13 +294,13 @@ class BoTSORT(object):
         inds_high = confs < self.track_high_thresh
 
         inds_second = np.logical_and(inds_low, inds_high)
-        
+
         dets_second = xywh[inds_second]
         dets = xywh[remain_inds]
-        
+
         scores_keep = confs[remain_inds]
         scores_second = confs[inds_second]
-        
+
         classes_keep = classes[remain_inds]
         clss_second = classes[inds_second]
 
@@ -307,9 +311,9 @@ class BoTSORT(object):
 
         if len(dets) > 0:
             '''Detections'''
-            
+
             detections = [STrack(xyxy, s, c, f.cpu().numpy()) for
-                              (xyxy, s, c, f) in zip(dets, scores_keep, classes_keep, features_keep)]
+                          (xyxy, s, c, f) in zip(dets, scores_keep, classes_keep, features_keep)]
         else:
             detections = []
 
@@ -335,7 +339,8 @@ class BoTSORT(object):
 
         # Associate with high score detection boxes
         raw_emb_dists = matching.embedding_distance(strack_pool, detections)
-        dists = matching.fuse_motion(self.kalman_filter, raw_emb_dists, strack_pool, detections, only_position=False, lambda_=self.lambda_)
+        dists = matching.fuse_motion(self.kalman_filter, raw_emb_dists, strack_pool, detections, only_position=False,
+                                     lambda_=self.lambda_)
 
         # ious_dists = matching.iou_distance(strack_pool, detections)
         # ious_dists_mask = (ious_dists > self.proximity_thresh)
@@ -348,15 +353,15 @@ class BoTSORT(object):
         # emb_dists[ious_dists_mask] = 1.0
         # dists = np.minimum(ious_dists, emb_dists)
 
-            # Popular ReID method (JDE / FairMOT)
-            # raw_emb_dists = matching.embedding_distance(strack_pool, detections)
-            # dists = matching.fuse_motion(self.kalman_filter, raw_emb_dists, strack_pool, detections)
-            # emb_dists = dists
+        # Popular ReID method (JDE / FairMOT)
+        # raw_emb_dists = matching.embedding_distance(strack_pool, detections)
+        # dists = matching.fuse_motion(self.kalman_filter, raw_emb_dists, strack_pool, detections)
+        # emb_dists = dists
 
-            # IoU making ReID
-            # dists = matching.embedding_distance(strack_pool, detections)
-            # dists[ious_dists_mask] = 1.0
-    
+        # IoU making ReID
+        # dists = matching.embedding_distance(strack_pool, detections)
+        # dists[ious_dists_mask] = 1.0
+
         matches, u_track, u_detection = matching.linear_assignment(dists, thresh=self.match_thresh)
 
         for itracked, idet in matches:
@@ -386,7 +391,7 @@ class BoTSORT(object):
         if len(dets_second) > 0:
             '''Detections'''
             detections_second = [STrack(STrack.tlbr_to_tlwh(tlbr), s, c) for
-                (tlbr, s, c) in zip(dets_second, scores_second, clss_second)]
+                                 (tlbr, s, c) in zip(dets_second, scores_second, clss_second)]
         else:
             detections_second = []
 
@@ -413,15 +418,15 @@ class BoTSORT(object):
         detections = [detections[i] for i in u_detection]
         ious_dists = matching.iou_distance(unconfirmed, detections)
         ious_dists_mask = (ious_dists > self.proximity_thresh)
-        
+
         ious_dists = matching.fuse_score(ious_dists, detections)
-    
+
         emb_dists = matching.embedding_distance(unconfirmed, detections) / 2.0
         raw_emb_dists = emb_dists.copy()
         emb_dists[emb_dists > self.appearance_thresh] = 1.0
         emb_dists[ious_dists_mask] = 1.0
         dists = np.minimum(ious_dists, emb_dists)
-    
+
         matches, u_unconfirmed, u_detection = matching.linear_assignment(dists, thresh=0.7)
         for itracked, idet in matches:
             unconfirmed[itracked].update(detections[idet], self.frame_id)
@@ -460,7 +465,7 @@ class BoTSORT(object):
         output_stracks = [track for track in self.tracked_stracks if track.is_activated]
         outputs = []
         for t in output_stracks:
-            output= []
+            output = []
             tlwh = t.tlwh
             tid = t.track_id
             tlwh = np.expand_dims(tlwh, axis=0)
@@ -483,6 +488,9 @@ class BoTSORT(object):
         return x1, y1, x2, y2
 
     def _get_features(self, bbox_xywh, ori_img):
+        if not self.with_reid:
+            return np.array([])
+
         im_crops = []
         for box in bbox_xywh:
             x1, y1, x2, y2 = self._xywh_to_xyxy(box)
@@ -493,6 +501,7 @@ class BoTSORT(object):
         else:
             features = np.array([])
         return features
+
 
 def joint_stracks(tlista, tlistb):
     exists = {}

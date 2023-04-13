@@ -9,3 +9,4 @@ strongsort:
   n_init: 3
   nn_budget: 100
   conf_thres: 0.5122620708221085
+  with_reid: True # Вкл/выкл использования модели для предикта фичей

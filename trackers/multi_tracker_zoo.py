@@ -26,6 +26,7 @@ def create_tracker(tracker_type, tracker_config, reid_weights, device, half):
             nn_budget=cfg.strongsort.nn_budget,
             mc_lambda=cfg.strongsort.mc_lambda,
             ema_alpha=cfg.strongsort.ema_alpha,
+            with_reid=cfg.strongsort.with_reid
         )
         return strongsort
 
@@ -67,7 +68,8 @@ def create_tracker(tracker_type, tracker_config, reid_weights, device, half):
             appearance_thresh=cfg.botsort.appearance_thresh,
             cmc_method=cfg.botsort.cmc_method,
             frame_rate=cfg.botsort.frame_rate,
-            lambda_=cfg.botsort.lambda_
+            lambda_=cfg.botsort.lambda_,
+            with_reid=cfg.botsort.with_reid
         )
         return botsort
     elif tracker_type == 'sort':
