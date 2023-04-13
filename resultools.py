@@ -632,14 +632,15 @@ def test_results_to_table(results, csv_file_path, excel_file_path, sep: str = ";
 
 
 def convert_test_json_to_csv():
-    json_file_path = TEST_TRACKS_PATH
-    csv_file_path = TEST_ROOT / "all_track_results.csv"
-    excel_file_path = TEST_ROOT / "all_track_results.xlsx"
+    json_file_path = TEST_ROOT / 'all_track_results_group1.json'
+    csv_file_path = TEST_ROOT / "all_track_results_group1.csv"
+    excel_file_path = TEST_ROOT / "all_track_results_group1.xlsx"
 
     with open(json_file_path, "r") as read_file:
         results = json.loads(read_file.read())
 
     test_results_to_table(results, csv_file_path, excel_file_path)
+
 
 def gr1():
     # Истинные значения вошедших и вышедших на видео
@@ -664,8 +665,8 @@ def gr1():
 
 
 if __name__ == '__main__':
-    gr1()
+    # gr1()
     # test_tracks_file(test_file=TEST_TRACKS_PATH)
-    # convert_test_json_to_csv()
+    convert_test_json_to_csv()
 
     # results_to_table()

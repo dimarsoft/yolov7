@@ -40,6 +40,7 @@ def objective_ocsort(trial):
 
     test_func = "timur"
     test_func = "popov_alex"
+    test_func = "group3"
 
     txt_source_folder = str(get_detections_path())
 
