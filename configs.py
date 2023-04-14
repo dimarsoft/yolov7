@@ -3,7 +3,6 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict
 
-
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]
 CONFIG_ROOT = ROOT / 'cfg'
@@ -82,6 +81,17 @@ def get_all_trackers():
             'strongsort': 'trackers/strongsort/configs/strongsort.yaml',
             'fastdeepsort': 'trackers/fast_deep_sort/configs/fastdeepsort.yaml',
             'norfair': 'trackers/NorFairTracker/configs/norfair_track.yaml',
+        }
+
+    return all_trackers
+
+
+def get_all_optune_trackers():
+    all_trackers = \
+        {
+            'botsort': 'trackers/botsort/configs/botsort_optune.yaml',
+            'bytetrack': 'trackers/bytetrack/configs/bytetrack_optune.yaml',
+            'fastdeepsort': 'trackers/fast_deep_sort/configs/fastdeepsort_optune.yaml',
         }
 
     return all_trackers
