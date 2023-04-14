@@ -1,0 +1,13 @@
+# 93.02325581395348
+# Trial 100
+fastdeepsort:
+  ecc: false
+  max_age: 3
+  max_cosine_distance: 0.15
+  max_iou_distance: 0.6
+  nms_max_overlap: 1.0
+  n_init: 3
+  nn_budget: 100
+  embedder: "mobilenet"
+  # embedder - "mobilenet",  "torchreid",  "clip_RN50",  "clip_RN101",  "clip_RN50x4",
+  #            "clip_RN50x16",  "clip_ViT-B/32",  "clip_ViT-B/16",
