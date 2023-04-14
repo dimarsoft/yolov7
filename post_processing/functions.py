@@ -1,8 +1,10 @@
 from copy import deepcopy
+from typing import Tuple
 
 import cv2
 import torch
 import numpy as np
+import math
 
 
 def letterbox(img, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleFill=False, scaleup=True, stride=32):
@@ -87,7 +89,29 @@ def intersect(A, B, C, D):
     return ccw(A, C, D) != ccw(B, C, D) and ccw(A, B, C) != ccw(A, B, D)
 
 
+def get_buff(dh, line_p):
+    tgb = (line_p[1][1] - line_p[0][1]) / (line_p[1][0] - line_p[0][0])
+    dx2 = abs((dh * dh) / (tgb * tgb + 1))
+    dy2 = dh * dh - dx2
+    dx = math.sqrt(dx2)
+    dy = math.sqrt(dy2)
+
+    sgn = lambda x: 1 if x[1] > x[0] else -1
+    dx = dx * sgn([l[0] for l in line_p])
+    dy = dy * sgn([l[1] for l in line_p])
+
+    return dx, dy
+
+
 def crossing_bound(people_path, bound_line):
+    def ccw(A, B, C):
+        return (C[1] - A[1]) * (B[0] - A[0]) > (B[1] - A[1]) * (C[0] - A[0])
+
+    def intersect(A, B, C, D):
+        return ccw(A, C, D) != ccw(B, C, D) and ccw(A, B, C) != ccw(A, B, D)
+
+    dh = 3
+
     if len(people_path) >= 4:
         p1 = [(people_path[0][0] + people_path[1][0]) / 2, (people_path[0][1] + people_path[1][1]) / 2]
         p2 = [(people_path[-2][0] + people_path[-1][0]) / 2, (people_path[-2][1] + people_path[-1][1]) / 2]
@@ -98,14 +122,39 @@ def crossing_bound(people_path, bound_line):
     direction = "up" if p2[1] - p1[1] < 0 else "down"
 
     line_norm = get_norm(*bound_line)
+    dx, dy = get_buff(dh, line_norm)
+
+    bound_left = [[l[0] - dx, l[1] - dy] for l in bound_line]
+    bound_rght = [[l[0] + dx, l[1] + dy] for l in bound_line]
+
     p1_proj = get_proj(*line_norm, p1)
     p2_proj = get_proj(*line_norm, p2)
 
-    intersect_ = intersect(p1_proj, p2_proj, bound_line[0], bound_line[1])
-    return {"direction": direction, "intersect": intersect_}
+    intersect_left = intersect(p1_proj, p2_proj, bound_left[0], bound_left[1])
+    intersect_rght = intersect(p1_proj, p2_proj, bound_rght[0], bound_rght[1])
+    intersect = intersect_left and intersect_rght
+    return {"direction": direction, "intersect": intersect, "bound_left": bound_left, "bound_rght": bound_rght}
 
 
-def calc_inp_outp_people(tracks_info):
+# def crossing_bound(people_path, bound_line):
+#     if len(people_path) >= 4:
+#         p1 = [(people_path[0][0] + people_path[1][0]) / 2, (people_path[0][1] + people_path[1][1]) / 2]
+#         p2 = [(people_path[-2][0] + people_path[-1][0]) / 2, (people_path[-2][1] + people_path[-1][1]) / 2]
+#     else:
+#         p1 = [people_path[0][0], people_path[0][1]]
+#         p2 = [people_path[-1][0], people_path[-1][1]]
+#
+#     direction = "up" if p2[1] - p1[1] < 0 else "down"
+#
+#     line_norm = get_norm(*bound_line)
+#     p1_proj = get_proj(*line_norm, p1)
+#     p2_proj = get_proj(*line_norm, p2)
+#
+#     intersect_ = intersect(p1_proj, p2_proj, bound_line[0], bound_line[1])
+#     return {"direction": direction, "intersect": intersect_}
+
+
+def calc_inp_outp_people(tracks_info) -> dict:
     input_p = 0
     output_p = 0
     for track_i in tracks_info:
@@ -248,7 +297,8 @@ def iou_prop(people, helmet, vest):
             people[frid] = calc_iou(people[frid], vest[frid], "vest", upbbox=False)
 
 
-def get_deviations(people_tracks, helmet_tracks, vest_tracks, bound_line, log: bool = True):
+def get_deviations(people_tracks, helmet_tracks, vest_tracks, bound_line, log: bool = True) \
+        -> Tuple[list[dict], dict]:
     people_info = get_people_info(people_tracks, helmet_tracks, vest_tracks)
     return find_deviations(people_info, bound_line, False, log)
 
@@ -287,59 +337,107 @@ def search_frame(people_info, bound_line):
         p2_proj = get_proj(*line_norm, people_info["path"][i - 1])
         intersect_val = intersect(p1_proj, p2_proj, bound_line[0], bound_line[1])
         if intersect_val:
-            res = i  # [i, int((i + n-1) / 2)]
+            res = i  # [max(i - 10, 0), int(i + 0.65 * (n - 1 - i))]
             break
     return res
 
 
-def find_deviations(people_tracks, bound_line, only_down: bool = True, log: bool = True):
-    tracks_info = []
-    intrs_pid = []
+def find_deviations(people_tracks: dict, bound_line, only_down: bool = True, log: bool = True) \
+        -> Tuple[list[dict], dict]:
+    """
 
-    devs = []
-    bool_print = False
+    Args:
+        people_tracks: Треки людей
+        bound_line: линия турникета
+        only_down(bool): нарушения только по входящим
+        log: вкл/выкл лог, для отладки
+
+    Returns:
+        Кортеж: словарь нарушений, словарь вход/выход
+
+    """
+    tracks_info = []
+
+    # фиксация нарушений
+    deviations = []
+
     for p_id in people_tracks.keys():
         people_path = people_tracks[p_id]['path']
         tr_info = crossing_bound(people_path, bound_line)
         tracks_info.append(tr_info)
 
         if tr_info["intersect"]:
-            intrs_pid.append(p_id)
-            if only_down:
-                process = tr_info["direction"] == 'down'
-            else:
-                process = True
-        else:
-            process = False
-
-        if process:
             helmet = np.array(people_tracks[p_id]["helmet"], dtype=bool)
             vest = np.array(people_tracks[p_id]["vest"], dtype=bool)
             in_helm = len(helmet[helmet]) / len(helmet) >= 0.5
             in_vest = len(vest[vest]) / len(vest) >= 0.5
 
-            truefalse = "Нет" if in_helm == True and in_vest == True else "Да"
-
-            no_dev = in_helm and in_vest
-
             id_frame_ind = search_frame(people_tracks[p_id], bound_line)
-            if not id_frame_ind is None:
+
+            if id_frame_ind is not None:
                 id_frame = people_tracks[p_id]["frid"][id_frame_ind]
-                if not no_dev:
+                no_dev = in_helm and in_vest
+                dir_val = True if not only_down else True if tr_info["direction"] == 'down' else False
+                if not no_dev and dir_val:
                     bbox = people_tracks[p_id]["bbox"][id_frame_ind]
-                    devs.append({
+                    deviations.append({
                         "frame_id": id_frame,
                         "has_helmet": in_helm,
                         "has_uniform": in_vest,
                         "box": bbox})
 
-                if in_vest == False or in_helm == False:
-                    # print(file, p_id, "Тут есть нарушение? - ", truefalse, f"id_frame = {id_frame}")
+    # подсчет вход/выход
+    calc_person = calc_inp_outp_people(tracks_info)
+    return deviations, calc_person
 
-                    if log:
-                        print(p_id, "Тут есть нарушение? - ", truefalse, f"id_frame = {id_frame}")
-                        print(f"Жилетка: {in_vest} / Каска: {in_helm}")
-                    # save_frame(fn, id_frame, people_tracks[p_id]["bbox"][id_frame_ind], bound_line, folder_with_video)
-
-            bool_print = True
-    return devs
+# def find_deviations(people_tracks, bound_line, only_down: bool = True, log: bool = True):
+#     tracks_info = []
+#     intrs_pid = []
+#
+#     devs = []
+#     # подсчет вход/выход
+#     inp_otp = {}
+#     for p_id in people_tracks.keys():
+#         people_path = people_tracks[p_id]['path']
+#         tr_info = crossing_bound(people_path, bound_line)
+#         tracks_info.append(tr_info)
+#
+#         if tr_info["intersect"]:
+#             intrs_pid.append(p_id)
+#             if only_down:
+#                 process = tr_info["direction"] == 'down'
+#             else:
+#                 process = True
+#         else:
+#             process = False
+#
+#         if process:
+#             helmet = np.array(people_tracks[p_id]["helmet"], dtype=bool)
+#             vest = np.array(people_tracks[p_id]["vest"], dtype=bool)
+#             in_helm = len(helmet[helmet]) / len(helmet) >= 0.5
+#             in_vest = len(vest[vest]) / len(vest) >= 0.5
+#
+#             truefalse = "Нет" if in_helm == True and in_vest == True else "Да"
+#
+#             no_dev = in_helm and in_vest
+#
+#             id_frame_ind = search_frame(people_tracks[p_id], bound_line)
+#             if not id_frame_ind is None:
+#                 id_frame = people_tracks[p_id]["frid"][id_frame_ind]
+#                 if not no_dev:
+#                     bbox = people_tracks[p_id]["bbox"][id_frame_ind]
+#                     devs.append({
+#                         "frame_id": id_frame,
+#                         "has_helmet": in_helm,
+#                         "has_uniform": in_vest,
+#                         "box": bbox})
+#
+#                 if in_vest == False or in_helm == False:
+#                     # print(file, p_id, "Тут есть нарушение? - ", truefalse, f"id_frame = {id_frame}")
+#
+#                     if log:
+#                         print(p_id, "Тут есть нарушение? - ", truefalse, f"id_frame = {id_frame}")
+#                         print(f"Жилетка: {in_vest} / Каска: {in_helm}")
+#                     # save_frame(fn, id_frame, people_tracks[p_id]["bbox"][id_frame_ind], bound_line, folder_with_video)
+#
+#     return devs
