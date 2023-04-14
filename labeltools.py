@@ -108,7 +108,7 @@ class DetectedLabel:
         self.width = width
         self.height = height
         self.human_pos = None
-        self.conf = conf
+        self.conf = float(conf)
 
     def label_str(self):
         if self.label is Labels.human:
@@ -558,7 +558,7 @@ class TrackWorker:
             x_center = bbox_left + bbox_w / 2
             y_center = bbox_top + bbox_h / 2
 
-            conf = int(track[7])
+            conf = track[7]
 
             track_list.append(
                 DetectedTrackLabel(Labels(cls), x_center, y_center, bbox_w, bbox_h,
