@@ -1,10 +1,10 @@
-# Trial number: 10
-# 90.69767441860465
+# Trial number: 41
+# 95.34883720930233
 ocsort:
-  asso_func: giou
+  asso_func: iou
   det_thresh: 0.4
-  delta_t: 5
-  inertia: 0.8
+  delta_t: 6
+  inertia: 0.6
   iou_thresh: 0.6
   max_age: 50
   min_hits: 7
