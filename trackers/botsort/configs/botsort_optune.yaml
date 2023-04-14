@@ -11,4 +11,4 @@ botsort:
   proximity_thresh: 0.6
   track_buffer: 90
   track_high_thresh: 0.1
-  with_reid: False # Вкл/выкл использования модели для предикта фичей
+  with_reid: True # Вкл/выкл использования модели для предикта фичей
