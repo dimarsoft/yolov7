@@ -2,7 +2,7 @@ from enum import Enum
 from enum import IntEnum
 
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import cv2
 from ultralytics.yolo.utils.plotting import Colors
@@ -91,17 +91,28 @@ class Bbox:
 
 
 class DetectedLabel:
-    def __init__(self, label, x, y, width, height):
+    def __init__(self, label, x, y, width, height, conf):
+        """
+        Объект обнаруженный детекцией
+        Args:
+            label: класс
+            x:
+            y:
+            width:
+            height:
+            conf: вероятность
+        """
         self.label = label
         self.x = x
         self.y = y
         self.width = width
         self.height = height
         self.human_pos = None
+        self.conf = conf
 
     def label_str(self):
         if self.label is Labels.human:
-            return "human"
+            return f"human: {self.conf:.2f}"
         if self.label is Labels.uniform:
             return "uniform"
         if self.label is Labels.helmet:
@@ -110,8 +121,20 @@ class DetectedLabel:
 
 
 class DetectedTrackLabel(DetectedLabel):
-    def __init__(self, label, x, y, width, height, track_id, frame):
-        super(DetectedTrackLabel, self).__init__(label, x, y, width, height)
+    def __init__(self, label, x, y, width, height, track_id, frame, conf):
+        """
+        Объект обнаруженный детекцией и прошедший через трекер
+        Args:
+            label:
+            x:
+            y:
+            width:
+            height:
+            track_id: ИД трека, -1 если его нет
+            frame:
+            conf:
+        """
+        super(DetectedTrackLabel, self).__init__(label, x, y, width, height, conf)
 
         self.track_id = track_id
         self.frame = frame
@@ -306,7 +329,7 @@ class TrackWorker:
             return HumanPos.above
         return human_pos
 
-    def get_near_v2(self, start, tracks) -> NearItem:
+    def get_near_v2(self, start, tracks) -> Optional[NearItem]:
         start_pos = tracks[start].human_pos
         end_pos = self.invert_human_pos(start_pos)
 
@@ -535,8 +558,11 @@ class TrackWorker:
             x_center = bbox_left + bbox_w / 2
             y_center = bbox_top + bbox_h / 2
 
+            conf = int(track[7])
+
             track_list.append(
-                DetectedTrackLabel(Labels(cls), x_center, y_center, bbox_w, bbox_h, track_id, frame_index))
+                DetectedTrackLabel(Labels(cls), x_center, y_center, bbox_w, bbox_h,
+                                   track_id, frame_index, conf=conf))
 
         return track_list
 
