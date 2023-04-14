@@ -1,10 +1,13 @@
 # Вариант проверки вошедших и вышедших
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import json
 
-from configs import CAMERAS_PATH
+from configs import CAMERAS_PATH, load_default_bound_line
 from count_results import Result, Deviation
+from exception_tools import print_exception
 
 
 class Rectangle:
@@ -271,3 +274,63 @@ def alex_count_humans(tracks, num, w, h, bound_line, log: bool = True):
             deviations.append(Deviation(int(start_frame), int(end_frame), int(status_id)))
 
     return Result(int(count_all), int(count_in), int(count_out), deviations)
+
+
+def tracks_from_txt(txt_path):
+    """
+    Чтение из тхт файла
+    Args:
+        txt_path:
+
+    Returns:
+
+    """
+    # import pandas as pd
+
+    try:
+        if Path(txt_path).stat().st_size > 0:
+            df = pd.read_csv(txt_path, delimiter=",", dtype=float, header=None)
+        else:
+            # если файл пустой, создаем пустой df, f nj pd.read_csv exception выдает
+            df = pd.DataFrame(dtype=float, columns=[0, 1, 2, 3, 4, 5, 6, 7, 8])
+    except Exception as ex:
+        print_exception(ex, f"yolo_load_detections_from_txt: '{str(txt_path)}'")
+        df = pd.DataFrame(dtype=float, columns=[0, 1, 2, 3, 4, 5, 6, 7, 8])
+
+    return df
+
+
+def test_fairmode():
+    file = "D:\\AI\\2023\\4.txt"
+
+    df = tracks_from_txt(file)
+
+    # df ваши данные в вашем формате
+
+    print(df)
+
+    tracks = []
+    w, h = 640, 640
+
+    # это наш формат, ббокс в относительных единицах
+    # columns = ['frame', 'id', 'class', 'bb_left', 'bb_top', 'bb_width', 'bb_height', 'conf'])
+    for item in df.values:
+        print(item)
+        tracks.append([item[0], item[1], item[7], item[2] / w, item[3] / h, item[4] / w, item[5] / h, item[6]])
+
+    # загрузка линий турникет
+    cameras_info = load_default_bound_line()
+    bound_line = cameras_info.get("4")
+    results_info = alex_count_humans(tracks, '4', w, h, bound_line)
+    results_info.file = "4"
+
+    print(results_info)
+
+    result_json_file = "result_json_file.json"
+
+
+    with open(result_json_file, "w") as write_file:
+        write_file.write(json.dumps(results_info, indent=4, sort_keys=True, default=lambda o: o.__dict__))
+
+if __name__ == '__main__':
+    test_fairmode()
