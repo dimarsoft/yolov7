@@ -1,0 +1,14 @@
+# Trial number: 1
+# "Value": 90.69767441860465,
+botsort:
+  appearance_thresh: 0.3
+  cmc_method: orb
+  conf_thres: 0.2
+  frame_rate: 12
+  lambda_: 0.9896143462366406
+  match_thresh: 0.3
+  new_track_thresh: 0.4
+  proximity_thresh: 0.6
+  track_buffer: 90
+  track_high_thresh: 0.1
+  with_reid: False # Вкл/выкл использования модели для предикта фичей

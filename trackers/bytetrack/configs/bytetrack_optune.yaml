@@ -1,0 +1,8 @@
+# optune accuracy  90.69767441860465
+bytetrack:
+  track_thresh: 0.3  # tracking confidence threshold
+  track_buffer: 30   # the frames for keep lost tracks
+  match_thresh: 0.8  # matching threshold for tracking
+  frame_rate: 12     # FPS, надо брать из видео файла
+  conf_thres: 0.8
+
