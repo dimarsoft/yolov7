@@ -1,5 +1,5 @@
-# Trial number: 22
-# [90.69]
+# Trial number: 10
+# 90.69767441860465
 ocsort:
   asso_func: giou
   det_thresh: 0.4
