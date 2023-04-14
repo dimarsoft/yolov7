@@ -89,6 +89,7 @@ def get_all_trackers():
 def get_all_optune_trackers():
     all_trackers = \
         {
+            'ocsort': 'trackers/ocsort/configs/ocsort_optune.yaml',
             'botsort': 'trackers/botsort/configs/botsort_optune.yaml',
             'bytetrack': 'trackers/bytetrack/configs/bytetrack_optune.yaml',
             'fastdeepsort': 'trackers/fast_deep_sort/configs/fastdeepsort_optune.yaml',

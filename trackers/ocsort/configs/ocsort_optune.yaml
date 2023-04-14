@@ -1,0 +1,11 @@
+# Trial number: 22
+# [90.69]
+ocsort:
+  asso_func: giou
+  det_thresh: 0.4
+  delta_t: 5
+  inertia: 0.8
+  iou_thresh: 0.6
+  max_age: 50
+  min_hits: 7
+  use_byte: true
