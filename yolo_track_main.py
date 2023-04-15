@@ -163,7 +163,8 @@ def run_single_video_yolo(source, yolo_info="7", conf=0.3, iou=0.45, test_func="
             "width": w,
             "height": h,
             "fps": fps,
-            "bound_line": bound_line
+            "bound_line": bound_line,
+            "file": str(source)
         }
 
     return res_dic
