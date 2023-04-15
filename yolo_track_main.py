@@ -107,7 +107,8 @@ def post_process(test_func, track, num, w, h, bound_line, source):
     return humans_result
 
 
-def run_single_video_yolo(source, yolo_info="7", conf=0.3, iou=0.45, test_func="timur", tracker_type="fastdeepsort"):
+def run_single_video_yolo(source, yolo_info="7", conf=0.3, iou=0.45, test_func="timur",
+                          tracker_type="fastdeepsort", log: bool = True):
     print(f"yolo version = {yolo_info}")
     yolo_version = parse_yolo_version(yolo_info)
 
@@ -126,7 +127,8 @@ def run_single_video_yolo(source, yolo_info="7", conf=0.3, iou=0.45, test_func="
     all_trackers = get_all_optune_trackers()
     tracker_config = all_trackers.get(tracker_type)
 
-    print(f"tracker_type = {tracker_type}")
+    if log:
+        print(f"tracker_type = {tracker_type}")
 
     track = model.track(
         source=source,
@@ -134,7 +136,8 @@ def run_single_video_yolo(source, yolo_info="7", conf=0.3, iou=0.45, test_func="
         iou=iou,
         tracker_type=tracker_type,
         tracker_config=tracker_config,
-        reid_weights=reid_weights
+        reid_weights=reid_weights,
+        log=log
     )
 
     num, w, h, fps = get_camera(source)

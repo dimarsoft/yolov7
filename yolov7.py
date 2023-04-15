@@ -97,7 +97,7 @@ class YOLO7:
                 old_img_h = img.shape[2]
                 old_img_w = img.shape[3]
                 for i in range(3):
-                    self.model(img, augment=self.augment)[0]
+                    _ = self.model(img, augment=self.augment)[0]
 
             # Inference
             t1 = time_synchronized()
@@ -234,7 +234,7 @@ class YOLO7:
         return results
 
     def track(self, source, tracker_type, tracker_config, reid_weights="osnet_x0_25_msmt17.pt",
-              conf_threshold=0.3, iou=0.4, classes=None, change_bb=False) -> list:
+              conf_threshold=0.3, iou=0.4, classes=None, change_bb=False, log: bool = True) -> list:
 
         self.reid_weights = Path(WEIGHTS) / reid_weights
         tracker = create_tracker(tracker_type, tracker_config, self.reid_weights, self.device, self.half)
@@ -249,10 +249,11 @@ class YOLO7:
         # высота
         h = int(input_video.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-        # количесто кадров в видео
+        # количество кадров в видео
         frames_in_video = int(input_video.get(cv2.CAP_PROP_FRAME_COUNT))
 
-        print(f"input = {source}, w = {w}, h = {h}, fps = {fps}, frames_in_video = {frames_in_video}")
+        if log:
+            print(f"input = {source}, w = {w}, h = {h}, fps = {fps}, frames_in_video = {frames_in_video}")
 
         curr_frame, prev_frame = None, None
 
@@ -288,19 +289,14 @@ class YOLO7:
                         dets += 1
                         predict_track = change_bbox(predict_track, change_bb, file_id)
 
-                        # conf_ = predict_track[:, [4]]
-                        # cls = predict_track[:, [5]]
-
-                        # print(f"cls = {cls}")
-                        # print(f"conf_ = {conf_}")
-
                         # Rescale boxes from img_size to im0 size
                         conv_pred = scale_coords(new_frame.shape[2:], predict_track, frame.shape).round()
 
                         # Print results
-                        for c in predict_track[:, 5].unique():
-                            n = (predict_track[:, 5] == c).sum()  # detections per class
-                            s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "  # add to string
+                        if log:
+                            for c in predict_track[:, 5].unique():
+                                n = (predict_track[:, 5] == c).sum()  # detections per class
+                                s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "  # add to string
 
                         for det_id, detection in enumerate(predict_track):  # detections per image
                             # print(f"{det_id}: detection = {detection}")
@@ -379,17 +375,17 @@ class YOLO7:
 
             t4 = time_synchronized()
 
-            detections_info = f"{s}{'' if dets > 0 else ', (no detections)'}"
-
-            empty_conf_count_str = f"{'' if empty_conf_count == 0 else f', empty_confs = {empty_conf_count}'}"
-
             prev_frame = frame
 
-            # Print time (inference + NMS)
+            if log:
+                detections_info = f"{s}{'' if dets > 0 else ', (no detections)'}"
+                empty_conf_count_str = f"{'' if empty_conf_count == 0 else f', empty_confs = {empty_conf_count}'}"
 
-            print(f'frame ({frame_id + 1}/{frames_in_video}) Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, '
-                  f'({(1E3 * (t3 - t2)):.1f}ms) NMS, {(1E3 * (t4 - t3)):.1f}ms) '
-                  f'{detections_info} {empty_conf_count_str}')
+                # Print time (inference + NMS)
+
+                print(f'frame ({frame_id + 1}/{frames_in_video}) Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, '
+                      f'({(1E3 * (t3 - t2)):.1f}ms) NMS, {(1E3 * (t4 - t3)):.1f}ms) '
+                      f'{detections_info} {empty_conf_count_str}')
 
         input_video.release()
 

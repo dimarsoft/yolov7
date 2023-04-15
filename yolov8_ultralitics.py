@@ -38,7 +38,7 @@ class YOLO8UL:
 
     def track(self, source, tracker_type, tracker_config, reid_weights="osnet_x0_25_msmt17.pt",
               conf_threshold=0.3, iou=0.4,
-              classes=None, change_bb=False):
+              classes=None, change_bb=False, log: bool = True) -> list:
 
         self.reid_weights = Path(WEIGHTS) / reid_weights
         tracker = create_tracker(tracker_type, tracker_config, self.reid_weights, self.device, self.half)
@@ -56,7 +56,8 @@ class YOLO8UL:
         # количество кадров в видео
         frames_in_video = int(input_video.get(cv2.CAP_PROP_FRAME_COUNT))
 
-        print(f"input = {source}, w = {w}, h = {h}, fps = {fps}, frames_in_video = {frames_in_video}")
+        if log:
+            print(f"input = {source}, w = {w}, h = {h}, fps = {fps}, frames_in_video = {frames_in_video}")
 
         curr_frame, prev_frame = None, None
 
@@ -89,10 +90,11 @@ class YOLO8UL:
 
                     dets += 1
 
-                    # Print results
-                    for c in predict_track[:, 5].unique():
-                        n = (predict_track[:, 5] == c).sum()  # detections per class
-                        s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "  # add to string
+                    if log:
+                        # Print results
+                        for c in predict_track[:, 5].unique():
+                            n = (predict_track[:, 5] == c).sum()  # detections per class
+                            s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "  # add to string
 
                     tracker_outputs = tracker.update(predict_track.cpu(), frame)
 
@@ -132,20 +134,19 @@ class YOLO8UL:
                         # print(info)
                         results.append(info)
 
-                detections_info = f"{s}{'' if dets > 0 else ', (no detections)'}"
-
-                empty_conf_count_str = f"{'' if empty_conf_count == 0 else f', empty_confs = {empty_conf_count}'}"
-
                 t3 = time_synchronized()
 
                 prev_frame = frame
 
-                # Print total time (preprocessing + inference + NMS + tracking)
+                if log:
+                    detections_info = f"{s}{'' if dets > 0 else ', (no detections)'}"
+                    empty_conf_count_str = f"{'' if empty_conf_count == 0 else f', empty_confs = {empty_conf_count}'}"
+                    # Print total time (preprocessing + inference + NMS + tracking)
 
-                # Print time (inference + NMS)
-                print(f'frame ({frame_id + 1}/{frames_in_video}) Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, '
-                      f'({(1E3 * (t3 - t2)):.1f}ms) track, '
-                      f'{detections_info} {empty_conf_count_str}')
+                    # Print time (inference + NMS)
+                    print(f'frame ({frame_id + 1}/{frames_in_video}) Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, '
+                          f'({(1E3 * (t3 - t2)):.1f}ms) track, '
+                          f'{detections_info} {empty_conf_count_str}')
 
         input_video.release()
 
