@@ -12,9 +12,12 @@ from count_results import Result, Deviation
 
 # класс
 class Labels(IntEnum):
-    human = 0
-    helmet = 1
-    uniform = 2
+    # Человек
+    human: int = 0
+    # Каска
+    helmet: int = 1
+    # Жилет
+    uniform: int = 2
 
 
 # положение человека относительно турникета
@@ -110,7 +113,7 @@ class DetectedLabel:
         self.human_pos = None
         self.conf = float(conf)
 
-    def label_str(self):
+    def label_str(self) -> str:
         if self.label is Labels.human:
             return f"human: {self.conf:.2f}"
         if self.label is Labels.uniform:
@@ -200,7 +203,6 @@ def draw_track_on_frame(frame, draw_rect, frame_w,
         # cv2.rectangle(frame, (x, y), (x + ww, y + hh), label_colors[lab.label], 1)
         cv2.rectangle(frame, (x, y), (x + ww, y + hh), label_color, line_width)
 
-
     # если человек, то рисуем центр масс
 
     if draw_center and lab.label is Labels.human:
@@ -240,7 +242,16 @@ class NearItem:
         self.end_i = end_i
 
 
-def get_status(has_helmet, has_uniform):
+def get_status(has_helmet: bool, has_uniform: bool) -> int:
+    """
+    Получить код нарушения
+    Args:
+        has_helmet: Есть каска?
+        has_uniform: Есть жилет
+
+    Returns:
+
+    """
     status = 0
     if not has_helmet and not has_uniform:
         status = 1
