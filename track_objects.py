@@ -4,6 +4,7 @@
 Удобно объекты классов потом сериализовать(сохранить) в json формат
 
 """
+from labeltools import Labels
 
 
 class BBox:
@@ -55,3 +56,12 @@ class Track(Detection):
 
         self.track_id = int(track_id)
 
+
+def get_classes() -> list[int]:
+    """
+    Классы объектов, с которыми работаем
+    Returns:
+        Список классов
+
+    """
+    return [int(Labels.human), int(Labels.helmet), int(Labels.uniform)]

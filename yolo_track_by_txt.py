@@ -299,7 +299,7 @@ def run_example():
     all_trackers = get_all_trackers_full_path()
 
     # selected_trackers_names = ["fastdeepsort"]
-    selected_trackers_names = ["ocsort", "sort", "fastdeepsort"]
+    # selected_trackers_names = ["ocsort", "sort", "fastdeepsort"]
     selected_trackers_names = ["ocsort"]
 
     selected_trackers = get_select_trackers(selected_trackers_names, all_trackers)
@@ -309,10 +309,11 @@ def run_example():
     tracker_config = None  # all_trackers.get(tracker_name)
 
     files = None
+    # files = ['1']
     # files = ['6', "8", "26", "36"]
     # files = ['1', "2", "3"]
 
-    # classes = [0]
+    classes = [0]
     classes = None
 
     change_bb = None  # pavel_change_bbox  # change_bbox
@@ -324,14 +325,14 @@ def run_example():
     # tracker_name = "ocsort"
     # tracker_config = ROOT / "trackers/ocsort/configs/ocsort_group1.yaml"
 
-    selected_trackers["ocsort"] = ROOT / "trackers/ocsort/configs/ocsort_group1.yaml"
+    selected_trackers["ocsort"] = ROOT / "trackers/ocsort/configs/ocsort_optune.yaml"
 
     print(str(tracker_config))
 
     txt_source_folder = "D:\\AI\\2023\\Detect\\2023_03_29_10_35_01_YoloVersion.yolo_v7_detect"
     run_track_yolo(txt_source_folder, video_source, tracker_name, tracker_config,
                    output_folder, reid_weights, test_file, test_func=test_func,
-                   files=files, save_vid=False,  change_bb=change_bb, classes=classes, log=False)
+                   files=files, save_vid=True,  change_bb=change_bb, classes=classes, log=False)
 
 
 # запуск из командной строки: python yolo_detect.py  --yolo 7 --weights "" source ""

@@ -6,7 +6,9 @@ from ultralytics.yolo.data.augment import LetterBox
 
 from change_bboxes import change_bbox
 from configs import WEIGHTS
+from labeltools import Labels
 from save_txt_tools import yolo_load_detections_from_txt
+from track_objects import get_classes
 from trackers.multi_tracker_zoo import create_tracker
 from utils.torch_utils import select_device, time_synchronized
 
@@ -49,9 +51,22 @@ class YoloTrackBbox:
         tracks_t1 = time_synchronized()
 
         self.reid_weights = Path(WEIGHTS) / reid_weights
-        tracker = create_tracker(tracker_type, tracker_config, self.reid_weights, self.device, self.half)
 
-        need_camera_update = hasattr(tracker, 'camera_update')
+        if classes is None:
+            classes = get_classes()
+
+        tracker_dict = {}
+
+        need_camera_update = False
+        # создаем трекеры по каждому классу
+        for class_id in classes:
+            tracker_dict[class_id] = create_tracker(tracker_type, tracker_config,
+                                                    self.reid_weights, self.device, self.half)
+            need_camera_update = hasattr(tracker_dict[class_id], 'camera_update')
+
+        # tracker = create_tracker(tracker_type, tracker_config, self.reid_weights, self.device, self.half)
+
+        # need_camera_update = hasattr(tracker, 'camera_update')
 
         file_t1 = time_synchronized()
 
@@ -117,7 +132,9 @@ class YoloTrackBbox:
 
             if need_camera_update:
                 if prev_frame is not None and curr_frame is not None:  # camera motion compensation
-                    tracker.camera_update(prev_frame, curr_frame)
+                    for key in tracker_dict.keys():
+                        tr = tracker_dict.get(key)
+                        tr.camera_update(prev_frame, curr_frame)
 
             t0 = time_synchronized()
 
@@ -125,25 +142,36 @@ class YoloTrackBbox:
 
             t1 = time_synchronized()
 
+            tracker_outputs = []
+
             with torch.no_grad():  # Calculating gradients would cause a GPU memory leak
 
                 group_t0 = time_synchronized()
-                group = df_bbox_det[df_bbox_det[0] == frame_id]
+                # group = df_bbox_det[df_bbox_det[0] == frame_id]
 
-                if len(group) > 0:
+                for key in tracker_dict.keys():
 
-                    predict = self.det_to_tensor(group, w, h)
-                    predict = change_bbox(predict, change_bb, file_id)
-                else:
-                    predict = empty_tensor
+                    df_by_class = df_bbox_det[df_bbox_det[2] == key]
+
+                    if len(df_by_class) > 0:
+                        predict = self.det_to_tensor(df_by_class, w, h)
+
+                        # ббокс если и меняем, то только у человека
+                        if key == int(Labels.human):
+                            predict = change_bbox(predict, change_bb, file_id)
+                    else:
+                        predict = empty_tensor
+
+                    tr = tracker_dict.get(key)
+                    out = tr.update(predict.cpu(), frame)
+                    tracker_outputs.extend(out)
+
                 group_t1 = time_synchronized()
 
                 dets = 0
                 empty_conf_count = 0
 
                 track_t1 = time_synchronized()
-
-                tracker_outputs = tracker.update(predict.cpu(), frame)
 
             track_t2 = time_synchronized()
             for det_id, detection in enumerate(tracker_outputs):  # detections per image
