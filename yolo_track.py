@@ -222,7 +222,7 @@ def run_track_yolo(yolo_info, model: str, source: str,
             print(f"Save total result_items '{str(save_test_result_file)}'")
             with open(save_test_result_file, "w") as write_file:
                 write_file.write(json.dumps(test_result_by_traker,
-                                            indent=4, sort_keys=True, default=lambda o: o.__dict__))
+                                            indent=4, default=lambda o: o.__dict__))
 
             save_results_csv_file = str(Path(session_folder) / 'all_compare_track_results.csv')
             save_results_excel_file = str(Path(session_folder) / 'all_compare_track_results.xlsx')

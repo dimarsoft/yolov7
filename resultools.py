@@ -49,7 +49,7 @@ def get_test_result(test_results, session_folder):
 
 
 def results_to_json(result_items: Result):
-    return json.dumps(result_items, indent=4, sort_keys=True, default=lambda o: o.__dict__)
+    return json.dumps(result_items, indent=4, default=lambda o: o.__dict__)
 
 
 class TestResults:
@@ -93,7 +93,7 @@ class TestResults:
         result_json_file = Path(output_folder) / "current_all_track_results.json"
         print(f"Save result_items '{str(result_json_file)}'")
         with open(result_json_file, "w") as write_file:
-            write_file.write(json.dumps(self.result_items, indent=4, sort_keys=True, default=lambda o: o.__dict__))
+            write_file.write(json.dumps(self.result_items, indent=4, default=lambda o: o.__dict__))
 
     def compare_to_file(self, output_folder):
         self.compare_list_to_file(output_folder, self.test_items)
@@ -182,7 +182,7 @@ class TestResults:
         print(f"Save compare results info '{str(result_json_file)}'")
 
         with open(result_json_file, "w") as write_file:
-            write_file.write(json.dumps(results_info, indent=4, sort_keys=True, default=lambda o: o.__dict__))
+            write_file.write(json.dumps(results_info, indent=4, default=lambda o: o.__dict__))
 
         return results_info
 
@@ -224,7 +224,7 @@ class TestResults:
 
         return count_equal
 
-    def compare_list_to_file_v2(self, output_folder, test_items):
+    def compare_list_to_file_v2(self, output_folder, test_items) -> dict:
 
         # 1 версия считаем вход/выход
 
@@ -368,7 +368,7 @@ class TestResults:
             print(f"Save compare results info '{str(result_json_file)}'")
 
             with open(result_json_file, "w") as write_file:
-                write_file.write(json.dumps(results_info, indent=4, sort_keys=True, default=lambda o: o.__dict__))
+                write_file.write(json.dumps(results_info, indent=4, default=lambda o: o.__dict__))
 
             result_csv_file = Path(output_folder) / "compare_track_results.csv"
             result_xlsx_file = Path(output_folder) / "compare_track_results.xlsx"

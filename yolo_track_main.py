@@ -1,16 +1,17 @@
 """
 
 """
+import json
 from pathlib import Path
 import gdown
 
 from configs import load_default_bound_line, get_all_trackers_full_path, WEIGHTS, YoloVersion, parse_yolo_version, ROOT, \
-    get_all_optune_trackers
+    get_all_optune_trackers, TEST_TRACKS_PATH
 from count_results import Result
 from exception_tools import print_exception
 from post_processing.alex import alex_count_humans
 from post_processing.timur import get_camera, timur_count_humans
-from resultools import results_to_json
+from resultools import results_to_json, TestResults
 from yolo_detect import create_yolo_model
 
 folder_link = "https://drive.google.com/drive/folders/1b-tp_yxHgadeElP4XoDCFoXxCwXHK9CV"
@@ -65,7 +66,7 @@ def download_test_video():
     print(folders)
 
 
-def post_process(test_func, track, num, w, h, bound_line, source):
+def post_process(test_func, track, num, w, h, bound_line, source) -> Result:
     # count humans
 
     humans_result = Result(0, 0, 0, [])
@@ -108,7 +109,7 @@ def post_process(test_func, track, num, w, h, bound_line, source):
 
 
 def run_single_video_yolo(source, yolo_info="7", conf=0.3, iou=0.45, test_func="timur",
-                          tracker_type="fastdeepsort", log: bool = True):
+                          tracker_type="fastdeepsort", log: bool = True) -> dict:
     print(f"yolo version = {yolo_info}")
     yolo_version = parse_yolo_version(yolo_info)
 
@@ -146,7 +147,21 @@ def run_single_video_yolo(source, yolo_info="7", conf=0.3, iou=0.45, test_func="
 
     humans_result = post_process(test_func, track, num, w, h, bound_line, source)
 
-    return results_to_json(humans_result)
+    test_result_file = TEST_TRACKS_PATH
+
+    test_results = TestResults(test_result_file)
+
+    test_results.add_test(humans_result)
+
+    test_res = test_results.compare_to_file_v2(output_folder=None)
+
+    res_dic = \
+        {
+            "result": humans_result.__dict__,
+            "test_result": test_res
+        }
+
+    return res_dic
 
 
 if __name__ == '__main__':
@@ -158,6 +173,18 @@ if __name__ == '__main__':
 
     video_file = str(Path(video_source) / "1.mp4")
 
-    # result = run_single_video_yolo(video_file, yolo_info="8ul")
+    # result = run_single_video_yolo(video_file, yolo_info="8ul", log=False)
 
     # print(result)
+
+    res = Result(1, 2, 4, [])
+
+    print(res.__dict__)
+
+    str1 = results_to_json(res)
+    print(str1)
+
+    str2 = json.dumps(res.__dict__, indent=4)
+
+    print(str2)
+
