@@ -69,7 +69,7 @@ def load_default_bound_line():
     return load_bound_line(CAMERAS_PATH)
 
 
-def get_all_trackers():
+def get_all_trackers() -> dict[str, str]:
     all_trackers = \
         {
             'sort': 'trackers/sort/configs/sort.yaml',
@@ -86,7 +86,7 @@ def get_all_trackers():
     return all_trackers
 
 
-def get_all_optune_trackers():
+def get_all_optune_trackers() -> dict[str, str]:
     all_trackers = \
         {
             'ocsort': 'trackers/ocsort/configs/ocsort_optune.yaml',

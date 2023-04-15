@@ -4,7 +4,8 @@
 from pathlib import Path
 import gdown
 
-from configs import load_default_bound_line, get_all_trackers_full_path, WEIGHTS, YoloVersion, parse_yolo_version, ROOT
+from configs import load_default_bound_line, get_all_trackers_full_path, WEIGHTS, YoloVersion, parse_yolo_version, ROOT, \
+    get_all_optune_trackers
 from count_results import Result
 from exception_tools import print_exception
 from post_processing.alex import alex_count_humans
@@ -121,7 +122,8 @@ def run_single_video_yolo(source, yolo_info="7", conf=0.3, iou=0.45, test_func="
     # tracker_type = "fastdeepsort"
     # tracker_type = "ocsort"
 
-    all_trackers = get_all_trackers_full_path()
+    # all_trackers = get_all_trackers_full_path()
+    all_trackers = get_all_optune_trackers()
     tracker_config = all_trackers.get(tracker_type)
 
     print(f"tracker_type = {tracker_type}")
