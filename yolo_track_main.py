@@ -157,8 +157,13 @@ def run_single_video_yolo(source, yolo_info="7", conf=0.3, iou=0.45, test_func="
 
     res_dic = \
         {
-            "result": humans_result.__dict__,
-            "test_result": test_res
+            "result": json.loads(results_to_json(humans_result)),
+            "test_result": test_res,
+            "num": num,
+            "width": w,
+            "height": h,
+            "fps": fps,
+            "bound_line": bound_line
         }
 
     return res_dic
