@@ -123,7 +123,7 @@ def run_single_video_yolo(source, yolo_info="7", conf=0.3, iou=0.45, test_func="
 
     print(f"num = {num}, w = {w}, h = {h}, fps = {fps}")
 
-    model = create_yolo_model(yolo_version, model, w, h)
+    model = create_yolo_model(yolo_version, model)
 
     # tracker_type = "fastdeepsort"
     # tracker_type = "ocsort"

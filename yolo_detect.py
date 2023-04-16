@@ -21,7 +21,7 @@ def create_yolo_model(yolo_version, model, w=640, h=640):
         return YOLO8(model)
 
     if yolo_version == YoloVersion.yolo_v8ul:
-        return YOLO8UL(model, imgsz=(w, h))
+        return YOLO8UL(model) # , imgsz=(w, h)
 
 
 def detect_single_video_yolo(yolo_version, model, source, output_folder, classes=None,
@@ -147,6 +147,10 @@ def run_cli(opt_info):
 
 
 if __name__ == '__main__':
+    # lst = range(44, 72)
+    # lst = [f"{x}" for x in lst]
+    # print(lst)
+
     # run_example()
 
     parser = argparse.ArgumentParser()
