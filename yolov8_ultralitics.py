@@ -66,6 +66,9 @@ class YOLO8UL:
         for frame_id in range(frames_in_video):
             ret, frame = input_video.read()
 
+            if not ret:
+                continue
+
             # Inference
             t1 = time_synchronized()
             s = ""

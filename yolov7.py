@@ -162,6 +162,9 @@ class YOLO7:
 
             ret, frame = input_video.read()
 
+            if not ret:
+                continue
+
             # Inference
             t1 = time_synchronized()
             s = ""
@@ -261,6 +264,9 @@ class YOLO7:
 
         for frame_id in range(frames_in_video):
             ret, frame = input_video.read()
+
+            if not ret:
+                continue
 
             # Inference
             t1 = time_synchronized()
