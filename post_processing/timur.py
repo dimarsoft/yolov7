@@ -129,6 +129,9 @@ def timur_count_humans(tracks, source, log: bool = True):
 
     bound_line = bound_line_cameras.get(camera_num)
 
+    if bound_line is None:
+        bound_line = bound_line_cameras.get('43')
+
     if log:
         print(f"bound_line =  {bound_line}")
 
