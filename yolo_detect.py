@@ -13,15 +13,15 @@ from yolov8 import YOLO8
 from yolov8_ultralitics import YOLO8UL
 
 
-def create_yolo_model(yolo_version, model):
+def create_yolo_model(yolo_version, model, w=640, h=640):
     if yolo_version == YoloVersion.yolo_v7:
-        return YOLO7(model)
+        return YOLO7(model, imgsz=(w, h))
 
     if yolo_version == YoloVersion.yolo_v8:
         return YOLO8(model)
 
     if yolo_version == YoloVersion.yolo_v8ul:
-        return YOLO8UL(model)
+        return YOLO8UL(model, imgsz=(w, h))
 
 
 def detect_single_video_yolo(yolo_version, model, source, output_folder, classes=None,

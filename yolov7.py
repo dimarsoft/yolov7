@@ -18,7 +18,7 @@ from yolo_tools import xyxy2ltwh
 
 
 class YOLO7:
-    def __init__(self, weights_path, half=False, device='', imgsz=640):
+    def __init__(self, weights_path, half=False, device='', imgsz=(640, 640)):
         self.device = select_device(device)
         # Load model
         self.weights_path = weights_path
@@ -26,7 +26,7 @@ class YOLO7:
 
         self.stride = int(self.model.stride.max())  # model stride
 
-        self.imgsz = check_img_size(imgsz, s=self.stride)  # check img_size
+        self.imgsz = (check_img_size(imgsz[0], s=self.stride), check_img_size(imgsz[1], s=self.stride))
 
         self.model = TracedModel(self.model, self.device, img_size=self.imgsz)
 

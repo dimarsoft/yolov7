@@ -7,11 +7,12 @@ from change_bboxes import change_bbox
 from configs import WEIGHTS
 from save_txt_tools import convert_toy7
 from trackers.multi_tracker_zoo import create_tracker
+from utils.general import check_img_size
 from utils.torch_utils import select_device, time_synchronized
 
 
 class YOLO8UL:
-    def __init__(self, weights_path, half=False, device=''):
+    def __init__(self, weights_path, half=False, device='', imgsz=(640, 640)):
         self.device = select_device(device)
 
         self.half = half
@@ -22,15 +23,14 @@ class YOLO8UL:
 
         self.model = YOLO(weights_path)
 
-        self.names = self.model.names
+        self.imgsz = (check_img_size(imgsz[0]), check_img_size(imgsz[1]))
 
-        #        if self.half:
-        #            self.model.half()  # to FP16
+        self.names = self.model.names
 
         self.reid_weights = Path(WEIGHTS) / 'osnet_x0_25_msmt17.pt'  # model.pt path,
 
     def detect(self, source, conf_threshold=0.3, iou=0.4, classes=None):
-        detections = self.model.predict(source, conf=conf_threshold, iou=iou, classes=classes)
+        detections = self.model.predict(source, conf=conf_threshold, iou=iou, classes=classes, imgsz=self.imgsz)
 
         detections = convert_toy7(detections, save_none_id=True)
 
@@ -71,7 +71,7 @@ class YOLO8UL:
             s = ""
 
             with torch.no_grad():  # Calculating gradients would cause a GPU memory leak
-                predict = self.model.predict(frame, conf=conf_threshold, iou=iou, classes=classes)[0].boxes.data
+                predict = self.model.predict(frame, conf=conf_threshold, iou=iou, classes=classes, imgsz=self.imgsz)[0].boxes.data
 
                 t2 = time_synchronized()
 

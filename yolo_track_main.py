@@ -119,7 +119,11 @@ def run_single_video_yolo(source, yolo_info="7", conf=0.3, iou=0.45, test_func="
 
     reid_weights = str(Path(WEIGHTS) / "osnet_x0_25_msmt17.pt")
 
-    model = create_yolo_model(yolo_version, model)
+    num, w, h, fps = get_camera(source)
+
+    print(f"num = {num}, w = {w}, h = {h}, fps = {fps}")
+
+    model = create_yolo_model(yolo_version, model, w, h)
 
     # tracker_type = "fastdeepsort"
     # tracker_type = "ocsort"
@@ -177,20 +181,21 @@ if __name__ == '__main__':
 
     video_source = "d:\\AI\\2023\\corridors\\dataset-v1.1\\test\\"
 
-    video_file = str(Path(video_source) / "1.mp4")
+    # video_file = str(Path(video_source) / "1.mp4")
+    video_file = "D:\\44.mp4"
 
-    # result = run_single_video_yolo(video_file, yolo_info="8ul", log=False)
+    result = run_single_video_yolo(video_file, yolo_info="8ul", log=False)
 
-    # print(result)
+    print(result)
 
-    res = Result(1, 2, 4, [])
+    # res = Result(1, 2, 4, [])
 
-    print(res.__dict__)
+    # print(res.__dict__)
 
-    str1 = results_to_json(res)
-    print(str1)
+    # str1 = results_to_json(res)
+    # print(str1)
 
-    str2 = json.dumps(res.__dict__, indent=4)
+    # str2 = json.dumps(res.__dict__, indent=4)
 
-    print(str2)
+    # print(str2)
 
