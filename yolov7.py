@@ -144,6 +144,8 @@ class YOLO7:
 
     def detect(self, source, conf_threshold=0.25, iou=0.45, classes=None):
 
+        file_id = Path(source).stem
+
         input_video = cv2.VideoCapture(source)
 
         fps = int(input_video.get(cv2.CAP_PROP_FPS))
@@ -226,7 +228,7 @@ class YOLO7:
 
             # Print time (inference + NMS)
 
-            print(f'frame ({frame_id + 1}/{frames_in_video}) Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, '
+            print(f'{file_id}: ({frame_id + 1}/{frames_in_video}) Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, '
                   f'({(1E3 * (t3 - t2)):.1f}ms) NMS, {(1E3 * (t4 - t3)):.1f}ms) '
                   f'{detections_info} {empty_conf_count_str}, {len(results)}')
 
@@ -389,7 +391,7 @@ class YOLO7:
 
                 # Print time (inference + NMS)
 
-                print(f'frame ({frame_id + 1}/{frames_in_video}) Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, '
+                print(f'{file_id}: ({frame_id + 1}/{frames_in_video}) Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, '
                       f'({(1E3 * (t3 - t2)):.1f}ms) NMS, {(1E3 * (t4 - t3)):.1f}ms) '
                       f'{detections_info} {empty_conf_count_str}')
 
