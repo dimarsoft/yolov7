@@ -1,4 +1,5 @@
 import argparse
+import gc
 import json
 from pathlib import Path
 
@@ -60,6 +61,10 @@ def detect_single_video_yolo(yolo_version, model, source, output_folder, classes
         t2 = time_synchronized()
 
         print(f"Processed '{source}' to {output_folder}: ({(1E3 * (t2 - t1)):.1f} ms)")
+
+    del detections
+
+    gc.collect()
 
 
 def run_detect_yolo(yolo_info, model: str, source: str, output_folder,
