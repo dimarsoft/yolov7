@@ -39,22 +39,22 @@ def objective_ocsort(trial):
     change_bb = None  # pavel_change_bbox  # change_bbox
 
     test_func = "timur"
-    test_func = "popov_alex"
-    test_func = "group3"
+    # test_func = "popov_alex"
+    # test_func = "group3"
 
     txt_source_folder = str(get_detections_path())
 
     det_thresh = trial.suggest_float('det_thresh', 0.3, 0.6, step=0.1)
 
-    # max_age = trial.suggest_int('max_age', 1, 10, log=True)
-    max_age = int(trial.suggest_categorical('max_age', [3, 10, 50, 100]))
+    max_age = trial.suggest_int('max_age', 1, 20, log=True)
+    # max_age = int(trial.suggest_categorical('max_age', [3, 10, 50, 100]))
 
     min_hits = trial.suggest_int('min_hits', 6, 8)
     iou_threshold = trial.suggest_float('iou_threshold', 0.6, 0.8, step=0.1)
     delta_t = trial.suggest_int('delta_t', 5, 15)
-    asso_func = trial.suggest_categorical('asso_func', ["iou", "giou"])
+    asso_func = trial.suggest_categorical('asso_func', ["iou"])
     inertia = trial.suggest_float('inertia', 0.6, 0.8, step=0.1)
-    use_byte = trial.suggest_categorical('use_byte', [True, False])
+    use_byte = trial.suggest_categorical('use_byte', [True])
 
     # test_func = trial.suggest_categorical('test_func', ["timur", "group_3"])
 

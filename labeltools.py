@@ -617,8 +617,6 @@ class TrackWorker:
         for i in range(frames_in_video):
             output_video.write(results[i])
 
-            del results[i]
-
         output_video.release()
 
         del results
