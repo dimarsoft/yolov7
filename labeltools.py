@@ -600,10 +600,11 @@ class TrackWorker:
         for frame_id in range(frames_in_video):
             ret, frame = input_video.read()
             results.append(frame)
+            self.draw_turnic_on_frame(frame, w, h)
         input_video.release()
 
-        for i in range(frames_in_video):
-            self.draw_turnic_on_frame(results[i], w, h)
+#        for i in range(frames_in_video):
+#            self.draw_turnic_on_frame(results[i], w, h)
 
         for label in self.track_labels:
             draw_track_on_frame(results[int(label.frame)], True, w, h, label, draw_class=draw_class)
@@ -616,7 +617,11 @@ class TrackWorker:
         for i in range(frames_in_video):
             output_video.write(results[i])
 
+            del results[i]
+
         output_video.release()
+
+        del results
 
     def test_humans(self):
         return self.get_humans_counter()
