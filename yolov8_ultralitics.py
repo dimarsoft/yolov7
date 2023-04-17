@@ -30,7 +30,9 @@ class YOLO8UL:
         self.reid_weights = Path(WEIGHTS) / 'osnet_x0_25_msmt17.pt'  # model.pt path,
 
     def detect(self, source, conf_threshold=0.3, iou=0.4, classes=None):
-        detections = self.model.predict(source, conf=conf_threshold, iou=iou, classes=classes, imgsz=self.imgsz)
+        detections = self.model.predict(source, conf=conf_threshold, iou=iou,
+                                        classes=classes, imgsz=self.imgsz,
+                                        stream=True)
 
         detections = convert_toy7(detections, save_none_id=True)
 
@@ -74,7 +76,12 @@ class YOLO8UL:
             s = ""
 
             with torch.no_grad():  # Calculating gradients would cause a GPU memory leak
-                predict = self.model.predict(frame, conf=conf_threshold, iou=iou, classes=classes, imgsz=self.imgsz)[0].boxes.data
+                predict = self.model.predict(frame,
+                                             conf=conf_threshold,
+                                             iou=iou,
+                                             classes=classes,
+                                             imgsz=self.imgsz,
+                                             stream=True)[0].boxes.data
 
                 t2 = time_synchronized()
 
