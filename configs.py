@@ -1,7 +1,7 @@
 import json
 from enum import Enum
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]
@@ -27,7 +27,7 @@ class YoloVersion(Enum):
     yolo_v8ul = 81  # из пакета ultralytics
 
 
-def parse_yolo_version(yolo_version):
+def parse_yolo_version(yolo_version) -> Optional[YoloVersion]:
     if isinstance(yolo_version, YoloVersion):
         return yolo_version
 
@@ -47,13 +47,22 @@ def parse_yolo_version(yolo_version):
     return None
 
 
-def load_bound_line(cameras_path):
+def load_bound_line(cameras_path) -> dict:
     with open(cameras_path, 'r') as f:
         bound_line = json.load(f)
     return bound_line
 
 
-def load_default_bound_line():
+def get_bound_line(cameras: dict, camera_num: str) -> Optional[list]:
+    line = cameras.get(camera_num)
+
+    if line is None:
+        line = cameras.get("-1")
+
+    return line
+
+
+def load_default_bound_line() -> dict:
     """
     Загрузка информации по камерам по видео файлам.
 
