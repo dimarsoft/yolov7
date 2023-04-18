@@ -126,6 +126,10 @@ class YoloTrackBbox:
 
             ret, frame = input_video.read()
 
+            if frame is None:
+                print(f"frame {frame_id} is None, ret = {ret}")
+                continue
+
             video_t1 = time_synchronized()
 
             curr_frame = frame
