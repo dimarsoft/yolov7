@@ -2,7 +2,7 @@ from pathlib import Path
 
 import optuna
 
-from configs import TEST_TRACKS_PATH, load_default_bound_line
+from configs import TEST_TRACKS_PATH, load_default_bound_line, get_bound_line
 from exception_tools import print_exception
 from path_tools import get_video_files
 from post_processing.alex import alex_count_humans
@@ -96,7 +96,7 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
     # track_worker = TrackWorker(track)
 
     num, w, h, fps = get_camera(source)
-    bound_line = cameras_info.get(num)
+    bound_line = get_bound_line(cameras_info, num)
 
     # print(f"num = {num}, w = {w}, h = {h}, bound_line = {bound_line}")
 
@@ -115,7 +115,7 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
                     humans_result = alex_count_humans(tracks_new, num, w, h, bound_line, log=False)
                     pass
                 if test_func == "timur":
-                    humans_result = timur_count_humans(tracks_new, source, log=False)
+                    humans_result = timur_count_humans(tracks_new, source, bound_line, log=False)
                     pass
                 if test_func == "group_3":
                     humans_result = group_3_count(tracks_new, num, w, h, fps)

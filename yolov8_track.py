@@ -5,7 +5,7 @@ import traceback
 from datetime import datetime
 from pathlib import Path
 
-from configs import load_default_bound_line, CAMERAS_PATH
+from configs import load_default_bound_line, CAMERAS_PATH, get_bound_line
 from labeltools import TrackWorker
 from post_processing.alex import alex_count_humans
 from post_processing.timur import timur_count_humans, get_camera
@@ -54,7 +54,7 @@ def run_single_video_yolo8v2(model, source, tracker_type: str, tracker_config, o
         print(f"Processed '{source}' to {output_folder}: ({(1E3 * (t2 - t1)):.1f} ms)")
 
     num, w, h, fps = get_camera(source)
-    bound_line = cameras_info.get(num)
+    bound_line = get_bound_line(cameras_info, num)
 
     print(f"num = {num}, w = {w}, h = {h}, bound_line = {bound_line}")
 
@@ -73,7 +73,7 @@ def run_single_video_yolo8v2(model, source, tracker_type: str, tracker_config, o
                     humans_result = alex_count_humans(tracks_new, num, w, h, bound_line)
                     pass
                 if test_func == "timur":
-                    humans_result = timur_count_humans(tracks_new, source)
+                    humans_result = timur_count_humans(tracks_new, source, bound_line)
                     pass
                 if test_func == "dimar":
                     humans_result = track_worker.test_humans()

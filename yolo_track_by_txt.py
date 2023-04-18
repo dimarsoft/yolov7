@@ -5,7 +5,7 @@ from datetime import datetime
 from pathlib import Path
 
 from configs import load_default_bound_line, CAMERAS_PATH, get_all_trackers_full_path, get_select_trackers, \
-    TEST_TRACKS_PATH, ROOT
+    TEST_TRACKS_PATH, ROOT, get_bound_line
 from labeltools import TrackWorker
 from path_tools import get_video_files
 from post_processing.alex import alex_count_humans
@@ -63,7 +63,7 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
         print(f"Processed '{source}' to {output_folder}: ({(1E3 * (t2 - t1)):.1f} ms)")
 
     num, w, h, fps = get_camera(source)
-    bound_line = cameras_info.get(num)
+    bound_line = get_bound_line(cameras_info, num)
 
     print(f"num = {num}, w = {w}, h = {h}, bound_line = {bound_line}")
 
@@ -82,7 +82,7 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
                     humans_result = alex_count_humans(tracks_new, num, w, h, bound_line, log=log)
                     pass
                 if test_func == "timur":
-                    humans_result = timur_count_humans(tracks_new, source, log=log)
+                    humans_result = timur_count_humans(tracks_new, source, bound_line, log=log)
                     pass
                 if test_func == "group_3":
                     humans_result = group_3_count(tracks_new, num, w, h, fps)

@@ -5,7 +5,8 @@ import shutil
 from pathlib import Path
 
 from change_bboxes import pavel_change_bbox
-from configs import parse_yolo_version, get_all_trackers_full_path, get_select_trackers, TEST_TRACKS_PATH
+from configs import parse_yolo_version, get_all_trackers_full_path, get_select_trackers, TEST_TRACKS_PATH, \
+    get_bound_line
 from exception_tools import save_exception
 from labeltools import TrackWorker
 from path_tools import create_session_folder, get_video_files
@@ -56,7 +57,7 @@ def run_single_video_yolo(yolo_version, model, source, tracker_type, tracker_con
         print(f"Processed '{source}' to {output_folder}: ({(1E3 * (t2 - t1)):.1f} ms)")
 
     num, w, h, fps = get_camera(source)
-    bound_line = cameras_info.get(num)
+    bound_line = get_bound_line(cameras_info, num)
 
     print(f"num = {num}, w = {w}, h = {h}, bound_line = {bound_line}")
 
@@ -75,7 +76,7 @@ def run_single_video_yolo(yolo_version, model, source, tracker_type, tracker_con
                     humans_result = alex_count_humans(tracks_new, num, w, h, bound_line)
                     pass
                 if test_func == "timur":
-                    humans_result = timur_count_humans(tracks_new, source)
+                    humans_result = timur_count_humans(tracks_new, source, bound_line)
                     pass
                 if test_func == "dimar":
                     humans_result = track_worker.test_humans()

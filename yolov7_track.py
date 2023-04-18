@@ -7,7 +7,7 @@ from pathlib import Path
 import torch
 
 from change_bboxes import change_bbox
-from configs import load_default_bound_line, CAMERAS_PATH, get_all_trackers_full_path
+from configs import load_default_bound_line, CAMERAS_PATH, get_all_trackers_full_path, get_bound_line
 from exception_tools import save_exception
 from labeltools import TrackWorker
 from post_processing.alex import alex_count_humans
@@ -64,7 +64,7 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
 
     num, w, h, fps = get_camera(source)
 
-    bound_line = cameras_info.get(num)
+    bound_line = get_bound_line(cameras_info, num)
 
     print(f"num = {num}, w = {w}, h = {h}, bound_line = {bound_line}")
 
@@ -83,7 +83,7 @@ def run_single_video_yolo7(model, source, tracker_type: str, tracker_config, out
                     humans_result = alex_count_humans(tracks_new, num, w, h, bound_line)
                     pass
                 if test_func == "timur":
-                    humans_result = timur_count_humans(tracks_new, source)
+                    humans_result = timur_count_humans(tracks_new, source, bound_line)
                     pass
                 if test_func == "dimar":
                     humans_result = track_worker.test_humans()
