@@ -81,7 +81,7 @@ class YOLO8UL:
                                              iou=iou,
                                              classes=classes,
                                              imgsz=self.imgsz,
-                                             stream=True)[0].boxes.data
+                                             stream=False)[0].boxes.data
 
                 t2 = time_synchronized()
 
