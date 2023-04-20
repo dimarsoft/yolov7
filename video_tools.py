@@ -39,7 +39,6 @@ def save_frames(path_to_video: Union[str, Path], output_folder: Union[str, Path]
 
 
 def draw_turnic_on_frame(frame, bound_line):
-    # турникет рисуем один раз
     p1 = bound_line[0]
     p2 = bound_line[1]
     y1 = int(p1[1])
@@ -107,8 +106,18 @@ def create_video_with_turn(source: Union[str, Path], out_folder: Union[str, Path
 
 def create_videos_with_turn_in_folder(
         source: Union[str, Path],
-        files: Optional[list[str]],
-        out_folder: Union[str, Path]):
+        out_folder: Union[str, Path],
+        files: Optional[list[str]] = None):
+    """
+    Функция создания файлов с отображением турникета и номеров кадров
+    Args:
+        source: Путь к папке с видео файлами
+        out_folder: Папка для сохранения новых файлов
+        files: Список номеров файлов, если None то все
+
+    Returns:
+
+    """
     bound_lines = load_bound_line(CAMERAS_PATH)
 
     # список файлов с видео для обработки
@@ -122,11 +131,13 @@ def create_videos_with_turn_in_folder(
         camera_num, w, h, fps = get_camera(item)
         bound_line = get_bound_line(bound_lines, camera_num)
 
-        create_video(source, out_folder, bound_line, draw_frame_index=True)
+        create_video(item, out_folder, bound_line, draw_frame_index=True)
 
 
 if __name__ == '__main__':
     # save_frames("D:\\48.mp4", "d:\\AI\\2023\\18.04.2023\\", 10)
     # draw_turn("D:\\48.mp4", "d:\\AI\\2023\\18.04.2023\\")
-    create_video_with_turn("D:\\44.mp4", "d:\\AI\\2023\\18.04.2023\\")
-    create_video_with_turn("D:\\10.mp4", "d:\\AI\\2023\\18.04.2023\\")
+    # create_video_with_turn("D:\\44.mp4", "d:\\AI\\2023\\18.04.2023\\")
+    # create_video_with_turn("D:\\10.mp4", "d:\\AI\\2023\\18.04.2023\\")
+    # create_videos_with_turn_in_folder("D:\\", "d:\\AI\\2023\\18.04.2023\\")
+    pass
