@@ -1,9 +1,10 @@
 import os
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 
-def get_video_files(source, files: list) -> list:
+def get_video_files(source, files: Optional[list[str]]) -> list:
     # список файлов с видео для обработки
     list_of_videos = []
 
