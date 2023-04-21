@@ -833,37 +833,24 @@
       "humans": 7,
       "counter_in": 0,
         "counter_out": 7
-    }
-  ,
+    },
     {
       "deviations": [
         {
-            "end_frame": 1613,
-            "start_frame": 1583,
-            "status_id": 1
+            "end_frame": 1613, "start_frame": 1583, "status_id": 1
         },
         {
-            "end_frame": 1574,
-            "start_frame": 1504,
-            "status_id": 1
+            "end_frame": 1574, "start_frame": 1504, "status_id": 1
         },
         {
-            "end_frame": 1398,
-            "start_frame": 1260,
-            "status_id": 1
-        },
-
-        {
-            "end_frame": 1259,
-            "start_frame": 1151,
-            "status_id": 1
+            "end_frame": 1398, "start_frame": 1260, "status_id": 1
         },
         {
-            "end_frame": 902,
-            "start_frame": 881,
-            "status_id": 1
-        }
-        ,
+            "end_frame": 1259, "start_frame": 1151, "status_id": 1
+        },
+        {
+            "end_frame": 902, "start_frame": 881, "status_id": 1
+        },
         {
             "end_frame": 546,  "start_frame": 519, "status_id": 1
         },
@@ -877,9 +864,6 @@
             "end_frame": 42, "start_frame": 68, "status_id": 1
         }
       ],
-      "file": "64.mp4",
-      "humans": 9,
-      "counter_in": 4,
-        "counter_out": 5
+      "file": "64.mp4", "humans": 9, "counter_in": 4, "counter_out": 5
     }
 ]
