@@ -932,9 +932,8 @@
       ],
       "file": "67.mp4", "humans": 4, "counter_in": 0, "counter_out": 4
     },
-  {
-    "53": {
-      "file_id": "53.mp4",
+    {
+      "file": "53.mp4",
       "humans": 24,
       "counter_in": 2,
       "counter_out": 22,
@@ -1054,11 +1053,9 @@
           "status_id": 1
         }
       ]
-    }
-  },
-  {
-    "54": {
-      "file_id": "54.mp4",
+    },
+    {
+      "file": "54.mp4",
       "humans": 10,
       "counter_in": 2,
       "counter_out": 8,
@@ -1091,8 +1088,7 @@
           "start_frame": 706, "end_frame": 746, "status_id": 1
         }
       ]
-    }
-  },
+    },
   {
     "file": "44.mp4",
     "counter_in": 6,
@@ -1341,7 +1337,6 @@
         ]
     },
     {
-        "file_id": 51,
         "file": "51.mp4",
         "counter_in": 1,
         "counter_out": 6,
@@ -1438,6 +1433,176 @@
         "end_frame": 1456,
         "status_id": 1
       }
+    ]
+  },
+  {
+    "file": "68.mp4",
+    "counter_in": 3,
+    "counter_out": 2,
+    "deviations": [
+      {
+        "start_frame": 80,
+        "end_frame": 95,
+        "status_id": 1
+      },
+      {
+        "start_frame": 200,
+        "end_frame": 250,
+        "status_id": 1
+      },
+      {
+        "start_frame": 280,
+        "end_frame": 310,
+        "status_id": 1
+      },
+      {
+        "start_frame": 340,
+        "end_frame": 365,
+        "status_id": 1
+      }
+    ]
+  },
+  {
+    "file": "69.mp4",
+    "counter_in": 4,
+    "counter_out": 4,
+    "deviations": [
+      {
+        "start_frame": 85,
+        "end_frame": 100,
+        "status_id": 3
+      },
+      {
+        "start_frame": 230,
+        "end_frame": 250,
+        "status_id": 1
+      },
+      {
+        "start_frame": 260,
+        "end_frame": 280,
+        "status_id": 1
+      },
+      {
+        "start_frame": 360,
+        "end_frame": 380,
+        "status_id": 1
+      },
+      {
+        "start_frame": 410,
+        "end_frame": 425,
+        "status_id": 1
+      },
+      {
+        "start_frame": 490,
+        "end_frame": 520,
+        "status_id": 1
+      },
+      {
+        "start_frame": 600,
+        "end_frame": 615,
+        "status_id": 1
+      },
+      {
+        "start_frame": 650,
+        "end_frame": 680,
+        "status_id": 1
+      }
+    ]
+  },
+  {
+    "file": "70.mp4",
+    "counter_in": 3,
+    "counter_out": 1,
+    "deviations": [
+      {
+        "start_frame": 30,
+        "end_frame": 120,
+        "status_id": 3
+      },
+      {
+        "start_frame": 150,
+        "end_frame": 165,
+        "status_id": 1
+      },
+      {
+        "start_frame": 270,
+        "end_frame": 280,
+        "status_id": 1
+      },
+      {
+        "start_frame": 560,
+        "end_frame": 620,
+        "status_id": 3
+      }
+    ]
+  },
+  {
+    "file": "71.mp4",
+    "counter_in": 3,
+    "counter_out": 3,
+    "deviations": [
+      {
+        "start_frame": 30,
+        "end_frame": 80,
+        "status_id": 3
+      },
+      {
+        "start_frame": 110,
+        "end_frame": 130,
+        "status_id": 1
+      },
+      {
+        "start_frame": 210,
+        "end_frame": 235,
+        "status_id": 1
+      },
+      {
+        "start_frame": 730,
+        "end_frame": 760,
+        "status_id": 1
+      },
+      {
+        "start_frame": 880,
+        "end_frame": 910,
+        "status_id": 1
+      },
+      {
+        "start_frame": 960,
+        "end_frame": 1050,
+        "status_id": 1
+      },
+      {
+        "start_frame": 1120,
+        "end_frame": 1140,
+        "status_id": 1
+      }
+    ]
+  },
+  {
+    "file": "72.mp4",
+    "counter_in": 2,
+    "counter_out": 0,
+    "deviations": [
+        {
+            "start_frame": 320,
+            "end_frame": 370,
+            "status_id": 3
+        },
+        {
+            "start_frame": 440,
+            "end_frame": 470,
+            "status_id": 1
+        },
+        {
+            "start_frame": 510,
+            "end_frame": 525,
+            "status_id": 1
+        },
+        {
+            "start_frame": 540,
+            "end_frame": 590,
+            "status_id": 3
+        }
     ]
   }
 
