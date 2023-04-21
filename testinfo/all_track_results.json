@@ -680,5 +680,206 @@
         "humans": 0,
         "counter_in": 0,
         "counter_out": 0
+    },
+    {
+        "deviations": [
+            {
+                "end_frame": 71,
+                "start_frame": 44,
+                "status_id": 1
+            },
+            {
+                "end_frame": 132,
+                "start_frame": 72,
+                "status_id": 1
+            },
+            {
+                "end_frame": 169,
+                "start_frame": 133,
+                "status_id": 1
+            },
+            {
+                "end_frame": 217,
+                "start_frame": 178,
+                "status_id": 1
+            },
+            {
+                "end_frame": 250,
+                "start_frame": 220,
+                "status_id": 1
+            },
+            {
+                "end_frame": 315,
+                "start_frame": 255,
+                "status_id": 1
+            },
+            {
+                "end_frame": 352,
+                "start_frame": 320,
+                "status_id": 1
+            },
+            {
+                "end_frame": 397,
+                "start_frame": 352,
+                "status_id": 1
+            },
+            {
+                "end_frame": 450,
+                "start_frame": 432,
+                "status_id": 1
+            }
+        ],
+        "file": "61.mp4",
+        "humans": 9,
+        "counter_in": 0,
+        "counter_out": 9
+    },
+    {
+      "deviations": [
+        {
+            "end_frame": 52,
+            "start_frame": 9,
+            "status_id": 1
+        },
+        {
+            "end_frame": 456,
+            "start_frame": 433,
+            "status_id": 1
+        },
+        {
+            "end_frame": 509,
+            "start_frame": 460,
+            "status_id": 3
+        },
+        {
+            "end_frame": 720,
+            "start_frame": 701,
+            "status_id": 1
+        }
+        ,
+        {
+            "end_frame": 758,
+            "start_frame": 730,
+            "status_id": 1
+        }
+        ,
+        {
+            "end_frame": 794,
+            "start_frame": 770,
+            "status_id": 1
+        }
+        ,
+        {
+            "end_frame": 889,
+            "start_frame": 854,
+            "status_id": 1
+        }
+        ,
+        {
+            "end_frame": 973,
+            "start_frame": 938,
+            "status_id": 1
+        },
+        {
+            "end_frame": 984,
+            "start_frame": 1013,
+            "status_id": 1
+        }
+      ],
+      "file": "62.mp4",
+      "humans": 9,
+      "counter_in": 1,
+        "counter_out": 8
+    }
+  ,
+    {
+      "deviations": [
+        {
+            "end_frame": 395,
+            "start_frame": 351,
+            "status_id": 1
+        }
+        ,
+        {
+            "end_frame": 350,
+            "start_frame": 292,
+            "status_id": 1
+        }
+        ,
+        {
+            "end_frame": 290,
+            "start_frame": 250,
+            "status_id": 1
+        }
+        ,
+        {
+            "end_frame": 236,
+            "start_frame": 180,
+            "status_id": 2
+        }
+        ,
+        {
+            "end_frame": 130,
+            "start_frame": 84,
+            "status_id": 1
+        },
+        {
+            "end_frame": 83,
+            "start_frame": 65,
+            "status_id": 1
+        }
+      ],
+      "file": "63.mp4",
+      "humans": 7,
+      "counter_in": 0,
+        "counter_out": 7
+    }
+  ,
+    {
+      "deviations": [
+        {
+            "end_frame": 1613,
+            "start_frame": 1583,
+            "status_id": 1
+        },
+        {
+            "end_frame": 1574,
+            "start_frame": 1504,
+            "status_id": 1
+        },
+        {
+            "end_frame": 1398,
+            "start_frame": 1260,
+            "status_id": 1
+        },
+
+        {
+            "end_frame": 1259,
+            "start_frame": 1151,
+            "status_id": 1
+        },
+        {
+            "end_frame": 902,
+            "start_frame": 881,
+            "status_id": 1
+        }
+        ,
+        {
+            "end_frame": 546,  "start_frame": 519, "status_id": 1
+        },
+        {
+            "end_frame": 107, "start_frame": 143, "status_id": 2
+        },
+        {
+            "end_frame": 69, "start_frame": 105, "status_id": 1
+        },
+        {
+            "end_frame": 42, "start_frame": 68, "status_id": 1
+        }
+      ],
+      "file": "64.mp4",
+      "humans": 9,
+      "counter_in": 4,
+        "counter_out": 5
     }
 ]
