@@ -583,18 +583,39 @@ def test_dev_results_to_table(results: list, csv_file_path, excel_file_path, sep
     df.to_excel(excel_file_path, index=False)
 
 
-def test_results_to_table(results, csv_file_path, excel_file_path, sep: str = ";"):
+def sort_test_results(results: list) -> list:
+    res_dic = {}
+
+    for key in results:
+        results_info = key
+
+        file_name = results_info["file"]
+        file_id = int(Path(file_name).stem)
+
+        res_dic[file_id] = key
+
+    res_dic = dict(sorted(res_dic.items()))
+
+    res = []
+    for item in res_dic.keys():
+        res.append(res_dic[item])
+
+    return res
+
+
+def test_results_to_table(results: list, csv_file_path, excel_file_path, sep: str = ";"):
     """
         Сохранение результатов сравнение в csv файл.
         Данные в таблично виде и упорядоченны по total_equal_percent
 
         Args:
-            results (dict): Словарь с результатами сравнения
+            results (list): Список с результатами сравнения
             csv_file_path: Путь к файлу, для сохранения данных в csv
             excel_file_path: Путь к файлу, для сохранения данных в excel
             sep: Разделитель в csv файле
         """
     table = []
+    # results = dict(sorted(results.items()))
     for key in results:
         results_info = key
 
@@ -625,6 +646,7 @@ def test_results_to_table(results, csv_file_path, excel_file_path, sep: str = ";
                                    "deviations",
                                    "start_frame",
                                    "end_frame", "status_id", "Тип"])
+
     # csv
     df.to_csv(csv_file_path, sep=sep, index=False)
     # excel
@@ -632,12 +654,14 @@ def test_results_to_table(results, csv_file_path, excel_file_path, sep: str = ";
 
 
 def convert_test_json_to_csv():
-    json_file_path = TEST_ROOT / 'all_track_results_group1.json'
-    csv_file_path = TEST_ROOT / "all_track_results_group1.csv"
-    excel_file_path = TEST_ROOT / "all_track_results_group1.xlsx"
+    json_file_path = TEST_ROOT / 'all_track_results.json'
+    csv_file_path = TEST_ROOT / "all_track_results.csv"
+    excel_file_path = TEST_ROOT / "all_track_results.xlsx"
 
     with open(json_file_path, "r") as read_file:
         results = json.loads(read_file.read())
+
+    results = sort_test_results(results)
 
     test_results_to_table(results, csv_file_path, excel_file_path)
 
