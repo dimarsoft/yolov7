@@ -6,6 +6,7 @@ from pathlib import Path
 
 from configs import load_default_bound_line, CAMERAS_PATH, get_all_trackers_full_path, get_select_trackers, \
     TEST_TRACKS_PATH, ROOT, get_bound_line
+from post_processing.stanislav import stanislav_count_humans
 from tools.labeltools import TrackWorker
 from tools.path_tools import get_video_files
 from post_processing.alex import alex_count_humans
@@ -80,6 +81,9 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
 
                 if test_func == "popov_alex":
                     humans_result = alex_count_humans(tracks_new, num, w, h, bound_line, log=log)
+                    pass
+                if test_func == "stanislav":
+                    humans_result = stanislav_count_humans(tracks_new, num, w, h, bound_line, log=log)
                     pass
                 if test_func == "timur":
                     humans_result = timur_count_humans(tracks_new, source, bound_line, log=log)
@@ -309,7 +313,7 @@ def run_example():
     tracker_config = None  # all_trackers.get(tracker_name)
 
     files = None
-    files = ['44']
+    #files = ['3']
     # files = ['6', "8", "26", "36"]
     # files = ['1', "2", "3"]
 
@@ -321,6 +325,7 @@ def run_example():
     test_func = "popov_alex"
     # test_func = "group_3"
     test_func = "timur"
+    test_func = "stanislav"
 
     # tracker_name = "ocsort"
     # tracker_config = ROOT / "trackers/ocsort/configs/ocsort_group1.yaml"
@@ -330,7 +335,7 @@ def run_example():
     print(str(tracker_config))
 
     txt_source_folder = "D:\\AI\\2023\\Detect\\2023_03_29_10_35_01_YoloVersion.yolo_v7_detect"
-    txt_source_folder = "D:\\AI\\2023\\Detections\\2023_04_18_20_03_05_YoloVersion.yolo_v8ul_detect"
+    # txt_source_folder = "D:\\AI\\2023\\Detections\\2023_04_18_20_03_05_YoloVersion.yolo_v8ul_detect"
     run_track_yolo(txt_source_folder, video_source, tracker_name, tracker_config,
                    output_folder, reid_weights, test_file, test_func=test_func,
                    files=files, save_vid=False,  change_bb=change_bb, classes=classes, log=False)
@@ -351,7 +356,7 @@ def run_cli(opt_info):
 
 
 if __name__ == '__main__':
-    run_example()
+    # run_example()
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--txt_source_folder', type=str, help='txt_source_folder')
@@ -370,4 +375,4 @@ if __name__ == '__main__':
     opt = parser.parse_args()
     print(opt)
 
-    # run_cli(opt)
+    run_cli(opt)
