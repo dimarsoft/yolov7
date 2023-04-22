@@ -1,8 +1,22 @@
 __version__ = 1.1
 
+import torch
+
+from utils.torch_utils import date_modified, git_describe
+
 
 def print_version():
-    print(f"Humans, helmets and uniforms. Version: {__version__}")
+    git_info = git_describe()
+
+    if git_info is None:
+        git_info = f"{date_modified()}"
+    else:
+        git_info = f"git: {git_info}, {date_modified()}"
+
+
+
+    ver = f'Version: {__version__}, {git_info}, torch {torch.__version__}'  # string
+    print(f"Humans, helmets and uniforms. {ver}")
 
 
 if __name__ == '__main__':
