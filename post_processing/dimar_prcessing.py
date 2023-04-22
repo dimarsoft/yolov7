@@ -1,5 +1,5 @@
-from count_results import Result
-from labeltools import TrackWorker
+from tools.count_results import Result
+from tools.labeltools import TrackWorker
 
 
 def dimar_count_humans(tracks):

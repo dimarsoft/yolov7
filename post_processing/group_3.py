@@ -1,7 +1,7 @@
 import pandas as pd
 from pandas import DataFrame
 
-from count_results import Result, Deviation
+from tools.count_results import Result, Deviation
 
 
 def convert_tracks_df(tracks, w, h) -> DataFrame:

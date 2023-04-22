@@ -1,7 +1,7 @@
 
 from configs import get_detections_path
 from optune.optune_tools import reset_seed, common_run_optuna
-from yolo_optune import run_track_yolo
+from yolo_common.yolo_optune import run_track_yolo
 
 
 def objective_fastdeepsort(trial):

@@ -5,9 +5,9 @@ from pathlib import Path
 import cv2
 
 from configs import CAMERAS_PATH, load_bound_line
-from count_results import Result, Deviation
-from labeltools import get_status
-from post_processing.functions import crossing_bound, calc_inp_outp_people, process_filt, get_centrmass, get_deviations
+from tools.count_results import Result, Deviation
+from tools.labeltools import get_status
+from post_processing.functions import crossing_bound, process_filt, get_centrmass, get_deviations
 
 
 def save_bound_line(cameras_path, bound_line):

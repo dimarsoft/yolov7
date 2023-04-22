@@ -3,7 +3,7 @@ from optuna.study import StudyDirection
 
 from configs import get_detections_path
 from optune.optune_tools import save_result, reset_seed, add_date_prefix, save_callback
-from yolo_optune import run_track_yolo
+from yolo_common.yolo_optune import run_track_yolo
 
 
 def objective_bytetrack(trial):
