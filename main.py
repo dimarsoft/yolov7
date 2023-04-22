@@ -13,10 +13,8 @@ def print_version():
     else:
         git_info = f"git: {git_info}, {date_modified()}"
 
-
-
-    ver = f'Version: {__version__}, {git_info}, torch {torch.__version__}'  # string
-    print(f"Humans, helmets and uniforms. {ver}")
+    version = f'Version: {__version__}, {git_info}, torch {torch.__version__}'  # string
+    print(f"Humans, helmets and uniforms. {version}")
 
 
 if __name__ == '__main__':
