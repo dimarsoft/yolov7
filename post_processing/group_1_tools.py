@@ -206,6 +206,10 @@ def get_count_men(men, orig_shape):  # определяем все сами
     if len(box_frame[id]) < 21:  # удаляем айди чей трек короче n кадров
         men = men[~np.isin(men[:, 0], id)]
 
+    # иначе возникает исключение при поиске max
+    if len(men[:, 0]) == 0:
+        return men, incoming, exiting
+
     n = int(max(men[:, 0]))
     human_c = [None] + [list() for _ in range(int(n))]
     for m in men:
