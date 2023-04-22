@@ -46,9 +46,9 @@ def init_torch_seeds(seed=0):
 
 
 def date_modified(path=__file__):
-    # return human-readable file modification date, i.e. '2021-3-26'
+    # return human-readable file modification date, i.e. '2023-04-22'
     t = datetime.datetime.fromtimestamp(Path(path).stat().st_mtime)
-    return f'{t.year}-{t.month}-{t.day}'
+    return f'{t.year:04}-{t.month:02}-{t.day:02}'
 
 
 def git_describe(path=Path(__file__).parent):  # path must be a directory
