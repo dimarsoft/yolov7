@@ -7,7 +7,7 @@ from typing import List, Optional
 import cv2
 from ultralytics.yolo.utils.plotting import Colors
 
-from count_results import Result, Deviation
+from tools.count_results import Result, Deviation
 
 
 # класс

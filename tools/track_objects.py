@@ -4,7 +4,7 @@
 Удобно объекты классов потом сериализовать(сохранить) в json формат
 
 """
-from labeltools import Labels
+from tools.labeltools import Labels
 
 
 class BBox:

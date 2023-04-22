@@ -4,8 +4,8 @@ from typing import Union, Optional
 import cv2
 
 from configs import load_bound_line, CAMERAS_PATH, get_bound_line
-from labeltools import draw_label_text
-from path_tools import get_video_files
+from tools.labeltools import draw_label_text
+from tools.path_tools import get_video_files
 from post_processing.timur import get_camera
 
 

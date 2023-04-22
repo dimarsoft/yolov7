@@ -8,8 +8,8 @@ bbox - в относительный величинах
 import json
 from pathlib import Path
 
-from exception_tools import print_exception
-from track_objects import Track
+from tools.exception_tools import print_exception
+from tools.track_objects import Track
 
 
 def convert_txt_toy7(results, save_none_id=False):
