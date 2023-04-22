@@ -6,6 +6,7 @@ from pathlib import Path
 
 from configs import load_default_bound_line, CAMERAS_PATH, get_all_trackers_full_path, get_select_trackers, \
     TEST_TRACKS_PATH, ROOT, get_bound_line
+from post_processing.group_1 import group_1_count_humans
 from post_processing.stanislav import stanislav_count_humans
 from tools.labeltools import TrackWorker
 from tools.path_tools import get_video_files
@@ -84,6 +85,9 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
                     pass
                 if test_func == "stanislav":
                     humans_result = stanislav_count_humans(tracks_new, num, w, h, bound_line, log=log)
+                    pass
+                if test_func == "group_1":
+                    humans_result = group_1_count_humans(tracks_new, num, w, h, bound_line, log=log)
                     pass
                 if test_func == "timur":
                     humans_result = timur_count_humans(tracks_new, source, bound_line, log=log)
@@ -313,7 +317,7 @@ def run_example():
     tracker_config = None  # all_trackers.get(tracker_name)
 
     files = None
-    #files = ['3']
+    # files = ['41']
     # files = ['6', "8", "26", "36"]
     # files = ['1', "2", "3"]
 
@@ -326,11 +330,13 @@ def run_example():
     # test_func = "group_3"
     test_func = "timur"
     test_func = "stanislav"
+    test_func = "group_1"
 
     # tracker_name = "ocsort"
     # tracker_config = ROOT / "trackers/ocsort/configs/ocsort_group1.yaml"
 
-    selected_trackers["ocsort"] = ROOT / "trackers/ocsort/configs/ocsort_optune.yaml"
+    # selected_trackers["ocsort"] = ROOT / "trackers/ocsort/configs/ocsort_optune.yaml"
+    selected_trackers["ocsort"] = ROOT / "trackers/ocsort/configs/ocsort_group1.yaml"
 
     print(str(tracker_config))
 
