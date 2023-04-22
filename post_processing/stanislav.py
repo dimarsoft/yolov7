@@ -328,7 +328,7 @@ def convert_track_to_df(tracks: list, w, h) -> DataFrame:
         cls = item[2]
         bbox_left, bbox_top, bbox_w, bbox_h = item[3] * w, item[4] * h, item[5] * w, item[6] * h
 
-        new_item = [item[0], item[1], bbox_left, bbox_top, bbox_w, bbox_h, cls]
+        new_item = [int(item[0]), int(item[1]), int(bbox_left), int(bbox_top), int(bbox_w), int(bbox_h), int(cls)]
 
         new_track.append(new_item)
 
