@@ -207,17 +207,18 @@ def Frame_f(data, passlist):
 def SplitDf(data):
     cls0 = data[data['cl'] == 0]
     df_l = []
-    for i in range(cls0['id'].min(), cls0['id'].max() + 1):  # от min id до max id
-        if len(cls0[cls0['id'] == i]) != 0:  # выбор существующих в ролике id
-            tmp_h = cls0[cls0['id'] == i]  # выборка датафрейма с конкретным id человека
+    if len(cls0) > 0:
+        for i in range(cls0['id'].min(), cls0['id'].max() + 1):  # от min id до max id
+            if len(cls0[cls0['id'] == i]) != 0:  # выбор существующих в ролике id
+                tmp_h = cls0[cls0['id'] == i]  # выборка датафрейма с конкретным id человека
 
-            begin = 1
-            for q in range(1, len(tmp_h)):
-                if q == (len(tmp_h) - 1):
-                    df_l.append(tmp_h[begin:(q - 1)])
-                if (tmp_h.iloc[q].frame - tmp_h.iloc[q - 1].frame) > 20:
-                    df_l.append(tmp_h[begin:(q - 1)])
-                    begin = q
+                begin = 1
+                for q in range(1, len(tmp_h)):
+                    if q == (len(tmp_h) - 1):
+                        df_l.append(tmp_h[begin:(q - 1)])
+                    if (tmp_h.iloc[q].frame - tmp_h.iloc[q - 1].frame) > 20:
+                        df_l.append(tmp_h[begin:(q - 1)])
+                        begin = q
 
     return df_l
 
