@@ -15,7 +15,7 @@ from post_processing.timur import timur_count_humans, get_camera
 from tools.resultools import TestResults, test_tracks_file
 from tools.save_txt_tools import yolo7_save_tracks_to_txt
 from utils.torch_utils import time_synchronized
-from yolov7 import YOLO7
+from yolo_common.yolov7 import YOLO7
 from datetime import datetime
 
 # from tqdm import tqdm

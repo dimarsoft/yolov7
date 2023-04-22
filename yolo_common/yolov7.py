@@ -14,7 +14,7 @@ from trackers.multi_tracker_zoo import create_tracker
 from utils.datasets import letterbox, LoadImages
 from utils.general import non_max_suppression, scale_coords
 from utils.torch_utils import select_device, time_synchronized, TracedModel
-from yolo_tools import xyxy2ltwh
+from yolo_common.yolo_tools import xyxy2ltwh
 
 
 class YOLO7:

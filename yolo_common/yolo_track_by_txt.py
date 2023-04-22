@@ -16,8 +16,8 @@ from tools.resultools import TestResults, save_test_result, save_results_to_csv
 from tools.save_txt_tools import yolo7_save_tracks_to_txt, yolo7_save_tracks_to_json
 from utils.general import set_logging
 from utils.torch_utils import time_synchronized
-from yolo_track_bbox import YoloTrackBbox
-from yolov7_track import save_exception
+from yolo_common.yolo_track_bbox import YoloTrackBbox
+from yolo_common.yolov7_track import save_exception
 
 # настройки камер, считываются при старте сессии
 cameras_info = {}
