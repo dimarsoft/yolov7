@@ -21,8 +21,8 @@ from tools.save_txt_tools import yolo8_save_tracks_to_txt, convert_toy7, yolo_lo
 from trackers.multi_tracker_zoo import create_tracker
 from utils.general import scale_coords
 from utils.torch_utils import time_synchronized, select_device
-from yolo_tools import xyxy2ltwh
-from yolo_track_by_txt import cameras_info
+from yolo_common.yolo_tools import xyxy2ltwh
+from yolo_common.yolo_track_by_txt import cameras_info
 
 
 class YOLO8:

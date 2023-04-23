@@ -12,7 +12,8 @@ from tools.exception_tools import print_exception
 from post_processing.alex import alex_count_humans
 from post_processing.timur import get_camera, timur_count_humans
 from tools.resultools import results_to_json, TestResults
-from yolo_detect import create_yolo_model
+from yolo_common.run_post_process import get_post_process_results
+from yolo_common.yolo_detect import create_yolo_model
 
 folder_link = "https://drive.google.com/drive/folders/1b-tp_yxHgadeElP4XoDCFoXxCwXHK9CV"
 yolo7_model_gdrive = "https://drive.google.com/drive/u/4/folders/1b-tp_yxHgadeElP4XoDCFoXxCwXHK9CV"
@@ -174,6 +175,48 @@ def run_single_video_yolo(source, yolo_info="7", conf=0.3, iou=0.45, test_func="
     return res_dic
 
 
+def get_results_video_yolo(source, yolo_info="7", conf=0.3, iou=0.45, test_func="timur",
+                           tracker_type="fastdeepsort", log: bool = True) -> dict:
+    print(f"yolo version = {yolo_info}")
+    yolo_version = parse_yolo_version(yolo_info)
+
+    if yolo_version is None:
+        raise Exception(f"unsupported yolo version {yolo_info}")
+    model = get_model_file(yolo_version)
+
+    reid_weights = str(Path(WEIGHTS) / "osnet_x0_25_msmt17.pt")
+
+    num, w, h, fps = get_camera(source)
+
+    print(f"num = {num}, w = {w}, h = {h}, fps = {fps}")
+
+    model = create_yolo_model(yolo_version, model)
+
+    all_trackers = get_all_optune_trackers()
+    tracker_config = all_trackers.get(tracker_type)
+
+    if log:
+        print(f"tracker_type = {tracker_type}")
+
+    track = model.track(
+        source=source,
+        conf_threshold=conf,
+        iou=iou,
+        tracker_type=tracker_type,
+        tracker_config=tracker_config,
+        reid_weights=reid_weights,
+        log=log
+    )
+
+    num, w, h, fps = get_camera(source)
+    cameras_info = load_default_bound_line()
+    bound_line = get_bound_line(cameras_info, num)
+
+    humans_result = get_post_process_results(test_func, track, num, w, h, fps, bound_line, source, log=True)
+
+    return json.loads(results_to_json(humans_result))
+
+
 if __name__ == '__main__':
     # download_test_video()
 
@@ -198,4 +241,3 @@ if __name__ == '__main__':
     # str2 = json.dumps(res.__dict__, indent=4)
 
     # print(str2)
-

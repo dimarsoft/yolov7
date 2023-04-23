@@ -9,9 +9,9 @@ from tools.path_tools import get_video_files, create_session_folder
 from tools.save_txt_tools import yolo7_save_tracks_to_txt, yolo7_save_tracks_to_json
 from utils.general import set_logging
 from utils.torch_utils import time_synchronized
-from yolov7 import YOLO7
-from yolov8 import YOLO8
-from yolov8_ultralitics import YOLO8UL
+from yolo_common.yolov7 import YOLO7
+from yolo_common.yolov8 import YOLO8
+from yolo_common.yolov8_ultralitics import YOLO8UL
 
 
 def create_yolo_model(yolo_version, model, w=640, h=640):

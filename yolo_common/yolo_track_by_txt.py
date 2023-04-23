@@ -317,7 +317,7 @@ def run_example():
     tracker_config = None  # all_trackers.get(tracker_name)
 
     files = None
-    # files = ['41']
+    # files = ['3']
     # files = ['6', "8", "26", "36"]
     # files = ['1', "2", "3"]
 
@@ -329,8 +329,8 @@ def run_example():
     test_func = "popov_alex"
     # test_func = "group_3"
     test_func = "timur"
-    test_func = "stanislav"
-    test_func = "group_1"
+    #test_func = "stanislav"
+    #test_func = "group_1"
 
     # tracker_name = "ocsort"
     # tracker_config = ROOT / "trackers/ocsort/configs/ocsort_group1.yaml"
@@ -362,7 +362,7 @@ def run_cli(opt_info):
 
 
 if __name__ == '__main__':
-    # run_example()
+    run_example()
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--txt_source_folder', type=str, help='txt_source_folder')
@@ -381,4 +381,4 @@ if __name__ == '__main__':
     opt = parser.parse_args()
     print(opt)
 
-    run_cli(opt)
+    # run_cli(opt)
