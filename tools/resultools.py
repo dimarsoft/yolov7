@@ -244,6 +244,12 @@ class TestResults:
         total_actual_devs = 0
         total_expected_devs = 0
 
+        total_predicted_in = 0
+        total_predicted_out = 0
+
+        total_true_in = 0
+        total_true_out = 0
+
         for result_item in self.result_items:
             item = TestResults.get_for(test_items, result_item.file)
 
@@ -262,8 +268,14 @@ class TestResults:
                 expected_counter_out = 0
                 expected_deviations = []
 
-            delta_in = expected_counter_in - actual_counter_in
-            delta_out = expected_counter_out - actual_counter_out
+            total_predicted_in += actual_counter_in
+            total_predicted_out += actual_counter_out
+
+            total_true_in += expected_counter_in
+            total_true_out += expected_counter_out
+
+            delta_in = abs(expected_counter_in - actual_counter_in)
+            delta_out = abs(expected_counter_out - actual_counter_out)
 
             if delta_in == 0 and delta_out == 0:
                 total_equal += 1
@@ -308,6 +320,9 @@ class TestResults:
             dev_info["actual_in"] = actual_counter_in
             dev_info["actual_out"] = actual_counter_out
 
+            dev_info["delta_in"] = delta_in
+            dev_info["delta_out"] = delta_out
+
             if actual_devs > 0:
                 dev_info["dev_precision"] = count_correct / actual_devs
             else:
@@ -327,6 +342,19 @@ class TestResults:
             sum_delta_in += abs(delta_in)
             sum_delta_out += abs(delta_out)
 
+            if expected_counter_in > 0:
+                accuracy_in = 1.0 - (delta_in / expected_counter_in)
+            else:
+                accuracy_in = 1.0 if delta_in == 0 else 0.0
+
+            if expected_counter_out > 0:
+                accuracy_out = 1.0 - (delta_out / expected_counter_out)
+            else:
+                accuracy_out = 1.0 if delta_out == 0 else 0.0
+
+            dev_info['accuracy_in'] = accuracy_in * 100.0
+            dev_info['accuracy_out'] = accuracy_out * 100.0
+
         results_info = dict()
 
         results_info['total_count_correct'] = total_count_correct
@@ -344,6 +372,25 @@ class TestResults:
 
         results_info['total_records'] = total_records
         results_info['total_equal'] = total_equal
+
+        results_info['total_predicted_in'] = total_predicted_in
+        results_info['total_predicted_out'] = total_predicted_out
+
+        results_info['total_true_in'] = total_true_in
+        results_info['total_true_out'] = total_true_out
+
+        if total_true_in > 0:
+            accuracy_in = 1.0 - (sum_delta_in / total_true_in)
+        else:
+            accuracy_in = 1.0 if sum_delta_in == 0 else 0.0
+
+        if total_true_out > 0:
+            accuracy_out = 1.0 - (sum_delta_out / total_true_out)
+        else:
+            accuracy_out = 1.0 if sum_delta_out == 0 else 0.0
+
+        results_info['accuracy_in'] = accuracy_in * 100.0
+        results_info['accuracy_out'] = accuracy_out * 100.0
 
         if total_records > 0:
             results_info['total_equal_percent'] = (100.0 * total_equal) / total_records
@@ -468,6 +515,9 @@ def save_results_to_csv(results: dict, csv_file_path, excel_file_path, sep=";") 
     for key in results.keys():
         results_info = results[key]
 
+        accuracy_in = results[key]["accuracy_in"]
+        accuracy_out = results[key]["accuracy_out"]
+
         total_equal_percent = results[key]["total_equal_percent"]
         total_equal = results[key]["total_equal"]
         total_records = results[key]["total_records"]
@@ -491,12 +541,16 @@ def save_results_to_csv(results: dict, csv_file_path, excel_file_path, sep=";") 
 
         print(f"{key} = {total_equal_percent}, {files_str}")
 
-        table.append([key, total_equal_percent, total_equal, total_records, str(files_str),
+        table.append([key,
+                      accuracy_in, accuracy_out,
+                      total_equal_percent, total_equal, total_records, str(files_str),
                       total_dev_precision, total_dev_recall,
                       total_count_correct, total_actual_devs, total_expected_devs,
                       total_dev_actual_percent, files_dev_str])
 
-    df = DataFrame(table, columns=["tracker_name", "total_equal_percent",
+    df = DataFrame(table, columns=["tracker_name",
+                                   "accuracy_in", "accuracy_out",
+                                   "total_equal_percent",
                                    "total_equal", "total_records", "not_equal_items",
                                    "total_dev_precision", "total_dev_recall",
                                    "total_count_correct", "total_actual_devs", "total_expected_devs",
@@ -544,7 +598,7 @@ def results_to_table():
     # print(results)
 
 
-def test_dev_results_to_table(results: list, csv_file_path, excel_file_path, sep: str = ";"):
+def test_dev_results_to_table(results: list[dict], csv_file_path, excel_file_path, sep: str = ";"):
     table = []
 
     for dev_info in results:
@@ -563,14 +617,25 @@ def test_dev_results_to_table(results: list, csv_file_path, excel_file_path, sep
         actual_counter_in = dev_info["actual_in"]
         actual_counter_out = dev_info["actual_out"]
 
+        accuracy_in = dev_info["accuracy_in"]
+        accuracy_out = dev_info["accuracy_out"]
+
+        delta_in = dev_info["delta_in"]
+        delta_out = dev_info["delta_out"]
+
         table.append([file, actual_counter_in, actual_counter_out,
                       expected_counter_in,
                       expected_counter_out,
-                      precision, recall, actual_devs, count_correct, expected_devs])
+                      accuracy_in, accuracy_out,
+                      delta_in, delta_out,
+                      precision, recall,
+                      actual_devs, count_correct, expected_devs])
 
     df = DataFrame(table, columns=["file",
-                                   "Вход", "Выход",
-                                   "Вход(эталон)", "Выход(эталон)",
+                                   "Вход(pred)", "Выход(pred)",
+                                   "Вход(true)", "Выход(true)",
+                                   "accuracy_in", "accuracy_out",
+                                   "delta_in", "delta_out",
                                    "precision", "recall",
                                    "actual_devs",
                                    "count_correct",
