@@ -78,7 +78,8 @@ def objective_ocsort(trial):
                                  test_func=test_func,
                                  files=files, change_bb=change_bb, classes=classes)
 
-    accuracy = cmp_results["total_equal_percent"]
+    # accuracy = cmp_results["total_equal_percent"]
+    accuracy = cmp_results["total_dev_precision"]
 
     return accuracy
 

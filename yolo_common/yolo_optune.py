@@ -10,7 +10,7 @@ from post_processing.group_3 import group_3_count
 from post_processing.timur import get_camera, timur_count_humans
 from tools.resultools import TestResults
 from utils.general import set_logging
-from yolo_track_bbox import YoloTrackBbox
+from yolo_common.yolo_track_bbox import YoloTrackBbox
 
 print(f"optuna version = {optuna.__version__}")
 
