@@ -1212,7 +1212,17 @@
       },
       {
         "start_frame": 972,
-        "end_frame": 980,
+        "end_frame": 1015,
+        "status_id": 1
+      },
+      {
+        "start_frame": 1070,
+        "end_frame": 1100,
+        "status_id": 2
+      },
+      {
+        "start_frame": 1160,
+        "end_frame": 1190,
         "status_id": 1
       }
     ]
