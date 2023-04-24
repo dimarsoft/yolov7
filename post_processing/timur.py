@@ -159,8 +159,8 @@ def timur_count_humans(tracks, source, bound_line, log: bool = True) -> Result:
             start_frame, end_frame = end_frame, start_frame
 
         # -+ 1 сек от пересечения, но не забегая за границы человека по треку
-        start_frame = max(frame_id - fps, start_frame)
-        end_frame = min(frame_id + fps, end_frame)
+        start_frame = max(frame_id - 2*fps, start_frame)
+        end_frame = min(frame_id + 2*fps, end_frame)
 
         if start_frame <= frame_id <= end_frame:
             pass
