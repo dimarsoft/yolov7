@@ -1762,5 +1762,82 @@
       {"start_frame": 80, "end_frame": 130, "status_id": 1},
       {"start_frame": 186, "end_frame": 211, "status_id": 1}
     ]
+  },
+  {
+    "file": "73.mp4",
+    "counter_in": 3,
+    "counter_out": 3,
+    "deviations": [
+      {"start_frame": 488, "end_frame": 502, "status_id": 2}
+    ]
+  },
+  {
+    "file": "74.mp4",
+    "counter_in": 4,
+    "counter_out": 6,
+    "deviations": [
+      {"start_frame": 227, "end_frame": 235, "status_id": 1},
+      {"start_frame": 236, "end_frame": 275, "status_id": 1}
+    ]
+  },
+  {
+    "file": "75.mp4",
+    "counter_in": 9,
+    "counter_out": 1,
+    "deviations": [
+      {"start_frame": 127, "end_frame": 147, "status_id": 1}
+    ]
+  },
+  {
+    "file": "76.mp4",
+    "counter_in": 2,
+    "counter_out": 1,
+    "deviations": [  ]
+  },
+  {
+    "file": "77.mp4",
+    "counter_in": 0,
+    "counter_out": 1,
+    "deviations": [
+      {"start_frame": 736, "end_frame": 780, "status_id": 3}
+    ]
+  },
+  {
+    "file": "78.mp4",
+    "counter_in": 1,
+    "counter_out": 0,
+    "deviations": [  ]
+  },
+  {
+    "file": "79.mp4",
+    "counter_in": 1,
+    "counter_out": 6,
+    "deviations": [
+      {"start_frame": 460, "end_frame": 475, "status_id": 1}
+    ]
+  },
+  {
+    "file": "80.mp4",
+    "counter_in": 2,
+    "counter_out": 0,
+    "deviations": [
+      {"start_frame": 256, "end_frame": 274, "status_id": 1},
+      {"start_frame": 710, "end_frame": 737, "status_id": 1}
+    ]
+  },
+  {
+    "file": "81.mp4",
+    "counter_in": 1,
+    "counter_out": 0,
+    "deviations": [    ]
+  },
+  {
+    "file": "82.mp4",
+    "counter_in": 0,
+    "counter_out": 3,
+    "deviations": [
+      {"start_frame": 1755, "end_frame": 1796, "status_id": 1},
+      {"start_frame": 1867, "end_frame": 1889, "status_id": 1}
+    ]
   }
 ]
