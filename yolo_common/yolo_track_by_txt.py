@@ -26,14 +26,15 @@ cameras_info = {}
 
 def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_config, output_folder,
                           reid_weights, test_file, test_func,
-                          classes=None, change_bb=False, conf=0.3, save_vid=False, log: bool = True):
+                          classes=None, change_bb=False, conf=0.3, save_vid=False,
+                          log: bool = True, ext: str = "txt"):
     print(f"start {source}, {txt_source_folder}")
 
     source_path = Path(source)
     text_path = Path(output_folder) / f"{source_path.stem}.txt"
     json_file = Path(output_folder) / f"{source_path.stem}.json"
 
-    txt_source = Path(txt_source_folder) / f"{source_path.stem}.txt"
+    txt_source = Path(txt_source_folder) / f"{source_path.stem}.{ext}"
 
     model = YoloTrackBbox()
 
@@ -125,10 +126,12 @@ def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_
 
 def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_config, output_folder, reid_weights,
                    test_result_file, test_func=None, files=None,
-                   classes=None, change_bb=None, conf=0.3, save_vid=False, log: bool = True):
+                   classes=None, change_bb=None, conf=0.3, save_vid=False,
+                   log: bool = True, ext: str = "txt"):
     """
 
     Args:
+        ext:
         log: вкл/выкл логирования (print)
         txt_source_folder: папка с Labels: 1.txt....
         change_bb: менять bbox после детекции для трекера,
@@ -250,7 +253,7 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_co
                                       reid_weights, test_results, test_func, classes,
                                       change_bb=change_bb,
                                       conf=conf,
-                                      save_vid=save_vid, log=log)
+                                      save_vid=save_vid, log=log, ext=ext)
 
             file_result = save_test_result(test_results, tracker_session_folder, source_path)
 

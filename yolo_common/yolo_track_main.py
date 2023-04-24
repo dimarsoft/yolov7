@@ -7,7 +7,7 @@ import gdown
 
 from configs import load_default_bound_line, WEIGHTS, YoloVersion, parse_yolo_version, ROOT, \
     get_all_optune_trackers, TEST_TRACKS_PATH, get_bound_line
-from tools.count_results import Result
+from tools.count_results import Result, Deviation
 from tools.exception_tools import print_exception
 from post_processing.alex import alex_count_humans
 from post_processing.timur import get_camera, timur_count_humans
@@ -179,6 +179,12 @@ def get_results_video_yolo(source, yolo_info="7", conf=0.3, iou=0.45, test_func=
                            tracker_type="fastdeepsort", log: bool = True) -> dict:
     print(f"yolo version = {yolo_info}")
     yolo_version = parse_yolo_version(yolo_info)
+
+    devs = [Deviation(10, 100, 3)]
+
+    humans_result = Result(4, 2, 2, devs)
+
+    return json.loads(results_to_json(humans_result))
 
     if yolo_version is None:
         raise Exception(f"unsupported yolo version {yolo_info}")

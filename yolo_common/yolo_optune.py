@@ -20,10 +20,11 @@ cameras_info = {}
 def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_config,
                    reid_weights="osnet_x0_25_msmt17.pt",
                    test_result_file=TEST_TRACKS_PATH, test_func=None, files=None,
-                   classes=None, change_bb=None, conf=0.3):
+                   classes=None, change_bb=None, conf=0.3, ext: str = "txt"):
     """
 
     Args:
+        ext: Расширение файла: txt, npy
         txt_source_folder: папка с Labels: 1.txt....
         change_bb: менять bbox после детекции для трекера,
                    bbox будет меньше и по центру человека
@@ -62,7 +63,7 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_co
         run_single_video_yolo(txt_source_folder, item, tracker_type, tracker_config,
                               reid_weights, test_results, test_func, classes,
                               change_bb=change_bb,
-                              conf=conf)
+                              conf=conf, ext=ext)
     # save results
 
     cmp_results = test_results.compare_list_to_file_v2(None, test_results.test_items)
@@ -72,12 +73,12 @@ def run_track_yolo(txt_source_folder: str, source: str, tracker_type, tracker_co
 
 def run_single_video_yolo(txt_source_folder, source, tracker_type: str, tracker_config,
                           reid_weights, test_file, test_func,
-                          classes=None, change_bb=False, conf=0.3):
+                          classes=None, change_bb=False, conf=0.3, ext: str = "txt"):
     # print(f"start {source}, {txt_source_folder}")
 
     source_path = Path(source)
 
-    txt_source = Path(txt_source_folder) / f"{source_path.stem}.txt"
+    txt_source = Path(txt_source_folder) / f"{source_path.stem}.{ext}"
 
     model = YoloTrackBbox()
 

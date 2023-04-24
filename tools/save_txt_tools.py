@@ -187,6 +187,9 @@ def yolo7_save_tracks_to_json(results, json_file, conf=0.0):
 def yolo_load_detections_from_txt(txt_path):
     import pandas as pd
 
+    if Path(txt_path).suffix == ".npy":
+        return yolo_load_detections_from_npy(txt_path)
+
     try:
         if Path(txt_path).stat().st_size > 0:
             df = pd.read_csv(txt_path, delimiter=" ", dtype=float, header=None)
@@ -199,3 +202,52 @@ def yolo_load_detections_from_txt(txt_path):
         df = pd.DataFrame(dtype=float, columns=[0, 1, 2, 3, 4, 5, 6, 7])
 
     return df
+
+
+def yolo_load_detections_from_npy(txt_path):
+    import pandas as pd
+    import numpy as np
+
+    try:
+        if Path(txt_path).stat().st_size > 0:
+            # df = pd.read_csv(txt_path, delimiter=" ", dtype=float, header=None)
+
+            all_boxes_and_shp = np.load(txt_path, allow_pickle=True)
+            orig_shp = all_boxes_and_shp[0]  # Здесь формат
+            w, h = orig_shp[1], orig_shp[0]
+            all_boxes = all_boxes_and_shp[1]  # Здесь боксы
+
+            tracks = []
+
+            for item in all_boxes:
+                left = item[0] / w
+                top = item[1] / h
+
+                width = (item[2] - item[0]) / w
+                height = (item[3] - item[1]) / h
+
+                frame_index, track_id, cls, conf = item[6], -1, item[5], item[4]
+
+                # from bboxes - ndarray(x1, y1, x2, y2, conf, class, frame),
+                # to [frame_index, track_id, cls, bbox_left, bbox_top, bbox_w, bbox_h, box.conf]
+
+                tracks.append([frame_index, track_id, cls, left, top, width, height, conf])
+
+            df = pd.DataFrame(data=tracks, dtype=float, columns=[0, 1, 2, 3, 4, 5, 6, 7])
+
+        else:
+            # если файл пустой, создаем пустой df, f nj pd.read_csv exception выдает
+            df = pd.DataFrame(dtype=float, columns=[0, 1, 2, 3, 4, 5, 6, 7])
+        # df = pd.DataFrame(df, columns=['frame', 'id', 'class', 'bb_left', 'bb_top', 'bb_width', 'bb_height', 'conf'])
+    except Exception as ex:
+        print_exception(ex, f"yolo_load_detections_from_npy: '{str(txt_path)}'")
+        df = pd.DataFrame(dtype=float, columns=[0, 1, 2, 3, 4, 5, 6, 7])
+
+    return df
+
+
+if __name__ == '__main__':
+    npy_path = "D:\\AI\\2023\\Goup1\\78.npy"
+
+    dff = yolo_load_detections_from_txt(npy_path)
+    print(dff)
