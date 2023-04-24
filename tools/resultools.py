@@ -539,7 +539,7 @@ def save_results_to_csv(results: dict, csv_file_path, excel_file_path, sep=";") 
         files_str = get_files_str(not_equal_items)
         files_dev_str = get_files_str(get_no_correct_dev(by_item_dev_info))
 
-        print(f"{key} = {total_equal_percent}, {files_str}")
+        print(f"{key} : accuracy_in = {accuracy_in}, accuracy_out = {accuracy_out}, {files_str}")
 
         table.append([key,
                       accuracy_in, accuracy_out,
@@ -648,6 +648,21 @@ def test_dev_results_to_table(results: list[dict], csv_file_path, excel_file_pat
     df.to_excel(excel_file_path, index=False)
 
 
+def test_results_to_dict(results: list) -> dict:
+    res_dic = {}
+
+    for key in results:
+        results_info = key
+
+        file_name = results_info["file"]
+        file_id = int(Path(file_name).stem)
+
+        res_dic[file_id] = key
+
+    res_dic = dict(sorted(res_dic.items()))
+
+    return res_dic
+
 def sort_test_results(results: list) -> list:
     res_dic = {}
 
@@ -744,7 +759,34 @@ def gr1():
                      '24': 0, '25': 0, '26': 1, '27': 1, '28': 1, '29': 1, '30': 3, '31': 2, '32': 0, '33': 0, '34': 0,
                      '35': 0, '36': 0, '37': 0, '38': 7, '39': 1, '40': 1, '41': 0, '42': 0, '43': 0}
 
+    dict_in_true = {'44': 6, '45': 1, '46': 2, '47': 3, '48': 0, '49': 1, '50': 0, '51': 1, '52': 6, '53': 2,
+                    '54': 2, '55': 2, '56': 2, '57': 0, '58': 2, '59': 1, '60': 0, '61': 0, '62': 1, '63': 0,
+                    '64': 4, '65': 0, '66': 0, '67': 4, '68': 3, '69': 4, '70': 3, '71': 3, '72': 2}
+    dict_out_true = {'44': 1, '45': 5, '46': 1, '47': 4, '48': 26, '49': 3, '50': 15, '51': 6, '52': 5, '53': 22,
+                     '54': 8, '55': 6, '56': 4, '57': 3, '58': 2, '59': 3, '60': 3, '61': 9, '62': 8, '63': 7,
+                     '64': 5, '65': 6, '66': 4, '67': 5, '68': 2, '69': 4, '70': 1, '71': 3, '72': 0}
     # print(dict_in_true)
+
+    json_file_path = TEST_ROOT / 'all_track_results.json'
+
+    with open(json_file_path, "r") as read_file:
+        results = json.loads(read_file.read())
+
+    results = test_results_to_dict(results)
+
+    com = []
+    for k in dict_in_true.keys():
+        in_c = dict_in_true.get(k)
+        out_c = dict_out_true.get(k)
+
+        test = results.get(int(k))
+
+        counter_in = test["counter_in"]
+        counter_out = test["counter_out"]
+
+        com.append([int(k), in_c, out_c, counter_in, counter_out])
+
+    df_com = DataFrame(com, columns=["file", "gr1_in", "gr1_out", "gr2_in", "gr2_out"])
 
     df_in = DataFrame.from_dict(dict_in_true, orient="index", columns=['A'])
     df_out = DataFrame.from_dict(dict_out_true, orient="index", columns=['A'])
@@ -752,9 +794,11 @@ def gr1():
     df_in.to_excel("df_in.xlsx", index=False)
     df_out.to_excel("df_out.xlsx", index=False)
 
+    df_com.to_excel("df_com.xlsx", index=False)
+
 
 if __name__ == '__main__':
-    # gr1()
+    #gr1()
     # test_tracks_file(test_file=TEST_TRACKS_PATH)
     convert_test_json_to_csv()
 
