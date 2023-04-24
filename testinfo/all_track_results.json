@@ -930,7 +930,7 @@
             "end_frame": 80, "start_frame": 31, "status_id": 1
         }
       ],
-      "file": "67.mp4", "humans": 4, "counter_in": 0, "counter_out": 4
+      "file": "67.mp4", "humans": 9, "counter_in": 4, "counter_out": 5
     },
     {
       "file": "53.mp4",
