@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Tuple
+from typing import Tuple, Optional
 
 import cv2
 import torch
@@ -326,7 +326,7 @@ def get_people_info(people_tracks, helmet_tracks, vest_tracks):
     return people_tracks
 
 
-def search_frame(people_info, bound_line):
+def search_frame(people_info: dict, bound_line) -> Optional[int]:
     n = len(people_info["path"])
 
     line_norm = get_norm(*bound_line)
@@ -376,12 +376,18 @@ def find_deviations(people_tracks: dict, bound_line, only_down: bool = True, log
 
             if id_frame_ind is not None:
                 id_frame = people_tracks[p_id]["frid"][id_frame_ind]
+
+                start_frame = people_tracks[p_id]["frid"][0]
+                end_frame = people_tracks[p_id]["frid"][-1]
+
                 no_dev = in_helm and in_vest
                 dir_val = True if not only_down else True if tr_info["direction"] == 'down' else False
                 if not no_dev and dir_val:
                     bbox = people_tracks[p_id]["bbox"][id_frame_ind]
                     deviations.append({
                         "frame_id": id_frame,
+                        "start_frame": start_frame,
+                        "end_frame": end_frame,
                         "has_helmet": in_helm,
                         "has_uniform": in_vest,
                         "box": bbox})
