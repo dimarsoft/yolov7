@@ -333,18 +333,19 @@ def run_example():
     # test_func = "group_3"
     test_func = "timur"
     #test_func = "stanislav"
-    #test_func = "group_1"
+    # test_func = "group_1"
 
     # tracker_name = "ocsort"
     # tracker_config = ROOT / "trackers/ocsort/configs/ocsort_group1.yaml"
 
-    # selected_trackers["ocsort"] = ROOT / "trackers/ocsort/configs/ocsort_optune.yaml"
+    selected_trackers["ocsort"] = ROOT / "trackers/ocsort/configs/ocsort_optune.yaml"
     selected_trackers["ocsort"] = ROOT / "trackers/ocsort/configs/ocsort_group1.yaml"
 
     print(str(tracker_config))
 
     txt_source_folder = "D:\\AI\\2023\\Detect\\2023_03_29_10_35_01_YoloVersion.yolo_v7_detect"
     # txt_source_folder = "D:\\AI\\2023\\Detections\\2023_04_18_20_03_05_YoloVersion.yolo_v8ul_detect"
+    # txt_source_folder = "D:\\AI\\2023\\Detections\\2023_04_24_20_19_07_YoloVersion.yolo_v8ul_detect"
     run_track_yolo(txt_source_folder, video_source, tracker_name, tracker_config,
                    output_folder, reid_weights, test_file, test_func=test_func,
                    files=files, save_vid=False,  change_bb=change_bb, classes=classes, log=False)

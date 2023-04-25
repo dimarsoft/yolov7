@@ -54,3 +54,6 @@ norfair-tracker
 DNN
 openpyxl
 optuna
+
+# web app
+Flask

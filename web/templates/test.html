@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <title>Проверка тестовых видео</title>
+</head>
+<body>
+<header class="d-flex justify-content-center py-3">
+    <ul class="nav nav-pills">
+        <li class="nav-item"><a href="/" class="nav-link" aria-current="page">Главная</a></li>
+        <li class="nav-item"><a href="/test" class="nav-link active" >Тест</a></li>
+        <li class="nav-item"><a href="/about" class="nav-link ">О нас</a></li>
+        <li class="nav-item"><a href="/help" class="nav-link">Помощь</a></li>
+    </ul>
+</header>
+    <form action="/test_video_run/" method="post">
+        <input type="text" name="test_video" class="form-control" align="right" placeholder="Тестовые видео..."
+        value="{{ test_video }}">
+        <input type="submit" class="btn btn-success" value="Распознать" align="right">
+    </form>
+    <br>
+    <p>Входящих: {{ results.counter_in }}, Выходящих: {{ results.counter_out }}</p>
+
+    <br>{{ results }}
+
+{% block content %}
+  <table id="data" class="table table-striped">
+    <thead>
+      <tr>
+        <th>Начальный кадр</th>
+        <th>Конечный кадр</th>
+        <th>Нарушение</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for dev in results.deviations %}
+        <tr>
+          <td>{{ dev.start_frame }}, {{ dev.start_time }} мс</td>
+          <td>{{ dev.end_frame }}</td>
+          <td>{{ dev.status_id }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
+<select id="timeSelect">
+    <option value="0">В начало</option>
+{% for dev in results.deviations %}
+    <option value="{{ dev.start_time }}">
+        Выбрать {{ dev.start_time }}сек, [{{ dev.start_frame }}-{{ dev.end_frame }}] кадр,
+        {{ dev.status_id }}
+    </option>
+{% endfor %}
+</select>
+    <br/>
+    <video controls id="myVideo">
+      <source src="{{ url_for('static', filename='uploads/' + test_video) }}" type="video/mp4">
+    </video>
+    <script>
+        var video = document.getElementById("myVideo");
+            var timeSelect = document.getElementById("timeSelect");
+            timeSelect.addEventListener("change", function() {
+              var startTime = parseInt(timeSelect.value);
+              video.currentTime = startTime;
+            });
+
+    </script>
+</body>
+</html>

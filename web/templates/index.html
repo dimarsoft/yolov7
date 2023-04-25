@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Каски и жилеты</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+</head>
+<body>
+<header class="d-flex justify-content-center py-3">
+      <ul class="nav nav-pills">
+        <li class="nav-item"><a href="/" class="nav-link active" aria-current="page">Главная</a></li>
+        <li class="nav-item"><a href="/test" class="nav-link">Тест</a></li>
+        <li class="nav-item"><a href="/about" class="nav-link">О нас</a></li>
+        <li class="nav-item"><a href="/help" class="nav-link">Помощь</a></li>
+      </ul>
+</header>
+    <form action="/download_videos" method="post" >
+        <input type="submit" class="btn btn-success" value="Скачать с гугла" >
+    </form>
+
+      <form method="post">
+        <input type="text" name="search" class="form-control" align="right" placeholder="Обработка видео...">
+        <input type="submit" class="btn btn-success" value="Распознать" align="right">
+      </form>
+    <h1>Upload Video</h1>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+      <input type="file" name="file">
+      <input type="submit" value="Upload">
+    </form>
+</body>
+</html>
