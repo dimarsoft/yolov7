@@ -2,7 +2,8 @@ import numpy as np
 from numpy import ndarray
 
 from post_processing.group_1_tools import get_men, get_count_men, get_count_vialotion
-from tools.count_results import Result
+from tools.count_results import Result, Deviation
+from tools.labeltools import get_status
 
 
 def dict_fill(d_pred_, d_true_):
@@ -85,7 +86,21 @@ def group_1_count_humans(tracks: list, num, w, h, bound_line, log: bool = True) 
     # Здесь принимаем переназначенные айди смотрим нарушения, а также повторно считаем входящих по дистанции, проверяем
     violation, incoming2, exiting2, df, clothing_helmet, clothing_unif = get_count_vialotion(men_clean, orig_shp[1])
 
-    return Result(incoming2 + exiting2, incoming2, exiting2, [])
+    deviations = []
+
+    # 'helmet', 'uniform', 'first_frame', 'last_frame'
+
+    for row in range(len(violation)):
+        start_frame = violation["first_frame"].iloc[row]
+        end_frame = violation['last_frame'].iloc[row]
+
+        helmet = violation["helmet"].iloc[row]
+        uniform = violation['uniform'].iloc[row]
+
+        status = get_status(helmet == 1, uniform == 1)
+        deviations.append(Deviation(int(start_frame), int(end_frame), status))
+
+    return Result(incoming2 + exiting2, incoming2, exiting2, deviations)
 
 
 if __name__ == '__main__':
